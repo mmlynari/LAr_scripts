@@ -49,4 +49,3 @@ print "For the calo dimension given, covering angle is up to eta ", get_eta(cove
 print "Covering angle from both sides of radial direction: ", covering_angle
 print "We cover from %f to %f theta degrees"%(90-covering_angle, 90+covering_angle)
 print "Number of eta cells: %d * 2"%len(theta_delta)
-print "PCB length: %f" % (calo_rMax - calo_rMin)

@@ -73,11 +73,11 @@ x0_services = ((cryostat_thickness_in + cryostat_thickness_out) * cryostat_x0 + 
 x0 += x0_services
 
 # compute X0 of the presampler
-presampler_length = 15.0 # mm. without taking into account inclination, number is its bare length, measured parrallel to the readout
+presampler_length = 15.0 # mm. without taking into account inclination, number is its bare length, measured parallel to the readout
 length_presampler_crossed = presampler_length * cos(radians(inclination))
 x0_presampler_cell = (lar_thickness * lar_x0 * 2 + absorber_thickness * g10_x0  + glue_thickness * glue_x0 + steel_thickness * steel_x0 + pcb_thickness * pcb_x0) * factor_length_traversed_particle_perpendicular / 10.0 # / 10 because thickness provided in mm while X0 in 1/cm
 number_of_presampler_cells_crossed = length_presampler_crossed / (cell_size * factor_length_traversed_particle_perpendicular)
-print "One crosses %f presampler cells with pre-sampler length of %f mm (measured parrallely to the readout)"%(number_of_presampler_cells_crossed, presampler_length)
+print "One crosses %f presampler cells with pre-sampler length of %f mm (measured parallely to the readout)"%(number_of_presampler_cells_crossed, presampler_length)
 x0_presampler = x0_presampler_cell * number_of_presampler_cells_crossed
 x0 += x0_presampler
 
@@ -96,6 +96,8 @@ print "After %d layers (excluding presampler), we reach %f X0 (at eta = 0)"%(n_l
 total_calo_thickness = length_presampler_crossed + cell_size * n_layer * factor_length_traversed_particle_perpendicular # mm
 
 print "It corresponds to a calo thickness of %f cm"%(total_calo_thickness / 10.0)
+
+print "Length of the plate parallel to them: %f cm (rectangular triangle approximation)"%((total_calo_thickness / 10.0)/cos(radians(inclination)))
 
 total_calo_thickness_withServices = total_calo_thickness + inner_margin_for_services + outer_margin_for_services + cryostat_thickness_in + cryostat_thickness_out # mm
 

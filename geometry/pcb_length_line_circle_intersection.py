@@ -39,6 +39,6 @@ get_intersection_line_circle(216, 256, 50)
 print "get_intersection_line_circle(216, 217.5, 50)"
 get_intersection_line_circle(216, 217.5, 50)
 
-print "get_intersection_line_circle(216, 217.5, 50)"
+print "get_intersection_line_circle(217.5, 221, 50)"
 get_intersection_line_circle(217.5, 221, 50)
 
