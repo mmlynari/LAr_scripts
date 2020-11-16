@@ -3,13 +3,13 @@ from math import *
 # Compute calo depth to reach 22 X0 and count number of cells w.r.t component thickness and calo radius, all computations done in the inner radius
 #FIXME refine the projection on circle
 
-# X0 units are in cm from PDG, I use 1/X0 assuming it mention what thickness of material corresponds to 1 X0
+# X0 units are in cm from PDG, I use 1/X0 for calculus convenience
 # (units 1/cm)
 lar_x0 = 1/14.0
 lead_x0 = 1/0.5612
 W_x0 = 1/0.3504
-absorber_x0 = lead_x0
-#absorber_x0 = W_x0
+#absorber_x0 = lead_x0
+absorber_x0 = W_x0
 glue_x0 = 1/20.209 #LArCaloGlue from geant4 xml dd4hep
 steel_x0 = 1/1.775 # lArCaloSteel from geant4 xml dd4hep
 cryostat_x0 = 1/8.897 # Aluminiium 
@@ -32,6 +32,7 @@ inner_margin_for_services = 10 # mm
 outer_margin_for_services = 50 # mm
 
 inclination = 50 #degrees w.r.t. the radial direction
+#inclination = 80 #degrees w.r.t. the radial direction
 factor_length_traversed_particle_perpendicular = 1/cos(radians(90 - inclination))
 
 print "Gap thickness: %f mm, absorber thickness %f mm, pcb thickness %f mm"%(lar_thickness, glue_thickness + steel_thickness + absorber_thickness, pcb_thickness)
@@ -44,9 +45,9 @@ cells_starting_radius = cryostat_starting_radius + cryostat_thickness_in + inner
 print "Readout cells start at %f mm"%cells_starting_radius
 circumferance = 2 * pi * cells_starting_radius
 cellSize_circle_projection_factor = 1 / cos(radians(inclination))
-cellSize_circle_projection = cell_size * cellSize_circle_projection_factor
+cellSize_circle_projected = cell_size * cellSize_circle_projection_factor
 
-n_cells = circumferance / cellSize_circle_projection
+n_cells = circumferance / cellSize_circle_projected
 
 print "Need %f cells to cover the 2*pi*r in phi"%n_cells
 print "Phi granularity if we read two cells together: %f"%(2*pi/(n_cells/2))
@@ -60,7 +61,11 @@ total_number_of_cell = n_cells_per_module * n_module_rounded
 print "New number of cells: %f"%total_number_of_cell
 new_gap_size_inner = (((circumferance/(total_number_of_cell * cellSize_circle_projection_factor)) - absorber_thickness - pcb_thickness - glue_thickness - steel_thickness))/2.0 #divided by 2 because two gaps
 print "New gap size at inner radius after having rounded the number of cells is %f mm"%new_gap_size_inner
+print 
 lar_thickness = new_gap_size_inner
+
+cell_size = (lar_thickness * 2 + absorber_thickness + glue_thickness + steel_thickness + pcb_thickness) # mm 
+cellSize_circle_projected = cell_size * cellSize_circle_projection_factor
 
 print "------------------------"
 
@@ -95,13 +100,24 @@ print "After %d layers (excluding presampler), we reach %f X0 (at eta = 0)"%(n_l
 
 total_calo_thickness = length_presampler_crossed + cell_size * n_layer * factor_length_traversed_particle_perpendicular # mm
 
-print "It corresponds to a calo thickness of %f cm"%(total_calo_thickness / 10.0)
+print "It corresponds to a sensitive calo thickness of %f cm"%(total_calo_thickness / 10.0)
 
 print "Length of the plate parallel to them: %f cm (rectangular triangle approximation)"%((total_calo_thickness / 10.0)/cos(radians(inclination)))
 
 total_calo_thickness_withServices = total_calo_thickness + inner_margin_for_services + outer_margin_for_services + cryostat_thickness_in + cryostat_thickness_out # mm
 
 print "Including cryostat and services: it corresponds to a calo thickness of %f cm"%(total_calo_thickness_withServices / 10)
+
+# compute gap thickness at the outer radius based on dilution factor from circumference inner, circumference outer
+outer_sensitive_radius = cells_starting_radius + total_calo_thickness
+dilution_factor =  2 * pi * outer_sensitive_radius / circumferance
+gap_size_outer = new_gap_size_inner * dilution_factor
+print "Outer gap thicknes: %f mm"%gap_size_outer
+print "Smallest phi granularity %f degrees if we read the two gaps from one cell with one trace"%(360/float(total_number_of_cell))
+print "Smallest phi granularity %f miliradians if we read the two gaps from one cell with one trace"%(radians(360/float(total_number_of_cell))*1000)
+print "Smallest cell size at inner radius %f mm if we read the two gaps from one cell with one trace"%(circumferance/float(total_number_of_cell))
+print "Moliere radius ~4cm [to be computed precisely]"
+# deriving phi granularity
 
 
 
