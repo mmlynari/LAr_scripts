@@ -1,12 +1,13 @@
 import ROOT
-import os 
+import os, sys
 
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 max_evt = 2000
 #rootfile_name = "fccee_idea_LAr_photongun10GeV_10kevt_nonoise.root"
 rootfile_name = "fccee_idea_LAr_photongun10GeV_500evt_nonoise_withBothClustering.root"
-plot_dir_name = "plot_"+rootfile_name.replace('.root','')
+rootfile_name = sys.argv[1]
+plot_dir_name = "plot_"+os.path.basename(rootfile_name).replace('.root','')
 if not os.path.isdir(plot_dir_name):
   os.mkdir(plot_dir_name)
 f = ROOT.TFile(rootfile_name)
