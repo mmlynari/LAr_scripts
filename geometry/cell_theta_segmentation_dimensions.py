@@ -9,6 +9,7 @@ def get_eta(theta):
     eta = -log(tan(radians(theta/2)))
     return eta
 
+# centimeters
 calo_half_dz = 220
 calo_rMin = 216
 calo_rMax = 256
@@ -52,15 +53,21 @@ for i in range(0, eta_seg.size - 1):
 #print "Number of eta cells: %d * 2"%len(theta_delta)
 #print "--------------------------------------"
 
-calo_half_dz = 220
 calo_rMin = 216
 calo_rMax = 256
-covering_angle = 45 #degrees(atan(calo_half_dz/calo_rMin))
+cryo_stat_thickness_side = 10 #cm
+covering_angle = 45 #degrees(atan(calo_half_dz/calo_rMin)), this is meant to include crystat
+calo_half_dz = calo_rMin * tan(radians(covering_angle)) # including cryostat
+print "Calo inner half width for the covering angle %f and radius %f : %f"%(covering_angle, calo_rMin, calo_half_dz)
+calo_sensitive_half_dz = calo_half_dz - cryo_stat_thickness_side
+covering_angle_sensitive = degrees(atan(calo_sensitive_half_dz/calo_rMin))
+print "Sensitive calo inner half width for the covering angle %f and radius %f : %f which hjas covering angle of %f"%(covering_angle, calo_rMin, calo_sensitive_half_dz, covering_angle_sensitive)
 delta_theta = 0.5625
 print "Delta theta = %f degrees or %f miliradians"%(delta_theta, radians(delta_theta)*1000)
 print "Corresponds to delta eta of %f at eta = 0 (fixed delta eta mean smaller delta theta as we go toward the beam)"%(get_eta(90-delta_theta) - get_eta(90))
 
-theta_seg = arange(0, covering_angle + 2*delta_theta, delta_theta)
+
+theta_seg = arange(0, covering_angle_sensitive + 2*delta_theta, delta_theta)
 print theta_seg
 
 theta_delta = []
@@ -88,7 +95,8 @@ print "\n"
 print "Outer radius widths: ", [round(a, 2) for a in cell_width_outer]
 print "\n"
 #Derive angle covering based on calo length
-covering_angle = degrees(atan(calo_half_dz/calo_rMin))
+#covering_angle = degrees(atan(calo_half_dz/calo_rMin))
+print "All dimensiopns given below include cryostat side"
 print "For the calo dimension given, covering angle is up to eta ", get_eta(covering_angle)
 print "Covering angle from both sides of radial direction: ", covering_angle
 print "We cover from %f to %f theta degrees"%(90-covering_angle, 90+covering_angle)
