@@ -59,6 +59,17 @@ source %s/setup.sh
 
 
 if __name__ == "__main__":
+    # make sure you put the energies in ascending order to have an optimal job splitting
+    energies = [300, 1000, 10000, 50000] # in MeV
+    #energies = [300, 10000] # in MeV
+    thetas = [90, 70, 50] # degrees, will transform to radians later
+    energies_using_other_thetas = [1000, 10000, 50000] # may not be interested in having all the theta points for all the energies
+    pdgid = 22
+    original_n_jobs = 2
+    total_evt_to_generate = 50000
+    calibration = False
+    gaudi_config_path = "%s/runCaloSim.py"%os.environ.get("PWD", "") # provide only if not calibration
+    
     storage_path = sys.argv[1]
     calibration_campaign_name = sys.argv[2] #'20201118_condor_calib_5kEvt' #sys.argv[1]
     if not os.path.isdir(calibration_campaign_name):
@@ -67,17 +78,12 @@ if __name__ == "__main__":
     if not os.path.isdir(outfile_storage):
         os.mkdir(outfile_storage)
 
-    command_template = """fccrun %s/fcc_ee_samplingFraction_inclinedEcal.py -n EVT --MomentumMin PMIN --MomentumMax PMAX --ThetaMin THETAMINRADIAN --ThetaMax THETAMAXRADIAN --PdgCodes PDGID --Output "rec DATAFILE='OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root' TYP='ROOT' OPT='RECREATE'" --filename OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root"""%(os.environ.get("PWD", ""))
+    if calibration:
+        command_template = """fccrun %s/fcc_ee_samplingFraction_inclinedEcal.py -n EVT --MomentumMin PMIN --MomentumMax PMAX --ThetaMin THETAMINRADIAN --ThetaMax THETAMAXRADIAN --PdgCodes PDGID --Output "rec DATAFILE='OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root' TYP='ROOT' OPT='RECREATE'" --filename OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root"""%(os.environ.get("PWD", ""))
+    else:
+        command_template = """fccrun %s -n EVT --MomentumMin PMIN --MomentumMax PMAX --ThetaMin THETAMINRADIAN --ThetaMax THETAMAXRADIAN --PdgCodes PDGID --filename OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root"""%(gaudi_config_path)
     exec_filename_template = os.path.join(calibration_campaign_name, "exec_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_evt_EVT_jobid_JOBID.sh")
 
-    # make sure you put the energies in ascending order to have an optimal job splitting
-    energies = [300, 1000, 10000, 50000, 100000] # in MeV
-    #energies = [300, 10000] # in MeV
-    thetas = [90, 70, 50] # degrees, will transform to radians later
-    energies_using_other_thetas = [1000, 10000, 50000] # may not be interested in having all the theta points for all the energies
-    pdgid = 22
-    original_n_jobs = 1
-    total_evt_to_generate = 5000
 
     total_n_job = 0
     hadd_commands = ""
@@ -90,6 +96,8 @@ if __name__ == "__main__":
         else:
             n_jobs = original_n_jobs
         evt_per_job = int(round(total_evt_to_generate/n_jobs))
+        if evt_per_job == 0:
+            evt_per_job = 1
 
         if energy in energies_using_other_thetas:
             thetas_for_loop = thetas
@@ -101,7 +109,10 @@ if __name__ == "__main__":
             theta_max = theta
             job_idx = 0
             evt_already_launched = 0
-            while evt_already_launched < total_evt_to_generate - evt_per_job:
+            if total_evt_to_generate - evt_per_job < 0:
+                print "Careful, total_evt_to_generate is smaler than evt_per_job"
+                evt_per_job = total_evt_to_generate
+            while evt_already_launched <= total_evt_to_generate - evt_per_job:
                 command = command_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx))
                 exec_filename = exec_filename_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy)).replace('PMAX', str(energy)).replace('THETAMIN', str(theta)).replace('THETAMAX', str(theta)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
                 with open(exec_filename, "w") as f:
@@ -114,7 +125,7 @@ if __name__ == "__main__":
                 total_n_job += 1
 
             evt_last_job = total_evt_to_generate - evt_already_launched
-            if evt_last_job >= 0:
+            if evt_last_job > 0:
                 command = command_template.replace('EVT', str(evt_last_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx))
                 exec_filename = exec_filename_template.replace('EVT', str(evt_last_job)).replace('PMIN', str(energy)).replace('PMAX', str(energy)).replace('THETAMIN', str(theta)).replace('THETAMAX', str(theta)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
                 with open(exec_filename, "w") as f:
@@ -125,9 +136,12 @@ if __name__ == "__main__":
                 job_idx += 1
                 total_n_job += 1
 
-            hadd_commands += "rm OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
-            hadd_commands += "hadd OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
-            hadd_commands += "#rm OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+            if calibration:
+                hadd_commands += "rm OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+                hadd_commands += "hadd OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+                hadd_commands += "#rm OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+            else:
+                hadd_commands += "hadd  OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
 
     # write the hadd script
     hadd_script_path = os.path.join(calibration_campaign_name, "hadd.sh")

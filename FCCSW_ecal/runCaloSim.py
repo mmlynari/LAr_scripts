@@ -7,7 +7,7 @@ momentum = 10
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
 thetaMin = 80.
 thetaMax = 100.
-magneticField = False
+magneticField = True
 
 from Gaudi.Configuration import *
 
@@ -107,7 +107,7 @@ geantsim = SimG4Alg("SimG4Alg",
 from Configurables import CalibrateInLayersTool
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
                                    # sampling fraction obtained using SamplingFractionInLayers from DetStudies package
-                                   samplingFraction =  [0.24833] * 1 + [0.09482] * 1  +  [0.12242] * 1  +  [0.14182] * 1  +  [0.15667] * 1  +  [0.16923] * 1  +  [0.17980] * 1  +  [0.20085] * 1,
+                                   samplingFraction =  [0.303915364349] * 1 + [0.11249787216] * 1 + [0.136282995949] * 1 + [0.151751316217] * 1 + [0.16332172222] * 1 + [0.172571692265] * 1 + [0.180285193045] * 1 + [0.186437964574] * 1 + [0.192249568078] * 1 + [0.197260798603] * 1 + [0.202184330401] * 1 + [0.226140654131] * 1,
                                    readoutName = ecalBarrelReadoutName,
                                    layerFieldName = "layer")
 
@@ -187,9 +187,15 @@ createEcalBarrelCells.AuditExecute = True
 createHcalBarrelCells.AuditExecute = True
 out.AuditExecute = True
 
+from Configurables import EventCounter
+event_counter = EventCounter('event_counter')
+event_counter.Frequency = 100
+
 from Configurables import ApplicationMgr
 ApplicationMgr(
-    TopAlg = [genalg_pgun,
+    TopAlg = [
+              event_counter,
+              genalg_pgun,
               hepmc_converter,
               geantsim,
               createEcalBarrelCellsStep1,
