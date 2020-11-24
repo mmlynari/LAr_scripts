@@ -101,7 +101,7 @@ def draw_text(lines, coordinates = [0.1,0.8,0.5,0.9], colour = 36, border = 1):
    text.SetTextFont(62)
    for line in lines:
       text.AddText("#color["+str(colour)+"]{"+line+"}")
-      print(line)
+      #print(line)
       text.Draw()
       ROOT.SetOwnership(text,False)
    return text
@@ -198,8 +198,8 @@ def prepare_double_canvas(name, title, factor = 1):
 def prepare_divided_canvas(name, title, N):
    c = TCanvas(name, title, 1200*3, 900*3)
    c.Divide(int(ceil(sqrt(N))), int(ceil(N / ceil(sqrt(N)))))
-   print("=====> Dividing canvas into : ",N, sqrt(N),ceil(sqrt(N)), N / ceil(sqrt(N)), ceil(N / ceil(sqrt(N))))
-   print("=====> Dividing canvas into : ",ceil(sqrt(N)), ceil(N / ceil(sqrt(N))) )
+   #print("=====> Dividing canvas into : ",N, sqrt(N),ceil(sqrt(N)), N / ceil(sqrt(N)), ceil(N / ceil(sqrt(N))))
+   #print("=====> Dividing canvas into : ",ceil(sqrt(N)), ceil(N / ceil(sqrt(N))) )
    for ipad in range(1, N+1):
       pad = c.cd(ipad)
       pad.SetTopMargin(0.01)

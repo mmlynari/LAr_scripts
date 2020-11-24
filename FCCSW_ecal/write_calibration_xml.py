@@ -43,3 +43,4 @@ print "Number of layers: %d"%numberOfLayer
 
 print "sed -i 's/numLayers.*,/numLayers = %d,/' fcc_ee_samplingFraction_inclinedEcal.py"%numberOfLayer
 os.system("sed -i 's/numLayers.*,/numLayers = %d,/' fcc_ee_samplingFraction_inclinedEcal.py"%numberOfLayer)
+sys.exit(numberOfLayer)

@@ -1,7 +1,7 @@
 import calo_init
 
-#python plot_samplingFraction.py /eos/user/b/brfranco/rootfile_storage/202011_condor_calib_5kEvt/calibration_output_pdgID_22_pMin_?_pMax_?_thetaMin_90_thetaMax_90.root 10 50 -r 10000 50000 --totalNumLayers 12 --preview -outputfolder plots_sampling_fraction_201124
-#python plot_samplingFraction.py /eos/user/b/brfranco/rootfile_storage/202011_condor_calib_5kEvt/calibration_output_pdgID_22_pMin_50000_pMax_50000_thetaMin_?_thetaMax_?.root 50 70 90 -r 50 70 90 --totalNumLayers 12 --preview -outputfolder plots_sampling_fraction_theta_50GeV --theta
+#python plot_samplingFraction.py /eos/user/b/brfranco/rootfile_storage/202011_condor_calib_5kEvt/calibration_output_pdgID_22_pMin_?_pMax_?_thetaMin_90_thetaMax_90.root 1 10 50 100 -r 1000 10000 50000 100000 --totalNumLayers 12 --preview -outputfolder plots_sampling_fraction_201124 --plotSFvsEnergy
+#python plot_samplingFraction.py /eos/user/b/brfranco/rootfile_storage/202011_condor_calib_5kEvt/calibration_output_pdgID_22_pMin_50000_pMax_50000_thetaMin_?_thetaMax_?.root 50 70 90 -r 50 70 90 --totalNumLayers 12 --preview -outputfolder plots_sampling_fraction_theta_50GeV --plotSFvsEnergy --theta
 calo_init.add_defaults()
 calo_init.parser.add_argument("--merge", help="merge layers", default = [1] * 12, type = int, nargs='+') # bin 0 is empty! (before calo)
 calo_init.parser.add_argument("-t","--title", default="Sampling fraction", help="Graph title", type=str)
@@ -9,14 +9,15 @@ calo_init.parser.add_argument("-n","--histogramName", default="ecal_sf_layer", h
 calo_init.parser.add_argument("--histogramNameMean", default="ecal_sf", help="Name of the histogram with sampling fraction (sufixed with number of layer)", type = str)
 calo_init.parser.add_argument("-max","--axisMax", help="Maximum of the axis", type = float)
 calo_init.parser.add_argument("-min","--axisMin", help="Minimum of the axis", type = float)
-calo_init.parser.add_argument("-outputfolder",default="plots_sampling_fraction", help="Minimum of the axis", type = str)
-calo_init.parser.add_argument("--totalNumLayers", default = 8, help="Total number of the layers used in simulation", type = int)
+calo_init.parser.add_argument("-outputfolder",default="plots_sampling_fraction", help="Name of the output foler for the plots", type = str)
+calo_init.parser.add_argument("--totalNumLayers", default = 12, help="Total number of the layers used in simulation", type = int)
 calo_init.parser.add_argument("--numFirstLayer", default = 0, help="ID of first layer used in histograms name", type = int)
 calo_init.parser.add_argument("--layerWidth", default = [1.5] + [3.5] * 11 , nargs='+', help="Width of the layers (cm). One value for identical widths of each layer.", type = float)
 calo_init.parser.add_argument("--X0density", default = 0.422, help="Xo density of a current detector (X0/cm)", type = float)
 calo_init.parser.add_argument("--roundBrackets", help="Use round brackets for unit", action = 'store_true')
 calo_init.parser.add_argument("--preview", help="Plot preview of fits", action = 'store_true')
-calo_init.parser.add_argument("--theta", help="Plot as a function of theta", action = 'store_true')
+calo_init.parser.add_argument("--plotSFvsEnergy", help="Plot sf as a function of energy", action = 'store_true')
+calo_init.parser.add_argument("--theta", help="Plot sf as a function of theta instead of energy, plotSFvsEnergy must also be set to true", action = 'store_true')
 calo_init.parser.add_argument("--specialLabel", help="Additional label to be plotted", type=str, default = "")
 calo_init.parse_args()
 calo_init.print_config()
@@ -31,6 +32,7 @@ from math import sqrt, ceil, floor
 import os
 
 #gStyle.SetImageScaling(3.)
+#gStyle.SetOptFit(1111) # fi you want all fiut info on the poreview canvas
 gROOT.SetBatch(kTRUE)
 
 if not os.path.isdir(calo_init.args.outputfolder):
@@ -81,7 +83,6 @@ for ifile, filename in enumerate(calo_init.filenamesIn):
     for islice in range(startIndex, Nslices + startIndex):
         h = TH1F() 
         h = f.Get(histName+str(islice))
-        print h.GetTitle()
         # if first hist to be merged
         lastIm = -1
         if islice - startIndex in merge:
@@ -100,15 +101,9 @@ for ifile, filename in enumerate(calo_init.filenamesIn):
         fitPre = TF1("fitPre","gaus", h.GetMean() - 1. * h.GetRMS(), h.GetMean() + 1. * h.GetRMS())
         #h.Rebin(10)
         resultPre = h.Fit(fitPre, fitoptions)
-        badfit = False
-        #if resultPre.Get().Parameter(1) + 2. * resultPre.Get().Parameter(2) < 0: #h.GetXaxis().GetBinLowEdge(1):
-        #    badfit = True
-        #    fit = fitPre
-        #else:
-        #    fit = TF1("fit","gaus",resultPre.Get().Parameter(1) - 2. * resultPre.Get().Parameter(2), resultPre.Get().Parameter(1) + 2. * resultPre.Get().Parameter(2) )
         fit = TF1("fit","gaus",resultPre.Get().Parameter(1) - 2. * resultPre.Get().Parameter(2), resultPre.Get().Parameter(1) + 2. * resultPre.Get().Parameter(2) )
         result = h.Fit(fit, fitoptions)
-        if result and result.Ndf() > 0 and not badfit:
+        if result and result.Ndf() > 0:
             # if it fits terribly, try to fit in narrower range
             if result.Chi2() / result.Ndf() > 10:
                 print "Bad fit chi2 %f"%(result.Chi2() / result.Ndf())
@@ -117,27 +112,22 @@ for ifile, filename in enumerate(calo_init.filenamesIn):
                 print "New fit chi2 %f"%(result.Chi2() / result.Ndf())
         # make graph
         if result:
-            #if islice < len(merge) - 1:
             gSF.SetPoint(islice, sliceSum[islice]-sliceWidth[islice] * 0.5, result.Get().Parameter(1))
             gSF.SetPointError(islice, sliceWidth[islice] * 0.5 , result.Get().Parameter(2))
-            #gSF.SetPoint(islice, (merge[islice] + 0.5 * (merge[islice + 1] - merge[islice])) * sliceWidth, result.Get().Parameter(1))
-            #gSF.SetPointError(islice, 0.5 * (merge[islice + 1] - merge[islice]) * sliceWidth , result.Get().Parameter(2))
+            #if islice < len(merge) - 1:
+            #   gSF.SetPoint(islice, (merge[islice] + 0.5 * (merge[islice + 1] - merge[islice])) * sliceWidth, result.Get().Parameter(1))
+            #   gSF.SetPointError(islice, 0.5 * (merge[islice + 1] - merge[islice]) * sliceWidth , result.Get().Parameter(2))
             #else:
             #    gSF.SetPoint(islice, (merge[islice] + 0.5 * (merge[islice] - merge[islice - 1])) * sliceWidth, result.Get().Parameter(1))
             #    gSF.SetPointError(islice, 0.5 * (merge[islice] - merge[islice - 1]) * sliceWidth , result.Get().Parameter(2))
             dict_layer_sfVSenergyGraph[islice].SetPoint(ifile, energy, result.Get().Parameter(1))
             dict_layer_sfVSenergyGraph[islice].SetPointError(ifile, 0, result.Get().Parameter(2))
-        if calo_init.args.preview:
+        if calo_init.args.preview: # draw both singla canvas and one big divided canvas (later is buggy at the moment)
             tmp_canvas = prepare_single_canvas("energy_%s_"%(energy) + h.GetTitle().replace(" ", "_"), "energy_%s_"%(energy) + h.GetTitle().replace(" ", "_"))
             draw_1histogram(h,"","")
             tmp_canvas.SaveAs(os.path.join(calo_init.args.outputfolder, "preview_" + tmp_canvas.GetTitle() + ".png" ))
-            #print h.GetTitle()
-            #print islice
-            print cPreview.cd(islice+1)
+            cPreview.cd(islice+1)
             draw_1histogram(h,"","")
-            #cPreview.cd()
-            #print h.GetTitle()
-            #print islice
     if calo_init.args.preview:
         cPreview.SaveAs(os.path.join(calo_init.args.outputfolder, "preview_sampling_fraction_energy_%d.png"%energy))
     prepare_graph(gSF, 'sf_'+str(len(merge))+'layers', ';radial depth [cm];sampling fraction', ifile+9)
@@ -150,6 +140,7 @@ for ifile, filename in enumerate(calo_init.filenamesIn):
         string_for_fccsw += "["+str(gSF.GetY()[islice])+"] * "+str(calo_init.args.merge[islice])
     print "Sampling fraction for energy %d: "%energy
     print string_for_fccsw
+    os.environ['SAMPLING_FRACTION'] = string_for_fccsw #to allow automatization of the sampling fraction replacement in FCCSW configs
 
 
 canv = prepare_single_canvas('sf_e'+str(energy)+'GeV', 'Sampling fraction for '+str(energy)+'GeV')
@@ -182,45 +173,38 @@ if calo_init.args.specialLabel:
 canv.Update()
 
 # Draw sf vs energy graph
-for islice in range(startIndex, Nslices + startIndex):
-    #linear_function = TF1("fa", "[0] * x + [1])", 0, 100);
-    #linear_function.SetParameter(0, 0);
-    #linear_function.SetParameter(1, 0.2);
-    #fit = dict_layer_sfVSenergyGraph[islice].Fit(linear_function)
-    dict_layer_sfVSenergyGraph[islice].GetXaxis().SetRangeUser(calo_init.energy(0) -10, calo_init.energy(-1) + calo_init.energy(-1)/10.0)
-    if calo_init.args.theta:
-        x_axis_label = "#Theta angle [degrees]"
-        graph_title = "Sampling fraction versus polar angle: layer %d"%islice
-    else:
-        x_axis_label = "Energy [GeV]"
-        graph_title = "Sampling fraction versus energy: layer %d"%islice
-    dict_layer_sfVSenergyGraph[islice].GetXaxis().SetTitle(x_axis_label)
-    dict_layer_sfVSenergyGraph[islice].GetYaxis().SetTitle("Sampling fraction")
-    dict_layer_sfVSenergyGraph[islice].GetYaxis().SetRangeUser(0, 0.42)
-    prepare_graph(dict_layer_sfVSenergyGraph[islice], 'sf_vs_energy_layer%d'%islice, graph_title)
-    #canvas = TCanvas('sf_vs_energy_layer%d'%islice, 'sf_vs_energy_layer%d'%islice)
-    canvas = prepare_single_canvas('sf_vs_energy_layer%d'%islice, 'sf_vs_energy_layer%d'%islice)
-    canvas.SetTicky(1)
-    dict_layer_sfVSenergyGraph[islice].Draw('ape')
-    # fit the graph
-    #print "Fit the sf vs energy"
-    fit = dict_layer_sfVSenergyGraph[islice].Fit('pol1', 'SQ', "", 0, calo_init.energy(-1) + 0.1 * calo_init.energy(-1))
-    #print "Fitted the sf vs energy", y = ax + b
-    b = fit.Parameter(0)
-    print b
-    a = fit.Parameter(1)
-    print a
-    legend = TLegend(0.23, 0.2, 0.52, 0.35)
-    legend.SetBorderSize(0)
-    legend.SetFillStyle(0)
-    legend.AddEntry(nullptr,  'y = ax + b', "")
-    legend.AddEntry(nullptr,  'a = ' + str(round(a, 6)), "")
-    legend.AddEntry(nullptr,  'b = ' + str(round(b, 4)), "")
-    legend.Draw()
-    layer_for_file_name = str(islice)
-    if islice < 10:
-        layer_for_file_name = '0'+str(islice)
-    canvas.Print(os.path.join(calo_init.args.outputfolder,"sampling_fraction_vs_energy_layer%s.png"%layer_for_file_name))
+if calo_init.args.plotSFvsEnergy:
+    for islice in range(startIndex, Nslices + startIndex):
+        dict_layer_sfVSenergyGraph[islice].GetXaxis().SetRangeUser(calo_init.energy(0) -10, calo_init.energy(-1) + calo_init.energy(-1)/10.0)
+        if calo_init.args.theta:
+            x_axis_label = "#Theta angle [degrees]"
+            graph_title = "Sampling fraction versus polar angle: layer %d"%islice
+        else:
+            x_axis_label = "Energy [GeV]"
+            graph_title = "Sampling fraction versus energy: layer %d"%islice
+        dict_layer_sfVSenergyGraph[islice].GetXaxis().SetTitle(x_axis_label)
+        dict_layer_sfVSenergyGraph[islice].GetYaxis().SetTitle("Sampling fraction")
+        dict_layer_sfVSenergyGraph[islice].GetYaxis().SetRangeUser(0, 0.42)
+        prepare_graph(dict_layer_sfVSenergyGraph[islice], 'sf_vs_energy_layer%d'%islice, graph_title)
+        #canvas = TCanvas('sf_vs_energy_layer%d'%islice, 'sf_vs_energy_layer%d'%islice)
+        canvas = prepare_single_canvas('sf_vs_energy_layer%d'%islice, 'sf_vs_energy_layer%d'%islice)
+        canvas.SetTicky(1)
+        dict_layer_sfVSenergyGraph[islice].Draw('ape')
+        # fit the graph
+        fit = dict_layer_sfVSenergyGraph[islice].Fit('pol1', 'SQ', "", 0, calo_init.energy(-1) + 0.1 * calo_init.energy(-1))
+        b = fit.Parameter(0)
+        a = fit.Parameter(1)
+        legend = TLegend(0.23, 0.2, 0.52, 0.35)
+        legend.SetBorderSize(0)
+        legend.SetFillStyle(0)
+        legend.AddEntry(nullptr,  'y = ax + b', "")
+        legend.AddEntry(nullptr,  'a = ' + str(round(a, 6)), "")
+        legend.AddEntry(nullptr,  'b = ' + str(round(b, 4)), "")
+        legend.Draw()
+        layer_for_file_name = str(islice)
+        if islice < 10:
+            layer_for_file_name = '0'+str(islice)
+        canvas.Print(os.path.join(calo_init.args.outputfolder,"sampling_fraction_vs_energy_layer%s.png"%layer_for_file_name))
 
 # Save canvas and root file with graph, const term and sampling term
 if calo_init.output(0):
@@ -248,11 +232,5 @@ for islice in range(0, Nslicesmerged):
         t.Fill()
 plots.Write()
 plots.Close()
-
-print("============================================================")
-print("== to be used in FCCSW, with CalibrateInLayers algorithm: ==")
-print("============================================================")
-print string_for_fccsw
-print("============================================================")
 
 #raw_input("Press ENTER to exit")
