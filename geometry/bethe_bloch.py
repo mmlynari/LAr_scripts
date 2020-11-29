@@ -25,7 +25,7 @@ def get_gev_from_joule(joule):
     return joule / 1.6e-10
 
 # projectile properties
-initial_energy = get_joule_from_gev(10) #1 GeV in J
+initial_energy = get_joule_from_gev(1) #1 GeV in J
 m0   = 1.88e-28                   #mass of projectile (muon) in kg
 Z1   = 1                    #electric charge of projectile
 # material properties
@@ -36,7 +36,7 @@ rho = 1396*1000 # g/m^3
 Mu = 1.0 # constante de masse molaire g/mol
 ne   = na * Z * rho / (A * Mu)  # electron density in 1/m^3
 print "Electron density, ", ne, " (water is 3.34e29)"
-length_traversed_per_gap = 1.618377e-3 # mm 
+length_traversed_per_gap = 1.618377 # mm 
 n_gap_per_cell = 4
 
 Ekin = initial_energy
@@ -52,7 +52,7 @@ def v_of_Ekin_m0(Ekin, m0): #invert kinetic energy, E_kin, for speed, v.
     b2 = 1.-1./(1.+Ekin/m0/c/c)**2
     return sqrt(b2)*c
 
-def dEdx(Z1,Ekin,m0,EB,ne): #Bethe-Bloch equation
+def dEdx(Z1,Ekin,m0,EB,ne): #Bethe-Bloch equation in Joule/m
     v = v_of_Ekin_m0(Ekin, m0)
     b2 = beta(v)**2
     C = Z1**2*qe**4/4/pi/eps0**2/me
@@ -63,23 +63,27 @@ def dEdx(Z1,Ekin,m0,EB,ne): #Bethe-Bloch equation
 #Energy loss in first layer
 print str(dEdx(1,Ekin,m0,EB,ne)/(qe*1.e9)) + ' in MeV/mm'
 
-xMax = 1.618377e-3 # mm 
+xMax = length_traversed_per_gap # mm 
 #initialize position, energy loss, and dx
 x=0         #position in mm
 dE = 0.     #energy loss
-dx = 1.e-4  #0.1mm
+dx = 0.01  # mm
 #bbf = open('bb_in_water.dat','w')
+n_step = 0
 while x < xMax :
     string = str(x) + ', ' + str(Ekin/(qe*1e6)) + ', ' + str(dE/(qe*1.e9)/dx) + '\n'
     #print x, Ekin/(qe*1e6), dE/(qe*1.e9)/dx
     #print string
     #bbf.write(string)
-    dE = dEdx(Z1,Ekin,m0,EB,ne)*dx     #units J/m*dx
+    dE = dEdx(Z1,Ekin,m0,EB,ne)*dx*1e-3    #units J/m*dx e-3 because dx is given in mm
     x = x+dx
     Ekin = Ekin - dE
+    n_step += 1
+
 
 #bbf.close()
-
+print "Derived in %d steps, over a total length of %f mm (asked for %f mm)"%(n_step, x, xMax)
 print "Final energy: %f GeV"%get_gev_from_joule(Ekin)
 print "Energy lost per gap: %f MeV"%(1000*get_gev_from_joule(initial_energy - Ekin))
 print "Energy lost per cell: %f MeV"%(1000*get_gev_from_joule(initial_energy - Ekin)*4)
+print "This is wosrt case scenario as it considers particle at 90 degree (do not cross a lot of material) and only the inner gap (it gets wider)"
