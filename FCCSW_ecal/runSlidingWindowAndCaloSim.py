@@ -2,6 +2,8 @@ import os
 
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
+use_pythia = True
+
 # Input for simulations (momentum is expected in GeV!)
 momentum = 1
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
@@ -19,27 +21,35 @@ podioevent  = FCCDataSvc("EventDataSvc")
 ################## Particle gun setup
 _pi = 3.14159
 
-from Configurables import  MomentumRangeParticleGun
-pgun = MomentumRangeParticleGun("ParticleGun_Electron")
-pgun.PdgCodes = [11] # electron
-#pgun.PdgCodes = [13] # muon
-pgun.MomentumMin = momentum * GeV
-pgun.MomentumMax = momentum * GeV
-pgun.PhiMin = 0
-pgun.PhiMax = 2 * _pi
-pgun.ThetaMin = thetaMin * _pi / 180.
-pgun.ThetaMax = thetaMax * _pi / 180.
-
 from Configurables import GenAlg
-genalg_pgun = GenAlg()
-genalg_pgun.SignalProvider = pgun 
-genalg_pgun.hepmc.Path = "hepmc"
+genAlg = GenAlg()
+if use_pythia:
+    from Configurables import PythiaInterface
+    pythia8gentool = PythiaInterface()
+    pythia8gentool.Filename = "MCGeneration/ee_Z_ee.cmd"
+    genAlg.SignalProvider = pythia8gentool
+else:
+    from Configurables import  MomentumRangeParticleGun
+    pgun = MomentumRangeParticleGun("ParticleGun_Electron")
+    pgun.PdgCodes = [11] # electron
+    #pgun.PdgCodes = [13] # muon
+    pgun.MomentumMin = momentum * GeV
+    pgun.MomentumMax = momentum * GeV
+    pgun.PhiMin = 0
+    pgun.PhiMax = 2 * _pi
+    pgun.ThetaMin = thetaMin * _pi / 180.
+    pgun.ThetaMax = thetaMax * _pi / 180.
+    genAlg.SignalProvider = pgun
+
+genAlg.hepmc.Path = "hepmc"
 
 from Configurables import HepMCToEDMConverter
 hepmc_converter = HepMCToEDMConverter()
 hepmc_converter.hepmc.Path="hepmc"
-hepmc_converter.genparticles.Path="GenParticles"
-hepmc_converter.genvertices.Path="GenVertices"
+genParticlesOutputName = "genParticles"
+genVerticesOutputName = "genVertices"
+hepmc_converter.genparticles.Path = genParticlesOutputName
+hepmc_converter.genvertices.Path = genVerticesOutputName
 
 ################## Simulation setup
 # Detector geometry
@@ -99,7 +109,7 @@ savehcaltool.caloHits.Path = "HCalBarrelHits"
 # next, create the G4 algorithm, giving the list of names of tools ("XX/YY")
 from Configurables import SimG4PrimariesFromEdmTool
 particle_converter = SimG4PrimariesFromEdmTool("EdmConverter")
-particle_converter.genParticles.Path = "GenParticles"
+particle_converter.genParticles.Path = genParticlesOutputName
 
 from Configurables import SimG4Alg
 geantsim = SimG4Alg("SimG4Alg",
@@ -161,10 +171,10 @@ createEcalBarrelCells = CreateCaloCells("CreateECalBarrelCells",
 
 # Ecal barrel cell positions (good for physics, all coordinates set properly)
 from Configurables import CellPositionsECalBarrelTool
-cellPositionEcalBarrelTool = CellPositionsECalBarrelTool("CellPositionsECalBarrel", readoutName = ecalBarrelReadoutNamePhiTheta, OutputLevel = DEBUG)
+cellPositionEcalBarrelTool = CellPositionsECalBarrelTool("CellPositionsECalBarrel", readoutName = ecalBarrelReadoutNamePhiTheta, OutputLevel = INFO)
 
 from Configurables import CreateCaloCellPositions
-createEcalBarrelPositionedCells = CreateCaloCellPositions("ECalBarrelPositionedCells", OutputLevel = DEBUG)
+createEcalBarrelPositionedCells = CreateCaloCellPositions("ECalBarrelPositionedCells", OutputLevel = INFO)
 createEcalBarrelPositionedCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCells.hits.Path = "ECalBarrelCells"
 createEcalBarrelPositionedCells.positionedHits.Path = "ECalBarrelPositionedCells"
@@ -228,25 +238,25 @@ createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
                                                  OutputLevel = INFO
                                                  )
 createClusters.clusters.Path = "CaloClusters"
+createClusters.clusterCells.Path = "CaloClusterCells"
 
 ################ Output
 from Configurables import PodioOutput
 out = PodioOutput("out",
                   OutputLevel=INFO)
-#Save information about generated particles & calorimeter cells, drop G4 hits and the intermediate steps 
-#out.outputCommands = ["drop *", "keep ECalBarrelCells", "keep HCalBarrelCells", "keep GenParticles","keep GenVertices"]
-#Save all
-out.outputCommands = ["keep *"]
+
+#out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop emptyCaloCells"]
+out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop ECalBarrelPositions", "drop emptyCaloCells"]
 
 import uuid
-out.filename = "output_fullCalo_SimAndDigi_withCluster_noMagneticField_"+str(momentum)+"GeV.root"
+out.filename = "output_fullCalo_SimAndDigi_withCluster_noMagneticField_"+str(momentum)+"GeV"+"_pythia"+str(use_pythia)+".root"
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
 chra = ChronoAuditor()
 audsvc = AuditorSvc()
 audsvc.Auditors = [chra]
-genalg_pgun.AuditExecute = True
+genAlg.AuditExecute = True
 hepmc_converter.AuditExecute = True
 geantsim.AuditExecute = True
 createEcalBarrelCellsStep1.AuditExecute = True
@@ -264,7 +274,7 @@ from Configurables import ApplicationMgr
 ApplicationMgr(
     TopAlg = [
               event_counter,
-              genalg_pgun,
+              genAlg,
               hepmc_converter,
               geantsim,
               createEcalBarrelCellsStep1,
