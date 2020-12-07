@@ -2,14 +2,24 @@ import os
 
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
+################## Pythia
+## Pythia generator
+from Configurables import PythiaInterface
+pythia8gentool = PythiaInterface()
+pythia8gentool.Filename = "MCGeneration/ee_Z_ee.cmd"
+
+
+## Write the HepMC::GenEvent to the data service
+from Configurables import GenAlg
+pythia8gen = GenAlg()
+pythia8gen.SignalProvider = pythia8gentool
+pythia8gen.hepmc.Path = "hepmc"
+
 # Input for simulations (momentum is expected in GeV!)
-momentum = 1
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
-#thetaMin = 45.
-thetaMin = 90.
-#thetaMax = 135.
-thetaMax = 90.
-magneticField = True
+#thetaMin = 90.
+#thetaMax = 90.
+magneticField = False
 
 from Gaudi.Configuration import *
 
@@ -19,27 +29,16 @@ podioevent  = FCCDataSvc("EventDataSvc")
 ################## Particle gun setup
 _pi = 3.14159
 
-from Configurables import  MomentumRangeParticleGun
-pgun = MomentumRangeParticleGun("ParticleGun_Electron")
-#pgun.PdgCodes = [11] # electron
-pgun.PdgCodes = [13] # muon
-pgun.MomentumMin = momentum * GeV
-pgun.MomentumMax = momentum * GeV
-pgun.PhiMin = 0
-pgun.PhiMax = 2 * _pi
-pgun.ThetaMin = thetaMin * _pi / 180.
-pgun.ThetaMax = thetaMax * _pi / 180.
+genParticlesOutputName = "genParticles"
+genVerticesOutputName = "genVertices"
 
-from Configurables import GenAlg
-genalg_pgun = GenAlg()
-genalg_pgun.SignalProvider = pgun 
-genalg_pgun.hepmc.Path = "hepmc"
 
+### Reads an HepMC::GenEvent from the data service and writes a collection of EDM Particles
 from Configurables import HepMCToEDMConverter
-hepmc_converter = HepMCToEDMConverter()
-hepmc_converter.hepmc.Path="hepmc"
-hepmc_converter.genparticles.Path="GenParticles"
-hepmc_converter.genvertices.Path="GenVertices"
+hepmc_converter = HepMCToEDMConverter("Converter")
+hepmc_converter.hepmc.Path = "hepmc"
+hepmc_converter.genparticles.Path = genParticlesOutputName
+hepmc_converter.genvertices.Path = genVerticesOutputName
 
 ################## Simulation setup
 # Detector geometry
@@ -78,10 +77,10 @@ else:
 
 # Detector readouts
 # ECAL
-ecalBarrelReadoutName = "ECalBarrelTheta"
-ecalBarrelReadoutNamePhiTheta = "ECalBarrelPhiTheta"
-#ecalBarrelReadoutName = "ECalBarrelEta"
-#ecalBarrelReadoutNamePhiTheta = "ECalBarrelPhiEta"
+#ecalBarrelReadoutName = "ECalBarrelTheta"
+#ecalBarrelReadoutNamePhiTheta = "ECalBarrelPhiTheta"
+ecalBarrelReadoutName = "ECalBarrelEta"
+ecalBarrelReadoutNamePhiTheta = "ECalBarrelPhiEta"
 # HCAL
 hcalReadoutName = "HCalBarrelReadout"
 extHcalReadoutName = "HCalExtBarrelReadout"
@@ -92,14 +91,14 @@ saveecalbarreltool = SimG4SaveCalHits("saveECalBarrelHits", readoutNames = [ecal
 saveecalbarreltool.positionedCaloHits.Path = "ECalBarrelPositionedHits"
 saveecalbarreltool.caloHits.Path = "ECalBarrelHits"
 
-savehcaltool = SimG4SaveCalHits("saveHCalBarrelHits",readoutNames = [hcalReadoutName])
+savehcaltool = SimG4SaveCalHits("saveHCalBarrelHits", readoutNames = [hcalReadoutName])
 savehcaltool.positionedCaloHits.Path = "HCalPositionedHits"
 savehcaltool.caloHits.Path = "HCalBarrelHits"
 
 # next, create the G4 algorithm, giving the list of names of tools ("XX/YY")
 from Configurables import SimG4PrimariesFromEdmTool
 particle_converter = SimG4PrimariesFromEdmTool("EdmConverter")
-particle_converter.genParticles.Path = "GenParticles"
+particle_converter.genParticles.Path = genParticlesOutputName
 
 from Configurables import SimG4Alg
 geantsim = SimG4Alg("SimG4Alg",
@@ -150,15 +149,24 @@ resegmentEcalBarrel = RedoSegmentation("ReSegmentationEcal",
                              OutputLevel = INFO,
                              inhits = "ECalBarrelPositions",
                              outhits = "ECalBarrelCellsStep2")
+
+EcalBarrelCellsName = "ECalBarrelCells"
 createEcalBarrelCells = CreateCaloCells("CreateECalBarrelCells",
                                doCellCalibration=False,
                                addCellNoise=False, filterCellNoise=False,
                                OutputLevel=INFO,
                                hits="ECalBarrelCellsStep2",
-                               cells="ECalBarrelCells")
-positionsEcalBarrelStep2 = CreateVolumeCaloPositions("ECalBarrelPositionedCells", OutputLevel = INFO)
-positionsEcalBarrelStep2.hits.Path = "ECalBarrelCells"
-positionsEcalBarrelStep2.positionedHits.Path = "ECalBarrelPositionedCells"
+                               cells=EcalBarrelCellsName)
+
+# Ecal barrel cell positions (good for physics, all coordinates set properly)
+from Configurables import CellPositionsECalBarrelTool
+cellPositionEcalBarrelTool = CellPositionsECalBarrelTool("CellPositionsECalBarrel", readoutName = ecalBarrelReadoutNamePhiTheta, OutputLevel = DEBUG)
+
+from Configurables import CreateCaloCellPositions
+createEcalBarrelPositionedCells = CreateCaloCellPositions("ECalBarrelPositionedCells", OutputLevel = DEBUG)
+createEcalBarrelPositionedCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCells.hits.Path = "ECalBarrelCells"
+createEcalBarrelPositionedCells.positionedHits.Path = "ECalBarrelPositionedCells"
 
 # Create cells in HCal
 # 1. step - merge hits into cells with the default readout
@@ -170,6 +178,55 @@ createHcalBarrelCells = CreateCaloCells("CreateHCaloCells",
                                hits="HCalBarrelHits",
                                cells="HCalBarrelCells")
 
+# sliding window clustering
+#Empty cells for parts of calorimeter not implemented yet
+from Configurables import CreateEmptyCaloCellsCollection
+createemptycells = CreateEmptyCaloCellsCollection("CreateEmptyCaloCells")
+createemptycells.cells.Path = "emptyCaloCells"
+
+from Configurables import CaloTowerTool
+towers = CaloTowerTool("towers",
+                               deltaEtaTower = 0.01, deltaPhiTower = 2*_pi/768.,
+                               ecalBarrelReadoutName = ecalBarrelReadoutNamePhiTheta,
+                               ecalEndcapReadoutName = "",
+                               ecalFwdReadoutName = "",
+                               hcalBarrelReadoutName = "",
+                               hcalExtBarrelReadoutName = "",
+                               hcalEndcapReadoutName = "",
+                               hcalFwdReadoutName = "",
+                               OutputLevel = INFO)
+towers.ecalBarrelCells.Path = EcalBarrelCellsName
+towers.ecalEndcapCells.Path = "emptyCaloCells"
+towers.ecalFwdCells.Path = "emptyCaloCells"
+towers.hcalBarrelCells.Path = "emptyCaloCells"
+towers.hcalExtBarrelCells.Path = "emptyCaloCells"
+towers.hcalEndcapCells.Path = "emptyCaloCells"
+towers.hcalFwdCells.Path = "emptyCaloCells"
+
+# Cluster variables
+windE = 9
+windP = 17
+posE = 5
+posP = 11
+dupE = 7
+dupP = 13
+finE = 9
+finP = 17
+# approx in GeV: changed from default of 12 in FCC-hh
+threshold = 0.5
+
+from Configurables import CreateCaloClustersSlidingWindow
+createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
+                                                 towerTool = towers,
+                                                 nEtaWindow = windE, nPhiWindow = windP,
+                                                 nEtaPosition = posE, nPhiPosition = posP,
+                                                 nEtaDuplicates = dupE, nPhiDuplicates = dupP,
+                                                 nEtaFinal = finE, nPhiFinal = finP,
+                                                 energyThreshold = threshold,
+                                                 attachCells = True,
+                                                 OutputLevel = INFO
+                                                 )
+createClusters.clusters.Path = "CaloClusters"
 
 ################ Output
 from Configurables import PodioOutput
@@ -181,14 +238,15 @@ out = PodioOutput("out",
 out.outputCommands = ["keep *"]
 
 import uuid
-out.filename = "output_fullCalo_SimAndDigi_"+str(momentum)+"GeV_"+uuid.uuid4().hex+".root"
+#out.filename = "output_fullCalo_SimAndDigi_withCluster_noMagneticField_"+str(momentum)+"GeV_"+uuid.uuid4().hex+".root"
+out.filename = "output_fullCalo_SimAndDigi_withCluster_noMagneticField_pythia.root"
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
 chra = ChronoAuditor()
 audsvc = AuditorSvc()
 audsvc.Auditors = [chra]
-genalg_pgun.AuditExecute = True
+pythia8gen.AuditExecute = True
 hepmc_converter.AuditExecute = True
 geantsim.AuditExecute = True
 createEcalBarrelCellsStep1.AuditExecute = True
@@ -206,19 +264,21 @@ from Configurables import ApplicationMgr
 ApplicationMgr(
     TopAlg = [
               event_counter,
-              genalg_pgun,
+              pythia8gen,
               hepmc_converter,
               geantsim,
               createEcalBarrelCellsStep1,
               positionsEcalBarrel,
               resegmentEcalBarrel,
               createEcalBarrelCells,
-              #positionsEcalBarrelStep2,
-              createHcalBarrelCells,
+              createEcalBarrelPositionedCells,
+              #createHcalBarrelCells,
+              createemptycells,
+              createClusters,
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 100,
+    EvtMax   = 10,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )

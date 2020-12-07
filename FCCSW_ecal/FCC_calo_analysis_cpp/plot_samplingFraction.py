@@ -3,21 +3,22 @@ import calo_init
 #python plot_samplingFraction.py /eos/user/b/brfranco/rootfile_storage/202011_condor_calib_5kEvt/calibration_output_pdgID_22_pMin_?_pMax_?_thetaMin_90_thetaMax_90.root 1 10 50 100 -r 1000 10000 50000 100000 --totalNumLayers 12 --preview -outputfolder plots_sampling_fraction_201124 --plotSFvsEnergy
 #python plot_samplingFraction.py /eos/user/b/brfranco/rootfile_storage/202011_condor_calib_5kEvt/calibration_output_pdgID_22_pMin_50000_pMax_50000_thetaMin_?_thetaMax_?.root 50 70 90 -r 50 70 90 --totalNumLayers 12 --preview -outputfolder plots_sampling_fraction_theta_50GeV --plotSFvsEnergy --theta
 calo_init.add_defaults()
-calo_init.parser.add_argument("--merge", help="merge layers", default = [1] * 12, type = int, nargs='+') # bin 0 is empty! (before calo)
+calo_init.parser.add_argument("--merge", help="merge layers", default = [1] * 12, nargs='+') # bin 0 is empty! (before calo)
 calo_init.parser.add_argument("-t","--title", default="Sampling fraction", help="Graph title", type=str)
 calo_init.parser.add_argument("-n","--histogramName", default="ecal_sf_layer", help="Name of the histogram with sampling fraction (postfixed with number of layer)", type = str)
 calo_init.parser.add_argument("--histogramNameMean", default="ecal_sf", help="Name of the histogram with sampling fraction (sufixed with number of layer)", type = str)
 calo_init.parser.add_argument("-max","--axisMax", help="Maximum of the axis", type = float)
 calo_init.parser.add_argument("-min","--axisMin", help="Minimum of the axis", type = float)
 calo_init.parser.add_argument("-outputfolder",default="plots_sampling_fraction", help="Name of the output foler for the plots", type = str)
-calo_init.parser.add_argument("--totalNumLayers", default = 12, help="Total number of the layers used in simulation", type = int)
+calo_init.parser.add_argument("--totalNumLayers", default = 12, type = int)
 calo_init.parser.add_argument("--numFirstLayer", default = 0, help="ID of first layer used in histograms name", type = int)
-calo_init.parser.add_argument("--layerWidth", default = [1.5] + [3.5] * 11 , nargs='+', help="Width of the layers (cm). One value for identical widths of each layer.", type = float)
+calo_init.parser.add_argument("--layerWidth", default = [1.500000] * 1 + [3.500000] * 11 , type = float)
 calo_init.parser.add_argument("--X0density", default = 0.422, help="Xo density of a current detector (X0/cm)", type = float)
 calo_init.parser.add_argument("--roundBrackets", help="Use round brackets for unit", action = 'store_true')
 calo_init.parser.add_argument("--preview", help="Plot preview of fits", action = 'store_true')
 calo_init.parser.add_argument("--plotSFvsEnergy", help="Plot sf as a function of energy", action = 'store_true')
 calo_init.parser.add_argument("--theta", help="Plot sf as a function of theta instead of energy, plotSFvsEnergy must also be set to true", action = 'store_true')
+calo_init.parser.add_argument("--sed", help="Modify the sampling fraction in the FCCSW python configs", action = 'store_true')
 calo_init.parser.add_argument("--specialLabel", help="Additional label to be plotted", type=str, default = "")
 calo_init.parse_args()
 calo_init.print_config()
@@ -140,8 +141,12 @@ for ifile, filename in enumerate(calo_init.filenamesIn):
         string_for_fccsw += "["+str(gSF.GetY()[islice])+"] * "+str(calo_init.args.merge[islice])
     print "Sampling fraction for energy %d: "%energy
     print string_for_fccsw
-    os.environ['SAMPLING_FRACTION'] = string_for_fccsw #to allow automatization of the sampling fraction replacement in FCCSW configs
 
+if calo_init.args.sed:
+    command = "sed -i 's/samplingFraction =.*,/samplingFraction = %s,/' "%string_for_fccsw
+    os.system(command + " run*CaloSim.py") # it has to be launched from FCCSW_ecal folder
+    os.system("sed -i 's/samplingFraction =.*,/samplingFraction = %s,/' fcc_ee_upstreamMaterial_inclinedEcal.py"%string_for_fccsw) # it has to be launched from FCCSW_ecal folder
+    print command + " ../../Reconstruction/RecFCCeeCalorimeter/options/*"
 
 canv = prepare_single_canvas('sf_e'+str(energy)+'GeV', 'Sampling fraction for '+str(energy)+'GeV')
 

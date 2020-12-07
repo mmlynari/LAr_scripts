@@ -41,14 +41,16 @@ hepmc_converter.genvertices.Path="GenVertices"
 from Configurables import GeoSvc
 geoservice = GeoSvc("GeoSvc",
                     OutputLevel = INFO)
-path_to_detector = os.environ.get("FCC_DETECTORS", "")
+
+#path_to_detector = os.environ.get("FCC_DETECTORS", "")
+path_to_detector = os.environ.get("FCCSWBASEDIR", "")
 detectors_to_use=[ 
     'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectEmptyMaster.xml',
     #'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster.xml',
     #'Detector/DetFCCeeECalInclined/compact/original_FCCee_ECalBarrel_calibration.xml',
     'Detector/DetFCCeeECalInclined/compact/FCCee_ECalBarrel_calibration.xml',
     ]
-geoservice.detectors = [os.path.join(path_to_detector, _det) for _det in detectors_to_use]
+geoservice.detectors = [os.path.join(path_to_detector, "..", _det) for _det in detectors_to_use]
 
 # Geant4 service
 # Configures the Geant simulation: geometry, physics list and user actions
@@ -105,9 +107,13 @@ out = PodioOutput("out",OutputLevel=INFO)
 out.outputCommands = ["keep *"]
 out.filename = "fccee_samplingFraction_inclinedEcal.root"
 
+from Configurables import EventCounter
+event_counter = EventCounter('event_counter')
+event_counter.Frequency = 10
+
 # ApplicationMgr
 from Configurables import ApplicationMgr
-ApplicationMgr( TopAlg = [genalg_pgun, hepmc_converter, geantsim, hist, out],
+ApplicationMgr( TopAlg = [event_counter, genalg_pgun, hepmc_converter, geantsim, hist, out],
                 EvtSel = 'NONE',
                 EvtMax = 10,
                 # order is important, as GeoSvc is needed by G4SimSvc
