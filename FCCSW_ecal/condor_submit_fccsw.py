@@ -64,8 +64,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-outputFolder", default = "/eos/user/b/brfranco/rootfile_storage/", help = "Output folder absolute path for the rootfile", type = str)
     parser.add_argument("-campaignName", default = date.today().strftime("%y%m%d"), help = "Folder name used to store the submission script, logs, etc, as well as the output rootfile in the outputFolder", type = str)
-    parser.add_argument("-gaudiConfig", default = "%s/runCaloSim.py"%os.environ.get("PWD", ""), help = "Absolute path to the gaudi config to use", type = str)
-    parser.add_argument("-jobType", default = "caloReco", help = "Tell the type of job we launch. Can be samplingFraction, caloReco, upstreamCorrection", type = str)
+    parser.add_argument("-gaudiConfig", default = "%s/runSlidingWindowAndCaloSim.py"%os.environ.get("PWD", ""), help = "Absolute path to the gaudi config to use", type = str)
+    parser.add_argument("-jobType", default = "caloReco", help = "Tell the type of job we launch. Can be samplingFraction, caloReco, upstreamCorrection (not implemented yet)", type = str)
+    parser.add_argument("-pythia", default = False, help = "Tell to use Pythia instead of particle gun (the energies, polar angles etc do not matter anymore)", type = str)
+    parser.add_argument("-pythiaCfg", default = "%s/MCGeneration/ee_Z_ee.cmd"%os.environ.get("PWD", ""), help = "Absolute path to the Pythia config file", type = str)
     parser.add_argument("-inputFiles", help = "Regex used to get all the input files, if any is needed - not implemented yet.", type = str)
     parser.add_argument("-energies", default = [10], help = "Energies in MeV for the process to generate, behavior depends on fixedEnergy. Make sure you put the energies in ascending order to have an optimal job splitting.", type = int, nargs = '+')
     parser.add_argument("-fixedEnergies", default = True, help = "Do we launch several fixed energies gun or an energy range? If range, energies should have two entries: min and max - not implemented yet", type = bool)
@@ -102,7 +104,14 @@ if __name__ == "__main__":
     if args.jobType == 'samplingFraction':
         command_template = """fccrun %s -n EVT --MomentumMin PMIN --MomentumMax PMAX --ThetaMin THETAMINRADIAN --ThetaMax THETAMAXRADIAN --PdgCodes PDGID --Output "rec DATAFILE='OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root' TYP='ROOT' OPT='RECREATE'" --filename OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root"""%(gaudi_config_path)
     elif args.jobType == 'caloReco':
-        command_template = """fccrun %s -n EVT --MomentumMin PMIN --MomentumMax PMAX --ThetaMin THETAMINRADIAN --ThetaMax THETAMAXRADIAN --PdgCodes PDGID --filename OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root"""%(gaudi_config_path)
+        if args.pythia:
+            energies = [0]
+            thetas = [0]
+            pdgId = 0
+            command_template = """fccrun %s -n EVT --Filename %s --filename OUTPUTDIR/fccsw_output_pythia_%s_jobid_JOBID.root"""%(gaudi_config_path, args.pythiaCfg, os.path.basename(args.pythiaCfg).split('.')[0])
+        else:
+            command_template = """fccrun %s -n EVT --MomentumMin PMIN --MomentumMax PMAX --ThetaMin THETAMINRADIAN --ThetaMax THETAMAXRADIAN --PdgCodes PDGID --filename OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root"""%(gaudi_config_path)
+
     else:
         print "Wrong jobType provided, read the help to see what is available."
         sys.exit()
@@ -137,7 +146,10 @@ if __name__ == "__main__":
                 print "Careful, total_evt_to_generate is smaler than evt_per_job"
                 evt_per_job = total_evt_to_generate
             while evt_already_launched <= total_evt_to_generate - evt_per_job:
-                command = command_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx))
+                if args.pythia:
+                    command = command_template.replace('EVT', str(evt_per_job)).replace('OUTPUTDIR', outfile_storage).replace('JOBID', str(job_idx))
+                else:
+                    command = command_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx))
                 exec_filename = exec_filename_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy)).replace('PMAX', str(energy)).replace('THETAMIN', str(theta)).replace('THETAMAX', str(theta)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
                 with open(exec_filename, "w") as f:
                     f.write(get_exec_file_header())
@@ -150,7 +162,10 @@ if __name__ == "__main__":
 
             evt_last_job = total_evt_to_generate - evt_already_launched
             if evt_last_job > 0:
-                command = command_template.replace('EVT', str(evt_last_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx))
+                if args.pythia:
+                    command = command_template.replace('EVT', str(evt_per_job)).replace('OUTPUTDIR', outfile_storage).replace('JOBID', str(job_idx))
+                else:
+                    command = command_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx))
                 exec_filename = exec_filename_template.replace('EVT', str(evt_last_job)).replace('PMIN', str(energy)).replace('PMAX', str(energy)).replace('THETAMIN', str(theta)).replace('THETAMAX', str(theta)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
                 with open(exec_filename, "w") as f:
                     f.write(get_exec_file_header())
