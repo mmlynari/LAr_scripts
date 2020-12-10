@@ -173,8 +173,8 @@ createEcalBarrelCells = CreateCaloCells("CreateECalBarrelCells",
 from Configurables import CellPositionsECalBarrelTool
 cellPositionEcalBarrelTool = CellPositionsECalBarrelTool("CellPositionsECalBarrel", readoutName = ecalBarrelReadoutNamePhiTheta, OutputLevel = INFO)
 
-from Configurables import CreateCaloCellPositions
-createEcalBarrelPositionedCells = CreateCaloCellPositions("ECalBarrelPositionedCells", OutputLevel = INFO)
+from Configurables import CreateCaloCellPositionsFCCee
+createEcalBarrelPositionedCells = CreateCaloCellPositionsFCCee("ECalBarrelPositionedCells", OutputLevel = INFO)
 createEcalBarrelPositionedCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCells.hits.Path = "ECalBarrelCells"
 createEcalBarrelPositionedCells.positionedHits.Path = "ECalBarrelPositionedCells"
@@ -240,13 +240,17 @@ createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
 createClusters.clusters.Path = "CaloClusters"
 createClusters.clusterCells.Path = "CaloClusterCells"
 
+createEcalBarrelPositionedCaloClusterCells = CreateCaloCellPositionsFCCee("ECalBarrelPositionedCaloClusterCells", OutputLevel = INFO)
+createEcalBarrelPositionedCaloClusterCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCaloClusterCells.hits.Path = "CaloClusterCells"
+createEcalBarrelPositionedCaloClusterCells.positionedHits.Path = "PositionedCaloClusterCells"
 ################ Output
 from Configurables import PodioOutput
 out = PodioOutput("out",
                   OutputLevel=INFO)
 
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop emptyCaloCells"]
-out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop ECalBarrelPositions", "drop emptyCaloCells"]
+out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop ECalBarrelPositions", "drop emptyCaloCells", "drop CaloClusterCells"]
 
 import uuid
 out.filename = "output_fullCalo_SimAndDigi_withCluster_noMagneticField_"+str(momentum)+"GeV"+"_pythia"+str(use_pythia)+".root"
@@ -285,10 +289,11 @@ ApplicationMgr(
               #createHcalBarrelCells,
               createemptycells,
               createClusters,
+              createEcalBarrelPositionedCaloClusterCells,
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 1,
+    EvtMax   = 1000,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )
