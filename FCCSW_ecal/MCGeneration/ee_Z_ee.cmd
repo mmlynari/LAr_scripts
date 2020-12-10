@@ -6,7 +6,7 @@
 
 ! 1) Settings used in the main program.
 Random:setSeed = on  ! set to off to have real random number each time, set to on with fixed see for reproducibility
-Random:seed = 54
+Random:seed = SEED 
 Main:numberOfEvents = 1000        ! number of events to generate
 Main:timesAllowErrors = 5          ! how many aborts before run stops
 
