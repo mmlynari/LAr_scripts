@@ -62,6 +62,7 @@ source %s/setup.sh
 
 
 if __name__ == "__main__":
+    print "Starting, if it hangs forever, check that eos is responding (could get stuck when creating the output eos directory)..."
     parser = argparse.ArgumentParser()
     parser.add_argument("-outputFolder", default = "/eos/user/b/brfranco/rootfile_storage/", help = "Output folder absolute path for the rootfile", type = str)
     parser.add_argument("-campaignName", default = date.today().strftime("%y%m%d"), help = "Folder name used to store the submission script, logs, etc, as well as the output rootfile in the outputFolder", type = str)
@@ -78,9 +79,14 @@ if __name__ == "__main__":
     parser.add_argument("-pdgId", default = 22, help = "PDG ID of the particle to shoot", type = int)
     parser.add_argument("-originalNjobs", default = 1, help = "If more than one energy point, the script will submit with increasing number of jobs for increasing energies, tells how many jobs should be used for the first point.", type = int)
     parser.add_argument("-nEvt", default = 1000, help = "How many events to generate.", type = int)
+    parser.add_argument("-energyAtWhichStartingDilution", default = 1, help = "When launching energies far away from each other, you can end up with way too many jobs at high energy, this allows to keep it under control.", type = int)
     parser.add_argument("--submit", help="Won't actually submit the jobs unless this is provided.", action = 'store_true')
 
     args = parser.parse_args()
+
+    if os.environ.get("FCCSWBASEDIR", "") == "":
+        print "Error: fcc environment not set, please run source init.sh and source install/setup.sh in the FCCSW root directory\nExitting..."
+        sys.exit(1)
 
     # make sure you put the energies in ascending order to have an optimal job splitting
     energies = args.energies  # in MeV
@@ -121,12 +127,14 @@ if __name__ == "__main__":
 
     total_n_job = 0
     hadd_commands = ""
+    rm_commands = ""
+    fcc_analysis_commands = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd /afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses\nfccenv\nsource setup.sh\n"
     for index in range(len(energies)):
         energy = energies[index]
         energy_min = energy
         energy_max = energy
-        if index != 0:
-            n_jobs = int(n_jobs * math.floor(energy/energies[index-1]))
+        if index != 0 and energy > args.energyAtWhichStartingDilution:
+            n_jobs = int(math.floor(n_jobs * energy/energies[index-1]))
         else:
             n_jobs = original_n_jobs
         evt_per_job = int(round(total_evt_to_generate/n_jobs))
@@ -185,14 +193,19 @@ if __name__ == "__main__":
             if args.jobType == 'samplingFraction':
                 hadd_commands += "rm OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                 hadd_commands += "hadd OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
-                hadd_commands += "#rm OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+                rm_commands += "cp OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_1.root OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_forTests.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+                rm_commands += "rm OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
             else:
                 if args.pythia:
                     hadd_commands += "hadd  OUTPUTDIR/fccsw_output_pythia_{0}.root OUTPUTDIR/fccsw_output_pythia_{0}_jobid_*.root\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
-                    hadd_commands += "#rm  OUTPUTDIR/fccsw_output_pythia_{0}_jobid_*.root\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
+                    rm_commands += "cp  OUTPUTDIR/fccsw_output_pythia_{0}_jobid_1.root OUTPUTDIR/fccsw_output_pythia_{0}_forTests.root\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
+                    rm_commands += "rm  OUTPUTDIR/fccsw_output_pythia_{0}_jobid_*.root\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
+                    fcc_analysis_commands += "python FCCeePerformance/Calo/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pythia_{0}.root -outputFolder $(date +'%y%m%d')_pythia".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
                 else:
                     hadd_commands += "hadd  OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
-                    hadd_commands += "#rm OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+                    rm_commands += "cp OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_1.root OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_forTests.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+                    rm_commands += "rm OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+                    fcc_analysis_commands += "python FCCeePerformance/Calo/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root -outputFolder $(date +'%y%m%d')_caloReco\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
 
     # write the hadd script
     hadd_script_path = os.path.join(campaign_name, "hadd.sh")
@@ -200,6 +213,20 @@ if __name__ == "__main__":
         f.write(hadd_commands)
     st = os.stat(hadd_script_path)
     os.chmod(hadd_script_path, st.st_mode | stat.S_IEXEC)
+
+    # write the rm script
+    rm_script_path = os.path.join(campaign_name, "rm.sh")
+    with open(rm_script_path, "w") as f:
+        f.write(rm_commands)
+    st = os.stat(rm_script_path)
+    os.chmod(rm_script_path, st.st_mode | stat.S_IEXEC)
+
+    # write the fcc_analysis script
+    fcc_analysis_script_path = os.path.join(campaign_name, "fcc_analysis.sh")
+    with open(fcc_analysis_script_path, "w") as f:
+        f.write(fcc_analysis_commands)
+    st = os.stat(fcc_analysis_script_path)
+    os.chmod(fcc_analysis_script_path, st.st_mode | stat.S_IEXEC)
 
     # write the condor submit file
     condor_submit_path = campaign_name + ".sub"
