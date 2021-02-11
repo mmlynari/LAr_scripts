@@ -2,16 +2,19 @@ import os
 
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
-use_pythia = True
+use_pythia = False
 
 # Input for simulations (momentum is expected in GeV!)
-momentum = 1
+momentum = 0.3
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
-thetaMin = 45.
-#thetaMin = 90.
-thetaMax = 135.
-#thetaMax = 90.
+#thetaMin = 45.
+#thetaMin = 55.
+thetaMin = 90.
+#thetaMax = 135.
+thetaMax = 90.
+#thetaMax = 55.
 magneticField = False
+pdgCode = 22 #11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 
 from Gaudi.Configuration import *
 
@@ -31,7 +34,7 @@ if use_pythia:
 else:
     from Configurables import  MomentumRangeParticleGun
     pgun = MomentumRangeParticleGun("ParticleGun_Electron")
-    pgun.PdgCodes = [11] # electron
+    pgun.PdgCodes = [pdgCode] # electron
     #pgun.PdgCodes = [13] # muon
     pgun.MomentumMin = momentum * GeV
     pgun.MomentumMax = momentum * GeV
@@ -64,7 +67,7 @@ detectors_to_use=[
                   ]
 # prefix all xmls with path_to_detector
 geoservice.detectors = [os.path.join(path_to_detector, "..", _det) for _det in detectors_to_use]
-geoservice.OutputLevel = WARNING
+geoservice.OutputLevel = INFO
 #geoservice.OutputLevel = DEBUG
 
 # Geant4 service
@@ -124,7 +127,7 @@ geantsim = SimG4Alg("SimG4Alg",
 from Configurables import CalibrateInLayersTool
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
                                    # sampling fraction obtained using SamplingFractionInLayers from DetStudies package
-                                   samplingFraction = [0.306224547517] * 1 + [0.111664096145] * 1 + [0.135828948734] * 1 + [0.151690753987] * 1 + [0.163564788854] * 1 + [0.172627758875] * 1 + [0.180023941499] * 1 + [0.186642705553] * 1 + [0.192229484697] * 1 + [0.197347321559] * 1 + [0.202461342545] * 1 + [0.225390187901] * 1,
+                                   samplingFraction = [0.303451138049] * 1 + [0.111872504159] * 1 + [0.135806495306] * 1 + [0.151772636618] * 1 + [0.163397436122] * 1 + [0.172566977313] * 1 + [0.179855253903] * 1 + [0.186838417657] * 1 + [0.192865946689] * 1 + [0.197420241611] * 1 + [0.202066552306] * 1 + [0.22646764465] * 1,
                                    readoutName = ecalBarrelReadoutName,
                                    layerFieldName = "layer")
 
@@ -224,7 +227,7 @@ dupP = 13
 finE = 9
 finP = 17
 # approx in GeV: changed from default of 12 in FCC-hh
-threshold = 0.5
+threshold = 0.1
 
 from Configurables import CreateCaloClustersSlidingWindow
 createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
@@ -250,10 +253,11 @@ out = PodioOutput("out",
                   OutputLevel=INFO)
 
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop emptyCaloCells"]
+#out.outputCommands = ["keep *"]
 out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop ECalBarrelPositions", "drop emptyCaloCells", "drop CaloClusterCells"]
 
 import uuid
-out.filename = "output_fullCalo_SimAndDigi_withCluster_noMagneticField_"+str(momentum)+"GeV"+"_pythia"+str(use_pythia)+".root"
+out.filename = "output_fullCalo_SimAndDigi_withCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum)+"GeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+".root"
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
@@ -293,7 +297,7 @@ ApplicationMgr(
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 1000,
+    EvtMax   = 10000,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )
