@@ -92,6 +92,7 @@ x0_presampler = x0_presampler_cell * number_of_presampler_cells_crossed
 x0 += x0_presampler
 
 
+#FIXME AvX[dim_, x0_] := Apply[Plus, dim]/Apply[Plus, dim/x0]
 # Compute X0 when crossing one cell(abs gap pcb gap), taking into account the inclination w.r.t. radial angle
 x0_per_normal_cell = (lar_thickness * lar_x0 * 2 + absorber_thickness * absorber_x0 + glue_thickness * glue_x0 + steel_thickness * steel_x0 + pcb_thickness * pcb_x0) * factor_thicknessPerpendicularPcb_to_radialLength / 10.0 # / 10 because thickness provided in mm while X0 in 1/cm 
 print "X0 per normal cell: ", x0_per_normal_cell

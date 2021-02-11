@@ -17,7 +17,7 @@ _pi = 3.14159
 
 from Configurables import  MomentumRangeParticleGun
 pgun = MomentumRangeParticleGun("ParticleGun_Photon")
-pgun.PdgCodes = [22]
+pgun.PdgCodes = [11]
 pgun.MomentumMin = momentum * GeV
 pgun.MomentumMax = momentum * GeV
 pgun.PhiMin = 0
@@ -62,7 +62,7 @@ geantservice.g4PostInitCommands += ["/run/setCut 0.1 mm"]
 # Translates EDM to G4Event, passes the event to G4, writes out outputs via tools
 # and a tool that saves the calorimeter hits
 from Configurables import SimG4Alg, SimG4SaveCalHits
-saveecaltool = SimG4SaveCalHits("saveECalBarrelHits",readoutNames = ["ECalBarrelTheta"])
+saveecaltool = SimG4SaveCalHits("saveECalBarrelHits",readoutNames = ["ECalBarrelEta"])
 saveecaltool.positionedCaloHits.Path = "ECalBarrelPositionedHits"
 saveecaltool.caloHits.Path = "ECalBarrelHits"
 
@@ -79,7 +79,7 @@ geantsim = SimG4Alg("SimG4Alg",
 from Configurables import SamplingFractionInLayers
 hist = SamplingFractionInLayers("hists",
                                  energyAxis = momentum,
-                                 readoutName = "ECalBarrelTheta",
+                                 readoutName = "ECalBarrelEta",
                                  layerFieldName = "layer",
                                  activeFieldName = "type",
                                  activeFieldValue = 0,

@@ -9,19 +9,20 @@ other_conductor_thickness = 35
 w_t = 127
 dielectric_constant = 4.6
 total_thickness_no_trace_no_conductor = (h_hv + h_m + h_s) * 2
-total_thickness_no_trace = total_thickness_no_trace_no_conductor + 2 * other_conductor_thickness * 3 # there are three conductor layers per half PCB
-total_thickness = total_thickness_no_trace + trace_thickness # there are three conductor layers per half PCB
+total_thickness_no_trace = total_thickness_no_trace_no_conductor + 2 * other_conductor_thickness * 3 # there are three conductor layers per half PCB (signal trace will be added after since only one is present)
+total_thickness = total_thickness_no_trace + trace_thickness
 print "Total PCB thickness: %f mm\n"%(total_thickness/1000.0)
 
 # check that all dimensions comply
 # avoid spark between HV layer and signal pads (H_hv)
-electrical_rigidity_FR4 = 20 #kV/mm    electric field that it cain sustain without creating shortcircuit/
+electrical_rigidity_FR4 = 20 #kV/mm    electric field that it can sustain without creating shortcircuit
 wished_electric_field_in_gap = 1 # kV/mm
 LAr_gap_thickness = 1.24 # mm
 potential_hv_needed = wished_electric_field_in_gap * LAr_gap_thickness # kV
 minimum_space_hv_sigpad = potential_hv_needed / electrical_rigidity_FR4
-print "Mimimum spacing between signal pads and HV plate: %d microns"%(minimum_space_hv_sigpad*1000)
-print "Foreseen space: %d microns\n"%(h_hv)
+print "For a LAr gap of %f mm and a voltage on HV plate of %f kV:"%(LAr_gap_thickness, potential_hv_needed)
+print "\t Mimimum spacing between signal pads and HV plate to avoid electrical breackdown: %d microns"%(minimum_space_hv_sigpad*1000)
+print "\t Foreseen space: %d microns\n"%(h_hv)
 
 # check the transmission line impedence
 def get_impedence(space_between_inner_side_ground, trace_width, trace_thickness, dielectric_constant):
