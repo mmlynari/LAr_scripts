@@ -122,7 +122,7 @@ if __name__ == "__main__":
     else:
         print "Wrong jobType provided, read the help to see what is available."
         sys.exit()
-    exec_filename_template = os.path.join(campaign_name, "exec_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_evt_EVT_jobid_JOBID.sh")
+    exec_filename_template = os.path.join(campaign_name, "exec_evt_EVT_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.sh")
 
 
     total_n_job = 0
