@@ -74,6 +74,8 @@ geoservice.OutputLevel = INFO
 # Configures the Geant simulation: geometry, physics list and user actions
 from Configurables import SimG4Svc
 geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist="SimG4FtfpBert", actions="SimG4FullSimActions")
+geantservice.randomNumbersFromGaudi = False
+geantservice.seedValue = 4242
 
 # Range cut
 geantservice.g4PreInitCommands += ["/run/setCut 0.1 mm"]
@@ -297,7 +299,7 @@ ApplicationMgr(
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 10000,
+    EvtMax   = 100,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )
