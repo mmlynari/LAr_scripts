@@ -109,7 +109,15 @@ if __name__ == "__main__":
         os.mkdir(outfile_storage)
 
     if args.jobType == 'samplingFraction':
-        command_template = """fccrun %s -n EVT --MomentumMin PMIN --MomentumMax PMAX --ThetaMin THETAMINRADIAN --ThetaMax THETAMAXRADIAN --PdgCodes PDGID --Output "rec DATAFILE='OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root' TYP='ROOT' OPT='RECREATE'" --filename OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root"""%(gaudi_config_path)
+        command_template = """fccrun %s -n EVT --MomentumMin PMIN --MomentumMax PMAX --ThetaMin THETAMINRADIAN --ThetaMax THETAMAXRADIAN --PdgCodes PDGID --Output "rec DATAFILE='OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root' TYP='ROOT' OPT='RECREATE'" --filename OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root --seedValue SEED"""%(gaudi_config_path)
+        sf_commands = 'python FCC_calo_analysis_cpp/plot_samplingFraction.py OUTPUTDIR/calibration_output_pdgID_22_pMin_?_pMax_?_thetaMin_90_thetaMax_90.root 10 -r 10000 --preview -outputfolder FCC_calo_analysis_cpp/plots_sampling_fraction_$(date +"%y%m%d") --sed'.replace('OUTPUTDIR', outfile_storage)
+        # write the sampling fraction derivation script
+        sf_script_path = os.path.join(campaign_name, "sf.sh")
+        with open(sf_script_path, "w") as f:
+            f.write(sf_commands)
+        st = os.stat(sf_script_path)
+        os.chmod(sf_script_path, st.st_mode | stat.S_IEXEC)
+
     elif args.jobType == 'caloReco':
         if args.pythia:
             energies = [0]
@@ -128,7 +136,8 @@ if __name__ == "__main__":
     total_n_job = 0
     hadd_commands = ""
     rm_commands = ""
-    fcc_analysis_commands = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd /afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses\nfccenv\nsource setup.sh\n"
+    fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/"
+    fcc_analysis_commands = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nfccenv\nsource setup.sh\n"%fcc_analysis_path
     for index in range(len(energies)):
         energy = energies[index]
         energy_min = energy
@@ -191,7 +200,7 @@ if __name__ == "__main__":
                 total_n_job += 1
 
             if args.jobType == 'samplingFraction':
-                hadd_commands += "rm OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+                hadd_commands += "#rm OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                 hadd_commands += "hadd OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                 rm_commands += "cp OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_1.root OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_forTests.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                 rm_commands += "rm OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
@@ -200,12 +209,12 @@ if __name__ == "__main__":
                     hadd_commands += "hadd  OUTPUTDIR/fccsw_output_pythia_{0}.root OUTPUTDIR/fccsw_output_pythia_{0}_jobid_*.root\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
                     rm_commands += "cp  OUTPUTDIR/fccsw_output_pythia_{0}_jobid_1.root OUTPUTDIR/fccsw_output_pythia_{0}_forTests.root\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
                     rm_commands += "rm  OUTPUTDIR/fccsw_output_pythia_{0}_jobid_*.root\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
-                    fcc_analysis_commands += "python FCCeePerformance/Calo/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pythia_{0}.root -outputFolder $(date +'%y%m%d')_pythia".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
+                    fcc_analysis_commands += "python FCCeePerformance/Calo/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pythia_{0}.root -outputFolder FCCANAOUTPUT_pythia".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage).replace("FCCANAOUTPUT", campaign_name)
                 else:
                     hadd_commands += "hadd  OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                     rm_commands += "cp OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_1.root OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_forTests.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                     rm_commands += "rm OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
-                    fcc_analysis_commands += "python FCCeePerformance/Calo/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root -outputFolder $(date +'%y%m%d')_caloReco\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+                    fcc_analysis_commands += "python FCCeePerformance/Calo/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root -outputFolder FCCANAOUTPUT_caloReco\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace("FCCANAOUTPUT", campaign_name)
 
     # write the hadd script
     hadd_script_path = os.path.join(campaign_name, "hadd.sh")
@@ -227,6 +236,14 @@ if __name__ == "__main__":
         f.write(fcc_analysis_commands)
     st = os.stat(fcc_analysis_script_path)
     os.chmod(fcc_analysis_script_path, st.st_mode | stat.S_IEXEC)
+
+    # write the perfPlots script
+    perfPlots_script_path = os.path.join(campaign_name, "perfPlots.sh")
+    with open(perfPlots_script_path, "w") as f:
+        string_for_perfPlots_script = "cd %s/../LAr_scripts/caloNtupleAnalyzer/\npython perfPlots.py -inputFiles '%s/FCCANAOUTPUT_caloReco/*.root' -outputPostfix FCCANAOUTPUT_condor"%(os.environ.get("FCCSWBASEDIR", ""), fcc_analysis_path)
+        f.write(string_for_perfPlots_script.replace("FCCANAOUTPUT", campaign_name))
+    st = os.stat(perfPlots_script_path)
+    os.chmod(perfPlots_script_path, st.st_mode | stat.S_IEXEC)
 
     # write the condor submit file
     condor_submit_path = campaign_name + ".sub"
