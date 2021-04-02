@@ -203,13 +203,13 @@ cCapacitance.Print(os.path.join(output_folder, "cCapacitance.png"))
 #maximumNoise = 0.04
 #maximumNoiseWithTrace = 0.015
 
-for h in h_elecNoise_all:
+for h in itertools.chain(h_elecNoise_fcc, h_elecNoise_all):
     h.SetMinimum(0.)
     h.SetMaximum(maximumNoise*1.3)
     h.GetYaxis().SetTitleOffset(1.4)
     h.Write()
 
-for h in itertools.chain(h_elecNoise_fcc, h_elecNoise_withTraceCap, h_elecNoise_shield, h_elecNoise_trace, h_elecNoise_detector):
+for h in itertools.chain(h_elecNoise_withTraceCap, h_elecNoise_shield, h_elecNoise_trace, h_elecNoise_detector):
     h.SetMinimum(0.)
     h.SetMaximum(maximumNoiseWithTrace*1.33)
     h.GetYaxis().SetTitleOffset(1.4)

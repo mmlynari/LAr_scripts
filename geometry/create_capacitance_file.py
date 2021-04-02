@@ -27,8 +27,9 @@ gStyle.SetPadTickY(1)
 
 activeTotal = 400.0
 inclinedTotal = 564.964
-tracesPerLayer = [6, 2, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7]
-readoutLayerRadialLengths = [1.500000] * 1 + [3.500000] * 11 # careful, this is not really the radial spacing, it is, after dilution, the spacing in the parallel direction --> radial depth spacing will not be constant
+tracesPerLayer = [6, 1, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7] # only one trace for strip layer because 4 cells instead of one
+# careful, this is not really the radial spacing, it is, after dilution, the spacing in the parallel direction --> radial depth spacing will not be constant
+readoutLayerRadialLengths = [1.500000] * 1 + [3.500000] * 11
 #Detector
 rmin = 2160
 Nplanes = 1536
@@ -60,7 +61,7 @@ epsilonR = 4.4 # PCB
 #conversion factor: 1 inch = 25.4 mm
 inch2mm = 25.4
 #capa per length from maxwel
-capa_per_mm = 0.109 # pF/mm
+capa_per_mm = 0.123 # pF/mm
 # multiplicative factor
 # factor two because we merge two phi cells together, another factor 2 becasue we have two 1) signal pad / shield capa  2) HV plate / absorber capa per cell
 nmult = 4
@@ -143,6 +144,7 @@ fImpedance1D.Draw()
 fImpedance1D.GetXaxis().SetTitle("Distance to ground [mm]")
 fImpedance1D.GetYaxis().SetTitle("Impedance [#Omega]")
 
+#prepare the TH1
 hCapTrace = []
 hCapShield = []
 hCapDetector = []
@@ -184,9 +186,12 @@ cTrace = TCanvas("cTrace","",600,400)
 cShield = TCanvas("cShield","",600,400)
 cDetector = TCanvas("cDetector","",600,400)
 
-legend = TLegend(0.1,0.5,0.3,0.9)
+legend = TLegend(0.1,0.693,0.8,0.9)
+#legend = TLegend(0.135,0.693,0.8,0.892)
 legend.SetHeader("Longitudinal layers")
+legend.SetNColumns(4)
 capa_shield_max = 0
+capa_det_max = 0
 for i in range (0, len(readoutLayerParallelLengths)):
     print "--------------"
     for index in range(0, numEta):
@@ -199,12 +204,14 @@ for i in range (0, len(readoutLayerParallelLengths)):
         hCapTrace[i].SetBinContent(index+1, capacitanceTrace)
     
         #Shield capacitance (microstrip)
-        cellLength = readoutLayerParallelLengths[i]
+        cellLength = readoutLayerParallelLengths[i] / (sin(2. * atan(exp(-eta))))
         logMicrostrip = log(5.98 * hm / (0.8 * ws + t))
-        # analytical formula, factor 2 for the fact that there are two shield/pad capa in one cell, another 
-        capacitanceShield = nmult * cellLength * tracesPerLayer[i] * nmult * 1 / inch2mm * 0.67 * (epsilonR + 1.41) / logMicrostrip
-        # from maxwell, factor 2 for the fact that there are two shield/pad capa in one cell, another 
-        #capacitanceShield = 2 * nmult * cellLength * tracesPerLayer[i] * capa_per_mm
+        # analytical formula 
+        #capacitanceShield = nmult * cellLength * tracesPerLayer[i] * 1 / inch2mm * 0.67 * (epsilonR + 1.41) / logMicrostrip
+        # from maxwell 
+        capacitanceShield = nmult * cellLength * tracesPerLayer[i] * capa_per_mm
+        if i == 1: #strip layer has smaller capacitance due to traces running beneath the anti-etch
+            capacitanceShield /= 2
         if capacitanceShield > capa_shield_max:
             capa_shield_max = capacitanceShield
         hCapShield[i].SetBinContent(index+1, capacitanceShield)
@@ -224,6 +231,8 @@ for i in range (0, len(readoutLayerParallelLengths)):
             print "LAr gap size (perpendicular): %f mm"%distance
         capacitanceDetector = nmult * epsilon0 * epsilonRLAr * area / distance
         hCapDetector[i].SetBinContent(index+1, capacitanceDetector)
+        if capacitanceDetector > capa_det_max:
+            capa_det_max = capacitanceDetector
         if index==0:
             print "layer %d" %(i+1), "eta==0: capacitanceTrace %.0f pF," %capacitanceTrace, "capacitanceShield %.0f pF" %capacitanceShield, "capacitanceDetector %.0f pF" %capacitanceDetector
             #, "distance %.1f mm" %distance
@@ -255,10 +264,10 @@ for i in range (0, len(readoutLayerParallelLengths)):
     hCapTrace[i].SetMaximum(maximum*1.5)
     hCapTrace[i].Write()
     hCapShield[i].SetMinimum(0)
-    hCapShield[i].SetMaximum(maximum*1.5)
+    hCapShield[i].SetMaximum(capa_shield_max*1.5)
     hCapShield[i].Write()
     hCapDetector[i].SetMinimum(0)
-    hCapDetector[i].SetMaximum(maximum*1.5)
+    hCapDetector[i].SetMaximum(capa_det_max*1.5)
     hCapDetector[i].Write()
 
 cTrace.cd()
@@ -269,10 +278,12 @@ cShield.cd()
 legend.Draw()
 cShield.Update()
 cShield.Write()
+cShield.Print("capa_shield.png")
 cDetector.cd()
 legend.Draw()
 cDetector.Update()
 cDetector.Write()
+cDetector.Print("capa_detector.png")
 
 fImpedance.Write()
 fImpedance1D.Write()
