@@ -1,4 +1,4 @@
-from math import tan, radians, sqrt
+from math import tan, radians, sqrt, sin, asin, degrees
 
 # inner_radius is the radius at starting point of electrode, outer radius is the radius at end point of electrod, angle in degrees
 def get_cell_length_from_intersection_line_circle(inner_radius, outer_radius, inclination):
@@ -46,6 +46,7 @@ n_cell_after_ps = 11
 outer_radius = inner_radius + first_cell_radial_length + n_cell_after_ps*other_cells_radial_lengths
 calo_depth = outer_radius - inner_radius
 
+
 total_pcb_length_parallel = get_cell_length_from_intersection_line_circle(inner_radius, outer_radius, inclination)
 print "Total length from %d to %d with %d inclination: "%(inner_radius, outer_radius, inclination), total_pcb_length_parallel
 print "Pre sampler radial length %f, other cell radial length %f, number of other cells %d."%(first_cell_radial_length, other_cells_radial_lengths, n_cell_after_ps)
@@ -76,4 +77,12 @@ normal_cells_length_parallel = total_pcb_length_parallel * ratio_other_cells
 print "Length of the pre-sampler cell parallel: %f"%(pre_sampler_length_parallel)
 print "Length of the other cells parallel: %f"%(normal_cells_length_parallel)
 print "Total lenght parallel: %f"%(pre_sampler_length_parallel + n_cell_after_ps * normal_cells_length_parallel)
+
+# angle comprise by lines from  1) IP to inner right edge of a cell, 2) IP to outer left edge of a cell (useful to get the plate angle with radial direction that changes with increasing R)
+# based on scalene triangle sine law A/sin(a) = B/sin(b) = C/sin(c) (outer left edge aligned on the Y axis)
+delta_phi = degrees(asin(total_pcb_length_parallel/outer_radius * sin(radians(inclination))))
+print "Angle sustained by the readout projection: %f"%delta_phi
+
+radial_inclination_end = inclination - delta_phi
+
 

@@ -1,10 +1,12 @@
 import ROOT
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
-import os, glob
+import os, sys, glob
 import numpy as np
 import argparse
 from math import sqrt
 from datetime import date
+#from shutil import copy
+from copy import copy
 
 import gStyle
 
@@ -12,10 +14,10 @@ import gStyle
 
 parser = argparse.ArgumentParser()
 #parser.add_argument("-inputFiles", default = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/outputs/eGun1GeV_10kevt_originalGeometry_allCells/output_fullCalo_SimAndDigi_withCluster_noMagneticField_1GeV_pythiaFalse.root", help = "Name of the input file.", type = str)
-parser.add_argument("-inputFiles", default = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/210130_caloReco/fccsw_output_pdgID_22_pMin_*_pMax_*_thetaMin_90_thetaMax_90.root", help = "Name of the input file.", type = str)
-parser.add_argument("-outputPostfix", default = date.today().strftime("%y%m%d") + "_sqrtSum", help = "Postfix to append to the output folder.", type = str)
+parser.add_argument("-inputFiles", default = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/210217_caloReco/*.root", help = "Regex for input files.", type = str)
+parser.add_argument("-outputPostfix", default = date.today().strftime("%y%m%d") + "", help = "Postfix to append to the output folder.", type = str)
 parser.add_argument("-color", default = 46, help = "Color of the graph", type = int)
-parser.add_argument("-markerStyle", default = 34, help = "Style of the graph markers", type = int)
+parser.add_argument("-markerStyle", default = 21, help = "Style of the graph markers", type = int)
 parser.add_argument("-cells", default = True, help = "Also produce plots with total energy from cells (no clustering)", type = bool)
 args = parser.parse_args()
 
@@ -24,6 +26,24 @@ if not os.path.isdir(plot_dir_name):
     os.mkdir(plot_dir_name)
 
 inputFiles = glob.glob(args.inputFiles)
+if not inputFiles:
+    print "No file found"
+    sys.exit(1)
+
+# Single resolution histogram 
+
+def draw_resol_canvas(th1, prefix, variable): 
+    canvas_phiresol = ROOT.TCanvas(prefix + variable + "_resolution", prefix + variable + "_resolution")
+    fit_result = th1.Fit("gaus", "SQ")
+    th1.Draw()
+    if variable == 'relEresol':
+        th1.GetXaxis().SetTitle("(E_{Reco} - E_{Gen})/E_{Reco}")
+    else:
+        #th1.GetXaxis().SetTitle("#{0}_{Reco} - #{0}_{Gen}".format(variable))
+        th1.GetXaxis().SetTitle("#%s_{Reco} - #%s_{Gen}"%(variable, variable))
+    canvas_phiresol.Print(os.path.join(plot_dir_name, prefix + variable + "resol.png"))
+    th1.Write()
+    return fit_result
 
 max_evt = -1
 #cutoff_dR = 0.015
@@ -31,21 +51,31 @@ max_evt = -1
 cutoff_dR = 1000
 cutoff_relE = 1000
 dict_energy_relEresol_error = {}
+dict_energy_phiResol_error = {}
+dict_energy_thetaResol_error = {}
 dict_energy_cells_relEresol_error = {}
 energies_gev_float = []
 for inputFile in inputFiles:
     print "Treating %s..."%inputFile
     rootfile_path = inputFile
     energy = inputFile.split('_pMin_')[1].split("_")[0]
-    energy = int(energy)/1000.0
-    energies_gev_float.append(energy)
-    energy = str(energy).replace(".","dot")
+    energy_gev_float = int(energy)/1000.0
+    energies_gev_float.append(energy_gev_float)
+    energy = str(energy_gev_float).replace(".","dot")
     print energy
     dict_energy_relEresol_error[energy] = []
+    dict_energy_phiResol_error[energy] = []
+    dict_energy_thetaResol_error[energy] = []
     dict_energy_cells_relEresol_error[energy] = []
     prefix = energy + "GeV_"
 
-    th1_phiresol = ROOT.TH1F(prefix + "phi_resolution", prefix + "phi_resolution", 100, -0.03, 0.03)
+    phiresol_range = 0.002
+    if energy_gev_float < 6:
+        phiresol_range = 0.01
+    if energy_gev_float < 6:
+        phiresol_range = 0.03
+
+    th1_phiresol = ROOT.TH1F(prefix + "phi_resolution", prefix + "phi_resolution", 100, -1 * phiresol_range, phiresol_range)
     th1_thetaresol = ROOT.TH1F(prefix + "theta_resolution", prefix + "theta_resolution", 100, -0.03, 0.03)
     th1_angularresol = ROOT.TH1F(prefix + "angular_resolution", prefix + "angular_resolution", 100, 0, 0.03)
     th1_Eresol = ROOT.TH1F(prefix + "energy_resolution", prefix + "energy_resolution", 500, -25, 20)
@@ -117,19 +147,22 @@ for inputFile in inputFiles:
     output_rootfile = ROOT.TFile(output_rootfile_path, "recreate")
     output_rootfile.cd()
 
-    canvas_phiresol = ROOT.TCanvas(prefix + "phi_resolution", prefix + "phi_resolution")
-    th1_phiresol.Fit("gaus", "Q")
-    th1_phiresol.Draw()
-    th1_phiresol.GetXaxis().SetTitle("#Delta #Phi")
-    canvas_phiresol.Print(os.path.join(plot_dir_name, prefix + "phiresol.png"))
-    th1_phiresol.Write()
+    phiResolFit = draw_resol_canvas(th1_phiresol, prefix, 'Phi')
+    thetaResolFit = draw_resol_canvas(th1_thetaresol, prefix, 'Theta')
 
-    canvas_thetaresol = ROOT.TCanvas(prefix + "theta_resolution", prefix + "theta_resolution")
-    th1_thetaresol.Fit("gaus", "Q")
-    th1_thetaresol.Draw()
-    th1_thetaresol.GetXaxis().SetTitle("#Delta #Theta")
-    canvas_thetaresol.Print(os.path.join(plot_dir_name, prefix + "thetaresol.png"))
-    th1_thetaresol.Write()
+    #canvas_phiresol = ROOT.TCanvas(prefix + "phi_resolution", prefix + "phi_resolution")
+    #th1_phiresol.Fit("gaus", "Q")
+    #th1_phiresol.Draw()
+    #th1_phiresol.GetXaxis().SetTitle("#Delta #Phi")
+    #canvas_phiresol.Print(os.path.join(plot_dir_name, prefix + "phiresol.png"))
+    #th1_phiresol.Write()
+
+    #canvas_thetaresol = ROOT.TCanvas(prefix + "theta_resolution", prefix + "theta_resolution")
+    #th1_thetaresol.Fit("gaus", "Q")
+    #th1_thetaresol.Draw()
+    #th1_thetaresol.GetXaxis().SetTitle("#Delta #Theta")
+    #canvas_thetaresol.Print(os.path.join(plot_dir_name, prefix + "thetaresol.png"))
+    #th1_thetaresol.Write()
 
     canvas_angularresol = ROOT.TCanvas(prefix + "angular_resolution", prefix + "angular_resolution")
     th1_angularresol.Draw()
@@ -146,25 +179,36 @@ for inputFile in inputFiles:
     th1_Eresol.Write()
 
     canvas_relEresol = ROOT.TCanvas(prefix + "relE_resolution", prefix + "relE_resolution")
-    fit_range_min = th1_relEresol.GetMean() - 1 * th1_relEresol.GetRMS()
-    fit_range_max = th1_relEresol.GetMean() + 1 * th1_relEresol.GetRMS()
-    #th1_relEresol.Fit("gaus", "Q", "", fit_range_min, fit_range_max)
-    relEresolFit = th1_relEresol.Fit("gaus", "SQ", "")
+    fit_range_min = th1_relEresol.GetXaxis().GetBinCenter(th1_relEresol.GetMaximumBin()) - 2 * th1_relEresol.GetRMS()
+    fit_range_max = th1_relEresol.GetXaxis().GetBinCenter(th1_relEresol.GetMaximumBin()) + 2 * th1_relEresol.GetRMS()
+    #fit_range_min = th1_relEresol.GetMean() - 1 * th1_relEresol.GetRMS()
+    #fit_range_max = th1_relEresol.GetMean() + 1 * th1_relEresol.GetRMS()
+    #th1_relEresol.Fit("gaus", "SQ", "", fit_range_min, fit_range_max)
+    #relEresolFit = th1_relEresol.Fit("gaus", "SQ", "")
+    relEresolFit = th1_relEresol.Fit("gaus", "SQ", "", fit_range_min, fit_range_max)
     th1_relEresol.GetXaxis().SetTitle("(E_{Reco} - E_{Gen})/E_{Reco}")
     th1_relEresol.GetXaxis().SetTitleOffset(1.2)
     th1_relEresol.Draw()
     canvas_relEresol.Print(os.path.join(plot_dir_name, prefix + "relEresol.png"))
     th1_relEresol.Write()
+
     dict_energy_relEresol_error[energy].append(relEresolFit.Get().Parameter(2))
     dict_energy_relEresol_error[energy].append(relEresolFit.Get().ParError(2))
 
+    print energy
+    dict_energy_phiResol_error[energy].append(phiResolFit.Get().Parameter(2))
+    dict_energy_phiResol_error[energy].append(phiResolFit.Get().ParError(2))
+
+    dict_energy_thetaResol_error[energy].append(thetaResolFit.Get().Parameter(2))
+    dict_energy_thetaResol_error[energy].append(thetaResolFit.Get().ParError(2))
+
     if args.cells:
         canvas_relEresol_cells = ROOT.TCanvas(prefix + "relE_resolution_cells", prefix + "relE_resolution_cells")
-        fit_range_min = th1_relEresol_cells.GetMean() - 1 * th1_relEresol_cells.GetRMS()
-        fit_range_max = th1_relEresol_cells.GetMean() + 1 * th1_relEresol_cells.GetRMS()
-        #th1_relEresol_cells.Fit("gaus", "Q", "", fit_range_min, fit_range_max)
-        relEresolFit_cells = th1_relEresol_cells.Fit("gaus", "SQ", "")
-        print relEresolFit_cells
+        fit_range_min_cells = th1_relEresol_cells.GetXaxis().GetBinCenter(th1_relEresol_cells.GetMaximumBin()) - 2 * th1_relEresol_cells.GetRMS()
+        fit_range_max_cells = th1_relEresol_cells.GetXaxis().GetBinCenter(th1_relEresol_cells.GetMaximumBin()) + 2 * th1_relEresol_cells.GetRMS()
+        #fit_range_max = th1_relEresol_cells.GetMean() + 1 * th1_relEresol_cells.GetRMS()
+        relEresolFit_cells = th1_relEresol_cells.Fit("gaus", "SQ", "", fit_range_min_cells, fit_range_max_cells)
+        #relEresolFit_cells = th1_relEresol_cells.Fit("gaus", "SQ", "")
         th1_relEresol_cells.GetXaxis().SetTitle("(E_{Reco} - E_{Gen})/E_{Reco}")
         th1_relEresol_cells.GetXaxis().SetTitleOffset(1.2)
         th1_relEresol_cells.Draw()
@@ -175,80 +219,140 @@ for inputFile in inputFiles:
 
     output_rootfile.Close()
 
-def create_relEresol_graph(postfix):
-    relEresol_vs_energy_graph = ROOT.TGraphErrors("ECAL_Energy_Resolution" + postfix)
-    relEresol_vs_energy_graph.SetMarkerSize(1.5)
+postfix = ""
+#def create_relEresol_graph(postfix):
+
+def plot_resolution_vs_energy_graph(variable_name, postfix, relEresol_vs_energy_graph):
+    if variable_name == 'relEresol':
+        prefix = 'ECAL energy resolution '
+        y_axis_label = "#scale[1.9]{#sigma}#left(#frac{E_{Reco} - E_{Gen}}{E_{Reco}}#right)"
+    elif variable_name == 'phiResol':
+        prefix = 'ECAL #Phi resolution '
+        y_axis_label = "#scale[1.9]{#sigma}#left(#Phi_{Reco} - #Phi_{Gen}#right) [mrad]"
+    elif variable_name == 'thetaResol':
+        prefix = 'ECAL #theta resolution '
+        y_axis_label = "#scale[1.9]{#sigma}#left(#theta_{Reco} - #theta_{Gen}#right) [mrad]"
+    x_axis_label = "E_{Gen} [GeV]"
+    #relEresol_vs_energy_graph.SetMarkerSize(1.5)
     relEresol_vs_energy_graph.SetMarkerStyle(args.markerStyle)
     relEresol_vs_energy_graph.SetMarkerColor(args.color)
-    relEresol_vs_energy_graph.SetTitle("ECAL Energy Resolution " + postfix)
-    relEresol_vs_energy_graph.GetXaxis().SetTitle("E_{Gen} [GeV]")
+    relEresol_vs_energy_graph.SetTitle(prefix)
+    relEresol_vs_energy_graph.GetXaxis().SetTitle(x_axis_label)
     relEresol_vs_energy_graph.GetXaxis().SetTitleOffset(1.2)
-    relEresol_vs_energy_graph.GetYaxis().SetTitle("#scale[1.9]{#sigma}#left(#frac{E_{Reco} - E_{Gen}}{E_{Reco}}#right)")
+    relEresol_vs_energy_graph.GetXaxis().SetLimits(0.2, 300)
+    relEresol_vs_energy_graph.GetYaxis().SetTitle(y_axis_label)
     relEresol_vs_energy_graph.GetYaxis().SetTitleOffset(1.4)
     #relEresol_vs_energy_graph = ROOT.TGraphErrors(len(energies_gev_float), energies_gev_float, energy_resolutions, 0, energy_resolution_errors)
     #relEresol_vs_energy_graph.GetYaxis().SetLabelSize(0.06)
     #relEresol_vs_energy_graph.GetYaxis().SetTitleSize(0.06)
     #relEresol_vs_energy_graph.GetYaxis().SetTitleSize(0.05)
-    return relEresol_vs_energy_graph
+    tf1_relEresol_vs_e = ROOT.TF1("tf1_" + variable_name, "sqrt(pow([0]/x, 2) + pow([1]/sqrt(x), 2) + pow([2], 2))", energies_gev_float[0], energies_gev_float[-1])
+    tf1_relEresol_vs_e.SetLineColor(args.color)
+    relEresol_vs_e_fit = relEresol_vs_energy_graph.Fit(tf1_relEresol_vs_e, "SQ")
+    a = str(round(relEresol_vs_e_fit.Get().Parameter(0), 2))
+    b = str(round(relEresol_vs_e_fit.Get().Parameter(1), 2))
+    c = str(round(relEresol_vs_e_fit.Get().Parameter(2), 2))
+    relEresol_vs_energy_graph.GetXaxis().SetLimits(0.2, 300)
+    canvas_relEresol_vs_energy = ROOT.TCanvas(variable_name + "_vs_energy", variable_name + "_vs_energy")
+    canvas_relEresol_vs_energy.SetLogx(1)
+    relEresol_vs_energy_graph.Draw("ap")
+    relEresol_vs_energy_graph.Write()
+    eResol_vs_e_formula = "#color[%d]{#frac{%s}{E} #oplus #frac{%s}{#sqrt{E}} #oplus %s}"%(args.color, a, b, c) 
+    eResol_vs_e_legend = copy(gStyle.topRight_legend_relEresol)
+    eResol_vs_e_legend.AddEntry(ROOT.nullptr, eResol_vs_e_formula, "")
+    eResol_vs_e_legend.Draw()
+    canvas_relEresol_vs_energy.Print(os.path.join(plot_dir_name, variable_name + "_vs_energy.png"))
+    canvas_relEresol_vs_energy.Write()
+    #return relEresol_vs_e_fit
 
 
 energies_gev_float.sort()
 idx = 0
-relEresol_vs_energy_graph = create_relEresol_graph("")
-relEresol_vs_energy_cells_graph = create_relEresol_graph("cells")
+relEresol_vs_energy_graph = ROOT.TGraphErrors(prefix + postfix + "_relEresol_vs_energy_graph")
+relEresol_vs_energy_cells_graph = ROOT.TGraphErrors(prefix + postfix)
+#relEresol_vs_energy_cells_graph, relEerol_vs_energy_fit = create_resolution_vs_energy_graph('relEresol', "cells")
+
+phiResol_vs_energy_graph = ROOT.TGraphErrors(prefix + postfix + "_phiResol_vs_energy_graph")
+thetaResol_vs_energy_graph = ROOT.TGraphErrors(prefix + postfix + "_thetaResol_vs_energy_graph")
 
 for energy_float in energies_gev_float:
     energy_str = str(energy_float).replace(".", "dot")
+
+    # E resol
     relEresol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_relEresol_error[energy_str][0])
     relEresol_vs_energy_graph.SetPointError(idx, 0, dict_energy_relEresol_error[energy_str][1])
     if args.cells:
         relEresol_vs_energy_cells_graph.SetPoint(idx, energy_float, dict_energy_cells_relEresol_error[energy_str][0])
         relEresol_vs_energy_cells_graph.SetPointError(idx, 0, dict_energy_cells_relEresol_error[energy_str][1])
+
+    # Phi resol
+    phiResol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_phiResol_error[energy_str][0]*1000)
+    phiResol_vs_energy_graph.SetPointError(idx, 0, dict_energy_phiResol_error[energy_str][1]*1000)
+
+    # Theta resol
+    thetaResol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_thetaResol_error[energy_str][0]*1000)
+    thetaResol_vs_energy_graph.SetPointError(idx, 0, dict_energy_thetaResol_error[energy_str][1]*1000)
+
     idx +=1
 
-relEresol_vs_energy_graph.GetXaxis().SetLimits(0.2, 300)
-relEresol_vs_energy_cells_graph.GetXaxis().SetLimits(0.2, 300)
+# Writing the VARIABLE_RESOL_VS_ENERGY
+ROOT.gStyle.SetOptFit(000)
+
+output_rootfile_graph_name = os.path.join(plot_dir_name, "relResol_vs_energy.root")
+print "Writing %s"%output_rootfile_graph_name
+output_rootfile_graph = ROOT.TFile(output_rootfile_graph_name, "recreate")
+
+
+relEresol_vs_energy_fit = plot_resolution_vs_energy_graph('relEresol', "", relEresol_vs_energy_graph)
+phiResol_vs_energy_fit = plot_resolution_vs_energy_graph('phiResol', "", phiResol_vs_energy_graph)
+thetaResol_vs_energy_fit = plot_resolution_vs_energy_graph('thetaResol', "", thetaResol_vs_energy_graph)
+
 
 #Fit energy resolution vs energy
 #tf1_eResol_vs_e = TF1("tf1_eResol_vs_e", "sqrt([0] * [0] + pow([1] / sqrt(x), 2))", 5, 600)
-output_rootfile_graph = ROOT.TFile(os.path.join(plot_dir_name, "relResol_vs_energy.root"), "recreate")
-ROOT.gStyle.SetOptFit(000)
 
-tf1_eResol_vs_e = ROOT.TF1("tf1_eResol_vs_e", "sqrt(pow([0]/x, 2) + pow([1]/sqrt(x), 2) + pow([2], 2))", energies_gev_float[0], energies_gev_float[-1])
-tf1_eResol_vs_e.SetLineColor(args.color)
-eResol_vs_e_fit = relEresol_vs_energy_graph.Fit(tf1_eResol_vs_e, "SQ")
-a = str(round(eResol_vs_e_fit.Get().Parameter(0), 2))
-b = str(round(eResol_vs_e_fit.Get().Parameter(1), 2))
-c = str(round(eResol_vs_e_fit.Get().Parameter(2), 2))
+#tf1_eResol_vs_e = ROOT.TF1("tf1_eResol_vs_e", "sqrt(pow([0]/x, 2) + pow([1]/sqrt(x), 2) + pow([2], 2))", energies_gev_float[0], energies_gev_float[-1])
+#tf1_eResol_vs_e.SetLineColor(args.color)
+#eResol_vs_e_fit = relEresol_vs_energy_graph.Fit(tf1_eResol_vs_e, "SQ")
+#a = str(round(eResol_vs_e_fit.Get().Parameter(0), 2))
+#b = str(round(eResol_vs_e_fit.Get().Parameter(1), 2))
+#c = str(round(eResol_vs_e_fit.Get().Parameter(2), 2))
+#
+#tf1_phiResol_vs_e = ROOT.TF1("tf1_phiResol_vs_e", "sqrt(pow([0]/x, 2) + pow([1]/sqrt(x), 2) + pow([2], 2))", energies_gev_float[0], energies_gev_float[-1])
+#tf1_phiResol_vs_e.SetLineColor(args.color)
+#phiResol_vs_e_fit = relEresol_vs_energy_graph.Fit(tf1_phiResol_vs_e, "SQ")
+#a = str(round(phiResol_vs_e_fit.Get().Parameter(0), 2))
+#b = str(round(phiResol_vs_e_fit.Get().Parameter(1), 2))
+#c = str(round(phiResol_vs_e_fit.Get().Parameter(2), 2))
 
+#FIXME
+#canvas_relEresol_vs_energy = ROOT.TCanvas("relEresolution_vs_energy", "relEresolution_vs_energy")
+#canvas_relEresol_vs_energy.SetLogx(1)
+#relEresol_vs_energy_graph.Draw("ap")
+#relEresol_vs_energy_graph.Write()
+#eResol_vs_e_formula = "#color[%d]{#frac{%s}{E} #oplus #frac{%s}{#sqrt{E}} #oplus %s}"%(args.color, a, b, c) 
+#eResol_vs_e_legend = gStyle.topRight_legend_relEresol
+#eResol_vs_e_legend.AddEntry(ROOT.nullptr, eResol_vs_e_formula, "")
+#eResol_vs_e_legend.Draw()
+#canvas_relEresol_vs_energy.Print(os.path.join(plot_dir_name, "relEresolution_vs_energy.png"))
+#canvas_relEresol_vs_energy.Write()
 
-canvas_relEresol_vs_energy = ROOT.TCanvas("relEresolution_vs_energy", "relEresolution_vs_energy")
-canvas_relEresol_vs_energy.SetLogx(1)
-relEresol_vs_energy_graph.Draw("ap")
-relEresol_vs_energy_graph.Write()
-eResol_vs_e_formula = "#color[%d]{#frac{%s}{E} #oplus #frac{%s}{#sqrt{E}} #oplus %s}"%(args.color, a, b, c) 
-eResol_vs_e_legend = gStyle.topRight_legend
-eResol_vs_e_legend.AddEntry(ROOT.nullptr, eResol_vs_e_formula, "")
-eResol_vs_e_legend.Draw()
-canvas_relEresol_vs_energy.Print(os.path.join(plot_dir_name, "relEresolution_vs_energy.png"))
-canvas_relEresol_vs_energy.Write()
-
-if args.cells:
-    eResol_vs_e_fit = relEresol_vs_energy_cells_graph.Fit(tf1_eResol_vs_e, "SQ")
-    a = str(round(eResol_vs_e_fit.Get().Parameter(0), 2))
-    b = str(round(eResol_vs_e_fit.Get().Parameter(1), 2))
-    c = str(round(eResol_vs_e_fit.Get().Parameter(2), 2))
-
-    canvas_relEresol_vs_energy_cells = ROOT.TCanvas("relEresolution_vs_energy_cells", "relEresolution_vs_energy_cells")
-    canvas_relEresol_vs_energy_cells.SetLogx(1)
-    relEresol_vs_energy_cells_graph.Draw("ap")
-    relEresol_vs_energy_cells_graph.Write()
-    eResol_vs_e_formula = "#color[%d]{#frac{%s}{E} #oplus #frac{%s}{#sqrt{E}} #oplus %s}"%(args.color, a, b, c) 
-    gStyle.topRight_legend.Clear()
-    eResol_vs_e_legend_cells = gStyle.topRight_legend
-    eResol_vs_e_legend_cells.AddEntry(ROOT.nullptr, eResol_vs_e_formula, "")
-    eResol_vs_e_legend_cells.Draw()
-    canvas_relEresol_vs_energy_cells.Print(os.path.join(plot_dir_name, "relEresolution_vs_energy_cells.png"))
-    canvas_relEresol_vs_energy_cells.Write()
+#if args.cells:
+#    eResol_vs_e_fit = relEresol_vs_energy_cells_graph.Fit(tf1_eResol_vs_e, "SQ")
+#    a = str(round(eResol_vs_e_fit.Get().Parameter(0), 2))
+#    b = str(round(eResol_vs_e_fit.Get().Parameter(1), 2))
+#    c = str(round(eResol_vs_e_fit.Get().Parameter(2), 2))
+#
+#    canvas_relEresol_vs_energy_cells = ROOT.TCanvas("relEresolution_vs_energy_cells", "relEresolution_vs_energy_cells")
+#    canvas_relEresol_vs_energy_cells.SetLogx(1)
+#    relEresol_vs_energy_cells_graph.Draw("ap")
+#    relEresol_vs_energy_cells_graph.Write()
+#    eResol_vs_e_formula = "#color[%d]{#frac{%s}{E} #oplus #frac{%s}{#sqrt{E}} #oplus %s}"%(args.color, a, b, c) 
+#    gStyle.topRight_legend_relEresol.Clear()
+#    eResol_vs_e_legend_cells = gStyle.topRight_legend_relEresol
+#    eResol_vs_e_legend_cells.AddEntry(ROOT.nullptr, eResol_vs_e_formula, "")
+#    eResol_vs_e_legend_cells.Draw()
+#    canvas_relEresol_vs_energy_cells.Print(os.path.join(plot_dir_name, "relEresolution_vs_energy_cells.png"))
+#    canvas_relEresol_vs_energy_cells.Write()
 
 output_rootfile_graph.Close()

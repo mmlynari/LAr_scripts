@@ -57,6 +57,8 @@ geoservice.detectors = [os.path.join(path_to_detector, "..", _det) for _det in d
 from Configurables import SimG4Svc
 geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist="SimG4FtfpBert", actions="SimG4FullSimActions")
 geantservice.g4PostInitCommands += ["/run/setCut 0.1 mm"]
+geantservice.randomNumbersFromGaudi = False
+geantservice.seedValue = 4242
 
 # Geant4 algorithm
 # Translates EDM to G4Event, passes the event to G4, writes out outputs via tools

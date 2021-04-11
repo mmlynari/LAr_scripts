@@ -9,7 +9,7 @@ ROOT.gROOT.SetBatch(ROOT.kTRUE)
 max_evt = 1
 #rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/outputs/201209/fccsw_output_pythia_ee_Z_ee.root'
 rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/outputs/201216/fccsw_output_pythia_ee_Z_ee_all131all.root'
-plot_dir_name = 'plot_'+os.path.basename(rootfile_path).replace('.root','')
+plot_dir_name = 'plots_clusterShape_' + os.path.basename(rootfile_path).replace('.root','')
 if not os.path.isdir(plot_dir_name):
     os.mkdir(plot_dir_name)
 

@@ -1,6 +1,10 @@
 import os, sys, glob, re
 
 condor_dir = sys.argv[1]
+if '_calib_' in condor_dir:
+    n_line_errfile = 1
+else:
+    n_line_errfile = 15
 # 201012_pythia/exec_pdgID_22_pMin_0_pMax_0_thetaMin_0_thetaMax_0_evt_200_jobid_369.sh.err
 # "fccsw_output_pythia_ee_Z_ee_jobid_313.root"
 rootfile_dir = os.path.join("/eos/user/b/brfranco/rootfile_storage/", condor_dir)
@@ -28,7 +32,7 @@ for errorfile in glob.glob(os.path.join(condor_dir, "*.err")):
             for fixable_pattern in fixable_patterns:
                 if fixable_pattern in line:
                     fixable = True
-        if nlines != 15:
+        if nlines != n_line_errfile:
                 dict_energy_njob_nfailedjob[energy][1] += 1
             #if "Aborted" in line or "segmentation violation" in line:
                 jobid = errorfile.split("_")[-1].split('.')[0]
@@ -56,7 +60,7 @@ for errorfile in error_files:
 print "Failed job that could be recovered:"
 for fixable_sh in fixable_shs:
     print fixable_sh
-print "Number of job and failed job per energy:"
+print "Number of job, failed job and percentage per energy:"
 for energy in dict_energy_njob_nfailedjob.keys():
     dict_energy_njob_nfailedjob[energy].append(round(100*dict_energy_njob_nfailedjob[energy][1]/float(dict_energy_njob_nfailedjob[energy][0]), 1))
 print dict_energy_njob_nfailedjob

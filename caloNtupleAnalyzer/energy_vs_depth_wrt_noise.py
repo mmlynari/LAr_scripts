@@ -25,7 +25,7 @@ postfix = ''
 #else:
 #    postfix = ''
 
-noise_root_file_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCSW_201207_geometry/LAr_scripts/geometry/noise_capa_210401/elecNoise_ecalBarrelFCCee.root"
+noise_root_file_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCSW_201207_geometry/LAr_scripts/geometry/noise_capa/elecNoise_ecalBarrelFCCee.root"
 noise_root_file = ROOT.TFile(noise_root_file_path, 'r')
 th1_name_template = 'h_elecNoise_fcc_LAYERID'
 layer_radius_edges = [2160, 2173.6787835669493, 2206.0574015524803, 2239.0593055298277, 2272.657342921452, 2306.825466503636, 2341.5387200310156, 2376.7732184243205, 2412.5061235473704, 2448.71561648303, 2485.3808671070947, 2522.482001655514, 2560.000068884735] # needed to know from which layer to take the noise histogram, obtained from create_capacitance.py

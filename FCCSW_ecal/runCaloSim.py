@@ -114,7 +114,7 @@ geantsim = SimG4Alg("SimG4Alg",
 from Configurables import CalibrateInLayersTool
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
                                    # sampling fraction obtained using SamplingFractionInLayers from DetStudies package
-                                   samplingFraction = [0.303451138049] * 1 + [0.111872504159] * 1 + [0.135806495306] * 1 + [0.151772636618] * 1 + [0.163397436122] * 1 + [0.172566977313] * 1 + [0.179855253903] * 1 + [0.186838417657] * 1 + [0.192865946689] * 1 + [0.197420241611] * 1 + [0.202066552306] * 1 + [0.22646764465] * 1,
+                                   samplingFraction = [0.299660072999] * 1 + [0.107337834302] * 1 + [0.131093058668] * 1 + [0.147035129854] * 1 + [0.159254377569] * 1 + [0.169058931113] * 1 + [0.177898672999] * 1 + [0.185143191367] * 1 + [0.191511519611] * 1 + [0.198119136509] * 1 + [0.217033818545] * 1,
                                    readoutName = ecalBarrelReadoutName,
                                    layerFieldName = "layer")
 

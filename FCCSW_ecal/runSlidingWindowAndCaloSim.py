@@ -5,7 +5,7 @@ from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 use_pythia = False
 
 # Input for simulations (momentum is expected in GeV!)
-momentum = 0.3
+momentum = 10
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
 #thetaMin = 45.
 #thetaMin = 55.
@@ -14,7 +14,7 @@ thetaMin = 90.
 thetaMax = 90.
 #thetaMax = 55.
 magneticField = False
-pdgCode = 22 #11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
+pdgCode = 13 #11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 
 from Gaudi.Configuration import *
 
@@ -53,6 +53,7 @@ genParticlesOutputName = "genParticles"
 genVerticesOutputName = "genVertices"
 hepmc_converter.genparticles.Path = genParticlesOutputName
 hepmc_converter.genvertices.Path = genVerticesOutputName
+hepmc_converter.hepmcStatusList = []
 
 ################## Simulation setup
 # Detector geometry
@@ -72,8 +73,18 @@ geoservice.OutputLevel = INFO
 
 # Geant4 service
 # Configures the Geant simulation: geometry, physics list and user actions
+from Configurables import SimG4FullSimActions, SimG4Alg, SimG4PrimariesFromEdmTool, SimG4SaveParticleHistory
+actions = SimG4FullSimActions()
+actions.enableHistory=True
+actions.energyCut = 0.2 * GeV 
+savehisttool = SimG4SaveParticleHistory("saveHistory")
+savehisttool.mcParticles.Path = "simParticles"
+savehisttool.genVertices.Path = "simVertices"
+
+
 from Configurables import SimG4Svc
-geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist="SimG4FtfpBert", actions="SimG4FullSimActions")
+#geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist="SimG4FtfpBert", actions="SimG4FullSimActions")
+geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist="SimG4FtfpBert", actions=actions)
 geantservice.randomNumbersFromGaudi = False
 geantservice.seedValue = 4242
 
@@ -120,6 +131,7 @@ from Configurables import SimG4Alg
 geantsim = SimG4Alg("SimG4Alg",
                        outputs= ["SimG4SaveCalHits/saveECalBarrelHits",
                                  "SimG4SaveCalHits/saveHCalBarrelHits",
+                                 #savehisttool
                        ],
                        eventProvider=particle_converter,
                        OutputLevel=INFO)
@@ -259,7 +271,7 @@ out = PodioOutput("out",
 out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop ECalBarrelPositions", "drop emptyCaloCells", "drop CaloClusterCells"]
 
 import uuid
-out.filename = "output_fullCalo_SimAndDigi_withCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum)+"GeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+".root"
+out.filename = "output_fullCalo_SimAndDigi_withCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+".root"
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
@@ -299,7 +311,7 @@ ApplicationMgr(
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 100,
+    EvtMax   = 10000,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )

@@ -28,6 +28,7 @@ gStyle.SetPadTickY(1)
 activeTotal = 400.0
 inclinedTotal = 564.964
 tracesPerLayer = [6, 1, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7] # only one trace for strip layer because 4 cells instead of one
+ncells_strip_layer = 4.0
 # careful, this is not really the radial spacing, it is, after dilution, the spacing in the parallel direction --> radial depth spacing will not be constant
 readoutLayerRadialLengths = [1.500000] * 1 + [3.500000] * 11
 #Detector
@@ -40,7 +41,7 @@ passiveThickness = 2.0 #mm
 deltaEta = 0.01
 maxEta = 0.881 # 45 degrees
 numEta = int(ceil(maxEta/deltaEta))
-#PCB dimensions
+#PCB dimensions [mm]
 hhv = 0.1
 hs = 0.17
 t = 0.035
@@ -62,6 +63,7 @@ epsilonR = 4.4 # PCB
 inch2mm = 25.4
 #capa per length from maxwel
 capa_per_mm = 0.123 # pF/mm
+capa_per_mm_stripLayer = 0.062 # pF/mm
 # multiplicative factor
 # factor two because we merge two phi cells together, another factor 2 becasue we have two 1) signal pad / shield capa  2) HV plate / absorber capa per cell
 nmult = 4
@@ -151,9 +153,9 @@ hCapDetector = []
 line_color_number = 1
 line_style_number = 1
 for i in range (0, len(readoutLayerRadialLengths)):
-    if line_color_number == 10:
-        line_color_number = 28
-    if line_style_number > 10:
+    if line_color_number == 8:
+        line_color_number = 22
+    if line_style_number == 8:
         line_style_number = 1
     #traces 
     hCapTrace.append(TH1F())
@@ -177,9 +179,12 @@ for i in range (0, len(readoutLayerRadialLengths)):
     hCapDetector[i].SetLineColor(line_color_number)
     hCapDetector[i].SetLineStyle(line_style_number)
     hCapDetector[i].SetLineWidth(2)
-    hCapDetector[i].SetTitle("HV plate - absorber capacitance; |#eta|; Capacitance [pF]")
+    hCapDetector[i].SetTitle("Signal pad - absorber capacitance; |#eta|; Capacitance [pF]")
     hCapDetector[i].SetName("hCapacitance_detector"+str(i))
-    line_color_number += 1
+    if line_color_number > 8:
+        line_color_number += 10
+    else:
+        line_color_number += 1
     line_style_number += 1
 
 cTrace = TCanvas("cTrace","",600,400)
@@ -211,7 +216,7 @@ for i in range (0, len(readoutLayerParallelLengths)):
         # from maxwell 
         capacitanceShield = nmult * cellLength * tracesPerLayer[i] * capa_per_mm
         if i == 1: #strip layer has smaller capacitance due to traces running beneath the anti-etch
-            capacitanceShield /= 2
+            capacitanceShield = nmult * cellLength * tracesPerLayer[i] * capa_per_mm_stripLayer
         if capacitanceShield > capa_shield_max:
             capa_shield_max = capacitanceShield
         hCapShield[i].SetBinContent(index+1, capacitanceShield)
@@ -227,9 +232,13 @@ for i in range (0, len(readoutLayerParallelLengths)):
                  + real_radial_separation[i + 1] * ( 1 / (tan(2. * atan(exp(- (index + 1) * deltaEta)))) -  1 / (tan(2. * atan(exp(- index * deltaEta))) ) )
                  ) / 2. * (real_radial_separation[i+1] - real_radial_separation[i])
         distance = (2 * pi * (real_radial_separation[i+1] + real_radial_separation[i]) / 2. / Nplanes * cos (inclinations_wrt_radial_dir_at_middleRadialDepth[i]) - pcbThickness - passiveThickness) / 2. # divided by two because two lar gap per cell
+        distance += hhv #the capa is between signal plate and absorber --> need to add distance between HV plate and signal pad
+        distance += t #the capa is between signal plate and absorber --> need to add distance between HV plate and signal pad
         if eta == 0:
             print "LAr gap size (perpendicular): %f mm"%distance
         capacitanceDetector = nmult * epsilon0 * epsilonRLAr * area / distance
+        if i == 1: #strip layer has smaller capacitance because it is divided in 4 smaller cells
+            capacitanceDetector /= ncells_strip_layer
         hCapDetector[i].SetBinContent(index+1, capacitanceDetector)
         if capacitanceDetector > capa_det_max:
             capa_det_max = capacitanceDetector
@@ -279,11 +288,13 @@ legend.Draw()
 cShield.Update()
 cShield.Write()
 cShield.Print("capa_shield.png")
+cShield.Print("capa_shield.pdf")
 cDetector.cd()
 legend.Draw()
 cDetector.Update()
 cDetector.Write()
 cDetector.Print("capa_detector.png")
+cDetector.Print("capa_detector.pdf")
 
 fImpedance.Write()
 fImpedance1D.Write()

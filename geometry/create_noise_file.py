@@ -5,12 +5,14 @@ from datetime import date
 import os
 
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
+ROOT.gStyle.SetPadTickY(1)
 
 #filename = "ecalBarrelFCCee_"+flagImpedance+"Ohm_"+flagTraces+"_"+str(flagsShieldsWidth)+"shieldWidth"
 filename = "capacitances_perSource_ecalBarrelFCCee.root"
 fIn = TFile(filename, "r")
 
-output_folder = "noise_capa_" + date.today().strftime("%y%m%d") 
+#output_folder = "noise_capa_" + date.today().strftime("%y%m%d") 
+output_folder = "noise_capa" 
 if not os.path.isdir(output_folder):
     os.mkdir(output_folder)
 fSaveAll = TFile(os.path.join(output_folder, "capacitances_ecalBarrelFCCee.root"),"RECREATE")
