@@ -14,7 +14,7 @@ thetaMin = 90.
 thetaMax = 90.
 #thetaMax = 55.
 magneticField = False
-pdgCode = 13 #11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
+pdgCode = 11 #11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 
 from Gaudi.Configuration import *
 
@@ -275,7 +275,7 @@ dupP = 13
 finE = 9
 finP = 17
 # approx in GeV: changed from default of 12 in FCC-hh
-threshold = 0.1
+threshold = 0.2
 
 from Configurables import CreateCaloClustersSlidingWindow
 createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
@@ -305,7 +305,7 @@ out = PodioOutput("out",
 out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop ECalBarrelPositions", "drop emptyCaloCells", "drop CaloClusterCells"]
 
 import uuid
-out.filename = "output_fullCalo_SimAndDigi_withCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum)+"GeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+".root"
+out.filename = "output_fullCalo_SimAndDigi_withNoise_withCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum)+"GeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+".root"
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
@@ -343,12 +343,12 @@ ApplicationMgr(
               createEcalBarrelPositionedCellsNoise,
               #createHcalBarrelCells,
               #createemptycells,
-              #createClusters,
+              createClusters,
               #createEcalBarrelPositionedCaloClusterCells,
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 1000,
+    EvtMax   = 10,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )

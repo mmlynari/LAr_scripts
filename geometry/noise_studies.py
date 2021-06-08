@@ -6,8 +6,8 @@ plot_dir = "plots_noise"
 if not os.path.isdir(plot_dir):
     os.mkdir(plot_dir)
 
-noise_value_per_cell = 0.5 #MeV   0.1 cold pre amp and 10 pF,  0.5 for warm pre-amp and 10 pF cells
-number_fired_cells = np.arange(1, 800) # average number of fired cell for: 1GeV elec all theta new geo no zero supp --> 78, 10GeV elec all theta new geo no zero supp --> 370
+noise_value_per_cell = 10 #MeV   0.1 cold pre amp and 10 pF,  0.5 for warm pre-amp and 10 pF cells
+number_fired_cells = np.arange(1, 800) # average number of fired cell for: 1GeV elec all theta new geo no zero supp --> 78 (61 if above 1 MeV, 20 if above 10 MeV), 10GeV elec all theta new geo no zero supp --> 370
 total_noise_list = []
 for ncell in number_fired_cells:
     total_noise = math.sqrt(sum([noise_value_per_cell**2 for i in range(ncell)]))

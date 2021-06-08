@@ -251,9 +251,9 @@ cCapParts.Divide(3,4)
 for i in range (0, nLayers):
     cCapParts.cd(i+1)
     if i < 7:
-        hCapTotal[i].SetMaximum(450)
+        hCapTotal[i].SetMaximum(350)
     else:
-        hCapTotal[i].SetMaximum(900)
+        hCapTotal[i].SetMaximum(350)
 
     hCapTotal[i].SetTitle("Layer "+str(i+1))
     hCapTotal[i].GetXaxis().SetTitleSize(0.045)

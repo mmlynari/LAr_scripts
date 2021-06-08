@@ -23,6 +23,10 @@ gStyle.SetPadTickY(1)
 #ECalConstruction     INFO active material = LAr active layers thickness at inner radius (cm) = 0.247949 thickness at outer radious (cm) = 0.479746 making 93.4857 % increase.
 #ECalConstruction     INFO active passive initial overlap (before subtraction) (cm) = 0.1 = 50 %
 
+
+filename = "capacitances_perSource_ecalBarrelFCCee.root"
+#filename = "capacitances_ecalBarrelFCCee_nLayer_%d_fromAnalytical.root"%numLayers
+
 # layer 2 require special care as it is separated in several cells and that the shield run beneath the etch: cell 2 signal pad top capa: 0.68 + 0.20 = 0.88, cell 2 signal pad bot: 0.56 + 0.21 = 0.77, cell 3: 0.34 + 2.4 = 2.74, cell 4: 1 + 0.25 = 1.25, cell 5: 1.85 + 0.28 = 2.13 
 
 activeTotal = 400.0
@@ -124,8 +128,6 @@ print "Real radial depth: ", real_radial_depth
 print "inclinations_wrt_radial_dir_at_middleRadialDepth: ", [degrees(inclinations) for inclinations in inclinations_wrt_radial_dir_at_middleRadialDepth]
 print "Signal trace length per layer: ", trace_length
 
-filename = "capacitances_perSource_ecalBarrelFCCee.root"
-#filename = "capacitances_ecalBarrelFCCee_nLayer_%d_fromAnalytical.root"%numLayers
 
 gStyle.SetOptStat(0)
 
