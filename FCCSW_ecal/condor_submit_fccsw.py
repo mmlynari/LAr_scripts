@@ -54,9 +54,16 @@ queue filename matching files {1}
 
 def get_exec_file_header():# assumes you installed FCCSW locally with the 'install' folder at the root of your FCCSW repository
     return """#!/bin/bash
-source %s/../init.sh
-source %s/setup.sh
-"""%(os.environ.get("FCCSWBASEDIR", ""), os.environ.get("FCCSWBASEDIR", ""))
+source /cvmfs/sw.hsf.org/key4hep/setup.sh
+export K4RECCALORIMETER=%s
+export K4SIMGEANT4=%s
+export K4FWCORE=%s
+export FCCDETECTORS=%s
+export PYTHONPATH=%s
+LD_LIBRARY_PATH=%s
+CMAKE_PREFIX_PATH=%s
+PATH=%s
+"""%(os.environ.get("K4RECCALORIMETER", ""), os.environ.get("K4SIMGEANT4", ""), os.environ.get("K4FWCORE", ""), os.environ.get("FCCDETECTORS", ""), os.environ.get("PYTHONPATH", ""), os.environ.get("LD_LIBRARY_PATH", ""), os.environ.get("CMAKE_PREFIX_PATH", ""), os.environ.get("PATH", ""))
 
 
 
@@ -84,7 +91,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if os.environ.get("FCCSWBASEDIR", "") == "":
+    if os.environ.get("FCCDETECTORS", "") == "":
         print "Error: fcc environment not set, please run source init.sh and source install/setup.sh in the FCCSW root directory\nExitting..."
         sys.exit(1)
 

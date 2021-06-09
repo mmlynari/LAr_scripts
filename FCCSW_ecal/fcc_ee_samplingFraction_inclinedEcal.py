@@ -34,23 +34,23 @@ genalg_pgun.hepmc.Path = "hepmc"
 from Configurables import HepMCToEDMConverter
 hepmc_converter = HepMCToEDMConverter()
 hepmc_converter.hepmc.Path="hepmc"
-hepmc_converter.genparticles.Path="GenParticles"
-hepmc_converter.genvertices.Path="GenVertices"
+genParticlesOutputName = "genParticles"
+hepmc_converter.GenParticles.Path = genParticlesOutputName
+hepmc_converter.hepmcStatusList = []
 
 # DD4hep geometry service
 from Configurables import GeoSvc
 geoservice = GeoSvc("GeoSvc",
                     OutputLevel = INFO)
 
-#path_to_detector = os.environ.get("FCC_DETECTORS", "")
-path_to_detector = os.environ.get("FCCSWBASEDIR", "")
+path_to_detector = os.environ.get("FCCDETECTORS", "")
 detectors_to_use=[ 
     'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectEmptyMaster.xml',
     #'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster.xml',
     #'Detector/DetFCCeeECalInclined/compact/original_FCCee_ECalBarrel_calibration.xml',
     'Detector/DetFCCeeECalInclined/compact/FCCee_ECalBarrel_calibration.xml',
     ]
-geoservice.detectors = [os.path.join(path_to_detector, "..", _det) for _det in detectors_to_use]
+geoservice.detectors = [os.path.join(path_to_detector, _det) for _det in detectors_to_use]
 
 # Geant4 service
 # Configures the Geant simulation: geometry, physics list and user actions
@@ -63,18 +63,18 @@ geantservice.seedValue = 4242
 # Geant4 algorithm
 # Translates EDM to G4Event, passes the event to G4, writes out outputs via tools
 # and a tool that saves the calorimeter hits
+ecalBarrelHitsName = "ECalBarrelPositionedHits"
 from Configurables import SimG4Alg, SimG4SaveCalHits
-saveecaltool = SimG4SaveCalHits("saveECalBarrelHits",readoutNames = ["ECalBarrelEta"])
-saveecaltool.positionedCaloHits.Path = "ECalBarrelPositionedHits"
-saveecaltool.caloHits.Path = "ECalBarrelHits"
+saveECalBarrelTool = SimG4SaveCalHits("saveECalBarrelHits",readoutNames = ["ECalBarrelEta"])
+saveECalBarrelTool.CaloHits.Path = ecalBarrelHitsName
 
 from Configurables import SimG4PrimariesFromEdmTool
 particle_converter = SimG4PrimariesFromEdmTool("EdmConverter")
-particle_converter.genParticles.Path = "GenParticles"
+particle_converter.GenParticles.Path = genParticlesOutputName
 
 # next, create the G4 algorithm, giving the list of names of tools ("XX/YY")
 geantsim = SimG4Alg("SimG4Alg",
-                    outputs= ["SimG4SaveCalHits/saveECalBarrelHits"],
+                    outputs= [saveECalBarrelTool],
                     eventProvider = particle_converter,
                     OutputLevel = INFO)
 
@@ -87,7 +87,7 @@ hist = SamplingFractionInLayers("hists",
                                  activeFieldValue = 0,
                                  numLayers = 12,
                                  OutputLevel = INFO)
-hist.deposits.Path="ECalBarrelPositionedHits"
+hist.deposits.Path = ecalBarrelHitsName
 
 THistSvc().Output = ["rec DATAFILE='histSF_fccee_inclined.root' TYP='ROOT' OPT='RECREATE'"]
 THistSvc().PrintAll=True
