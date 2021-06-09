@@ -18,21 +18,21 @@ for nodeList in input_xml.getElementsByTagName('lccdd'):
         if node.localName == 'detectors':
             for subnode in node.childNodes:
                 if subnode.localName == 'detector':
-                    print subnode.localName
+                    print(subnode.localName)
                     for subsubnode in subnode.childNodes:
                         if subsubnode.localName == 'calorimeter':
-                            print "    ", subsubnode.localName
+                            print("    ", subsubnode.localName)
                             for subsubsubnode in subsubnode.childNodes:
                                 if subsubsubnode.localName == 'readout':
-                                    print "        ", subsubsubnode.localName
+                                    print("        ", subsubsubnode.localName)
                                     #print subsubsubnode.getAttribute('sensitive')
                                     subsubsubnode.setAttribute('sensitive', 'true') # here we change the readout as sensitive
                                     #print subsubsubnode.getAttribute('sensitive')
                                 if subsubsubnode.localName == 'passive':
-                                    print "        ", subsubsubnode.localName
+                                    print("        ", subsubsubnode.localName)
                                     for subsubsubsubnode in subsubsubnode.childNodes:
                                         if subsubsubsubnode.localName in ['inner', 'glue', 'outer']:
-                                            print "            ", subsubsubsubnode.localName
+                                            print("            ", subsubsubsubnode.localName)
                                             #print subsubsubsubnode.getAttribute('sensitive')
                                             subsubsubsubnode.setAttribute('sensitive', 'true') # here we change the absorber into sensitive material
                                             #print subsubsubsubnode.getAttribute('sensitive')
@@ -43,13 +43,13 @@ for nodeList in input_xml.getElementsByTagName('lccdd'):
                                             list_of_pair_layerThickness_numberOfLayer.append([subsubsubsubnode.getAttribute('thickness').split('*')[0], subsubsubsubnode.getAttribute('repeat')])
 with open(output_xml_path_sf, "w") as f:
     input_xml.writexml(f)
-print output_xml_path_sf, " written." 
-print "Number of layers: %d"%numberOfLayer
-print "Layer layout {depth : number}: ", list_of_pair_layerThickness_numberOfLayer 
+print(output_xml_path_sf, " written.") 
+print("Number of layers: %d"%numberOfLayer)
+print("Layer layout {depth : number}: ", list_of_pair_layerThickness_numberOfLayer) 
 
 # modify the number of layer in sampling fraction config
 os.system("sed -i 's/numLayers.*,/numLayers = %d,/' fcc_ee_samplingFraction_inclinedEcal.py"%numberOfLayer)
-print "fcc_ee_samplingFraction_inclinedEcal.py modified"
+print("fcc_ee_samplingFraction_inclinedEcal.py modified")
 
 # modify the layer layout in plot_sampling_fraction script
 os.system("sed -i 's/default = \[1\] \*.*,/default = \[1\] \* %d,/' FCC_calo_analysis_cpp/plot_samplingFraction.py"%numberOfLayer)
@@ -59,11 +59,11 @@ for pair_layerThickness_numberOfLayer in list_of_pair_layerThickness_numberOfLay
     string_for_layerWidth += "[%f] * %d + "%(float(pair_layerThickness_numberOfLayer[0]), int(pair_layerThickness_numberOfLayer[1])) 
 string_for_layerWidth = string_for_layerWidth[0:-2]
 os.system("sed -i 's/layerWidth\", default = .*,/layerWidth\", default = %s,/' FCC_calo_analysis_cpp/plot_samplingFraction.py"%string_for_layerWidth)
-print "FCC_calo_analysis_cpp/plot_samplingFraction.py modified"
+print("FCC_calo_analysis_cpp/plot_samplingFraction.py modified")
 
 # modify the number of layer in fcc_ee_upstreamMaterial_inclinedEcal.py
 os.system("sed -i 's/numLayers.*,/numLayers = %d,/' fcc_ee_upstreamMaterial_inclinedEcal.py"%numberOfLayer)
-print "fcc_ee_upstreamMaterial_inclinedEcal.py modified"
+print("fcc_ee_upstreamMaterial_inclinedEcal.py modified")
 
 # Write upstream correction xml
 # Re-make absorber and readout not sensitive
@@ -88,6 +88,6 @@ for nodeList in input_xml.getElementsByTagName('lccdd'):
 
 with open(output_xml_path_upstream, "w") as f:
     input_xml.writexml(f)
-print output_xml_path_upstream, " written." 
+print(output_xml_path_upstream, " written.") 
 
 

@@ -1,4 +1,4 @@
-python write_calibration_xml.py ../../Detector/DetFCCeeECalInclined/compact/FCCee_ECalBarrel.xml # make sure the geometry changes are propagated to the calibration xml
+python write_calibration_xml.py ../../FCCDetectors/Detector/DetFCCeeECalInclined/compact/FCCee_ECalBarrel.xml # make sure the geometry changes are propagated to the calibration xml
 python condor_submit_fccsw.py -outputFolder /eos/user/b/brfranco/rootfile_storage/ -campaignName $(date +"%y%m%d")_condor_calib_10kEvt_11layers \
  -gaudiConfig $PWD/fcc_ee_samplingFraction_inclinedEcal.py -jobType samplingFraction \
  -energies 10000 -polarAngles 90 -energiesForDifferentPolarAngles 10000 \
