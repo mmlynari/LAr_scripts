@@ -48,11 +48,11 @@ sumWidths = 0
 for width in sliceWidth:
     sumWidths += width
     sliceSum.append(sumWidths)
-print('sliceWidths',sliceWidth)
+print(('sliceWidths',sliceWidth))
 startIndex = calo_init.args.numFirstLayer
 Nslices = calo_init.args.totalNumLayers
 if sum(calo_init.args.merge) != Nslices:
-    print('Number of total layers (',Nslices,') is not the same as a sum of "--merge" arguments (sum = ',sum(calo_init.args.merge),')')
+    print(('Number of total layers (',Nslices,') is not the same as a sum of "--merge" arguments (sum = ',sum(calo_init.args.merge),')'))
     exit(0)
 Nslicesmerged = len(merge)
 all_graphs = []
@@ -107,10 +107,10 @@ for ifile, filename in enumerate(calo_init.filenamesIn):
         if result and result.Ndf() > 0:
             # if it fits terribly, try to fit in narrower range
             if result.Chi2() / result.Ndf() > 10:
-                print "Bad fit chi2 %f"%(result.Chi2() / result.Ndf())
+                print("Bad fit chi2 %f"%(result.Chi2() / result.Ndf()))
                 refit = TF1("refit","gaus",resultPre.Get().Parameter(1) - resultPre.Get().Parameter(2), resultPre.Get().Parameter(1) + resultPre.Get().Parameter(2) )
                 result = h.Fit(refit, fitoptions)
-                print "New fit chi2 %f"%(result.Chi2() / result.Ndf())
+                print("New fit chi2 %f"%(result.Chi2() / result.Ndf()))
         # make graph
         if result:
             gSF.SetPoint(islice, sliceSum[islice]-sliceWidth[islice] * 0.5, result.Get().Parameter(1))
@@ -139,14 +139,14 @@ for ifile, filename in enumerate(calo_init.filenamesIn):
         if islice > 0:
             string_for_fccsw += " + "
         string_for_fccsw += "["+str(gSF.GetY()[islice])+"] * "+str(calo_init.args.merge[islice])
-    print "Sampling fraction for energy %d: "%energy
-    print string_for_fccsw
+    print("Sampling fraction for energy %d: "%energy)
+    print(string_for_fccsw)
 
 if calo_init.args.sed:
     command = "sed -i 's/samplingFraction =.*,/samplingFraction = %s,/' "%string_for_fccsw
     os.system(command + " run*CaloSim.py") # it has to be launched from FCCSW_ecal folder
     os.system("sed -i 's/samplingFraction =.*,/samplingFraction = %s,/' fcc_ee_upstreamMaterial_inclinedEcal.py"%string_for_fccsw) # it has to be launched from FCCSW_ecal folder
-    print command + " ../../Reconstruction/RecFCCeeCalorimeter/options/*"
+    print(command + " ../../Reconstruction/RecFCCeeCalorimeter/options/*")
 
 canv = prepare_single_canvas('sf_e'+str(energy)+'GeV', 'Sampling fraction for '+str(energy)+'GeV')
 
