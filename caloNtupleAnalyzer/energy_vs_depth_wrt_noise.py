@@ -4,7 +4,7 @@ import numpy as np
 from datetime import date
 from math import sqrt
 
-print "Careful: only works for eta == 0 at the moment"
+print("Careful: only works for eta == 0 at the moment")
 #ROOT.gROOT.ProcessLine(".L FCCAnalysesDict.C+")
 
 #import gStyle
@@ -43,13 +43,13 @@ for layer_idx in range(len(layer_radius_edges) - 1) :
     energy_histos.append(energy_histo)
 
 if not os.path.isfile(rootfile_path):
-    print "Provided roootfile does not exists"
+    print("Provided roootfile does not exists")
     sys.exit(1)
 plot_dir_name = 'plots_signalOverNoisePerLayer_' + postfix + date.today().strftime("%y%m%d")  #+ "_" + os.path.basename(rootfile_path).replace('.root','')
 energy = int(rootfile_path.split('_pMin_')[1].split("_")[0].replace('GeV', ''))
 #energy = int(energy)/1000.0
 energy_str_gev = str(energy/1000.0).replace(".","dot")
-print energy_str_gev
+print(energy_str_gev)
 
 if not os.path.isdir(plot_dir_name):
     os.mkdir(plot_dir_name)
@@ -85,7 +85,7 @@ for event in events:
         continue
     if evt >= max_evt:
         break
-    for cell_idx in xrange(len(event.ECalBarrelPositionedCells_energy)):
+    for cell_idx in range(len(event.ECalBarrelPositionedCells_energy)):
         hit_radius = sqrt(event.ECalBarrelPositionedCells_x[cell_idx] * event.ECalBarrelPositionedCells_x[cell_idx] + event.ECalBarrelPositionedCells_y[cell_idx] * event.ECalBarrelPositionedCells_y[cell_idx])
         #hit_radius = sqrt(event.ECalBarrelPositionedCells_x[cell_idx] * event.ECalBarrelPositionedCells_x[cell_idx] + event.ECalBarrelPositionedCells_y[cell_idx] * event.ECalBarrelPositionedCells_y[cell_idx] + event.ECalBarrelPositionedCells_z[cell_idx] * event.ECalBarrelPositionedCells_z[cell_idx])
         final_layer_idx = -1
@@ -137,7 +137,7 @@ canvas_signalOverNoise_vs_depth.Write()
 canvas_signalOverNoise_vs_depth.Print(os.path.join(plot_dir_name, "tprof_signalOverNoise_vs_depth_" + energy_str_gev + ".png"))
 
 canvas_energy_vs_depth = ROOT.TCanvas("tprof_energy_vs_depth_canvas_" + energy_str_gev, "tprof_energy_vs_depth_canvas_" + energy_str_gev)
-print "Integral of TProfile (average total energy deposit): ", tprof_energy_vs_depth.Integral()
+print("Integral of TProfile (average total energy deposit): ", tprof_energy_vs_depth.Integral())
 #tprof_energy_vs_depth.Scale(1/tprof_energy_vs_depth.Integral())
 #tprof_energy_vs_depth.SetMarkerSize(4)
 tprof_energy_vs_depth.SetLineWidth(3)

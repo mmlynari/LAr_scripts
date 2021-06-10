@@ -27,7 +27,7 @@ if not os.path.isdir(plot_dir_name):
 
 inputFiles = glob.glob(args.inputFiles)
 if not inputFiles:
-    print "No file found"
+    print("No file found")
     sys.exit(1)
 
 # Single resolution histogram 
@@ -60,13 +60,13 @@ dict_energy_thetaResol_error = {}
 dict_energy_cells_relEresol_error = {}
 energies_gev_float = []
 for inputFile in inputFiles:
-    print "Treating %s..."%inputFile
+    print("Treating %s..."%inputFile)
     rootfile_path = inputFile
     energy = inputFile.split('_pMin_')[1].split("_")[0]
     energy_gev_float = int(energy)/1000.0
     energies_gev_float.append(energy_gev_float)
     energy = str(energy_gev_float).replace(".","dot")
-    print energy
+    print(energy)
     dict_energy_relEresol_error[energy] = []
     dict_energy_phiResol_error[energy] = []
     dict_energy_thetaResol_error[energy] = []
@@ -145,7 +145,7 @@ for inputFile in inputFiles:
 
         evt += 1
         if evt % 1000 == 0:
-            print "Event processed: %d"%evt
+            print("Event processed: %d"%evt)
 
     output_rootfile_path = os.path.join(plot_dir_name, prefix + "perfHistograms.root")
     output_rootfile = ROOT.TFile(output_rootfile_path, "recreate")
@@ -268,7 +268,7 @@ for energy_float in energies_gev_float:
 ROOT.gStyle.SetOptFit(000)
 
 output_rootfile_graph_name = os.path.join(plot_dir_name, "relResol_vs_energy.root")
-print "Writing %s"%output_rootfile_graph_name
+print("Writing %s"%output_rootfile_graph_name)
 output_rootfile_graph = ROOT.TFile(output_rootfile_graph_name, "recreate")
 
 

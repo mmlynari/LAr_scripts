@@ -36,9 +36,9 @@ for event in events:
                 th2_clusterCell1_xy.Fill(event.PositionedCaloClusterCells_x[firstCell+PositionedCaloClusterCell_idx], event.PositionedCaloClusterCells_y[firstCell+PositionedCaloClusterCell_idx])
             if caloCluster_idx == 1:
                 th2_clusterCell2_xy.Fill(event.PositionedCaloClusterCells_x[firstCell+PositionedCaloClusterCell_idx], event.PositionedCaloClusterCells_y[firstCell+PositionedCaloClusterCell_idx])
-        print event.CaloClusters_x[caloCluster_idx]
-        print event.CaloClusters_y[caloCluster_idx]
-        print "------------------"
+        print(event.CaloClusters_x[caloCluster_idx])
+        print(event.CaloClusters_y[caloCluster_idx])
+        print("------------------")
 
     evt += 1
     if evt % 100 == 0:

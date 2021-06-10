@@ -16,13 +16,13 @@ ROOT.gROOT.SetBatch(ROOT.kTRUE)
 #rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/210217_caloReco/fccsw_output_pdgID_22_pMin_10000_pMax_10000_thetaMin_90_thetaMax_90.root'
 rootfile_path = sys.argv[1]
 if not os.path.isfile(rootfile_path):
-    print "Provided roootfile does not exists"
+    print("Provided roootfile does not exists")
     sys.exit(1)
 plot_dir_name = 'plots_showerShape_' + date.today().strftime("%y%m%d")  + "_" + os.path.basename(rootfile_path).replace('.root','')
 energy = int(rootfile_path.split('_pMin_')[1].split("_")[0])
 #energy = int(energy)/1000.0
 energy_str_gev = str(energy/1000.0).replace(".","dot")
-print energy_str_gev
+print(energy_str_gev)
 
 if not os.path.isdir(plot_dir_name):
     os.mkdir(plot_dir_name)
@@ -47,7 +47,7 @@ for event in events:
         break
     th2_clusterCells_xy = ROOT.TH2F(energy_str_gev + "th2_clusterCells_xy_energy_evt%d"%evt, energy_str_gev + "th2_clusterCells_xy_energy_evt%d"%evt, 300, -3000, +3000, 300, -3000, +3000)
     th2_cells_xy = ROOT.TH2F(energy_str_gev + "th2_cells_xy_energy%d"%evt, energy_str_gev + "th2_cells_xy_energy%d"%evt, 300, -3000, +3000, 300, -3000, +3000)
-    for cell_idx in xrange(len(event.ECalBarrelPositionedCells_energy)):
+    for cell_idx in range(len(event.ECalBarrelPositionedCells_energy)):
         th2_cells_xy.Fill(event.ECalBarrelPositionedCells_x[cell_idx], event.ECalBarrelPositionedCells_y[cell_idx], 1000*100*event.ECalBarrelPositionedCells_energy[cell_idx]/float(energy))
 
     for caloCluster_idx in range(len(event.CaloClusters_energy)):
