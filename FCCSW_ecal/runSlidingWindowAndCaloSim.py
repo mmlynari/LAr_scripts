@@ -133,7 +133,7 @@ geantsim = SimG4Alg("SimG4Alg",
 # EM scale calibration (sampling fraction)
 from Configurables import CalibrateInLayersTool
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
-                                   samplingFraction = [0.303451138049] * 1 + [0.111872504159] * 1 + [0.135806495306] * 1 + [0.151772636618] * 1 + [0.163397436122] * 1 + [0.172566977313] * 1 + [0.179855253903] * 1 + [0.186838417657] * 1 + [0.192865946689] * 1 + [0.197420241611] * 1 + [0.202066552306] * 1 + [0.22646764465] * 1,
+                                   samplingFraction = [0.3015372769511699] * 1 + [0.11149483835280927] * 1 + [0.13606757625633936] * 1 + [0.15166527482797484] * 1 + [0.1632488357891111] * 1 + [0.17266802625003083] * 1 + [0.17979275037206174] * 1 + [0.18684819895019078] * 1 + [0.19186331727529204] * 1 + [0.1974122727924478] * 1 + [0.20215095335650032] * 1 + [0.22557145948990787] * 1,
                                    readoutName = ecalBarrelReadoutName,
                                    layerFieldName = "layer")
 
