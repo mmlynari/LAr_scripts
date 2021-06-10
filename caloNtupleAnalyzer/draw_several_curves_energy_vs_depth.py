@@ -18,7 +18,7 @@ if not os.path.isdir(plot_dir_name):
 legend = gStyle.topRight_legend
 colors = gStyle.colors
 if len(colors) < len(args.inputFiles):
-    print "Not enough color to draw all the asked curved"
+    print("Not enough color to draw all the asked curved")
     sys.exit(1)
 
 dict_legend_tprof = {}
@@ -28,7 +28,7 @@ count = 0
 energy_legends = []
 max_y = 0 
 for inputFile in args.inputFiles:
-    print "Treating ", inputFile
+    print("Treating ", inputFile)
     energy_str = str(inputFile.split('_')[-1].split('.')[0])
     energy = float(energy_str.replace('dot', '.'))
     unit = " GeV"
@@ -49,7 +49,7 @@ for inputFile in args.inputFiles:
     graph = ROOT.TProfile(inputRootFile.Get(name))
     #graph.SetMaximum(1.2*graph.GetMaximum())
     #graph.SetDirectory(0)
-    print "tprof_energy_vs_dept_"+energy_str
+    print("tprof_energy_vs_dept_"+energy_str)
     dict_legend_tprof[energy_legend] = graph
     dict_legend_tprof[energy_legend].SetDirectory(0)
     dict_legend_tprof[energy_legend].SetLineColor(colors[count])
@@ -62,7 +62,7 @@ for inputFile in args.inputFiles:
     count += 1
 
 for energy_legend in energy_legends:
-    print dict_legend_tprof[energy_legend]
+    print(dict_legend_tprof[energy_legend])
     legend.AddEntry(dict_legend_tprof[energy_legend], energy_legend)
 
 legend.Draw()
