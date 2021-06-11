@@ -6,12 +6,12 @@ use_pythia = False
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
-momentum = 10
+momentum = 10 # in GeV
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
 #thetaMin = 45.
-thetaMin = 90.25
-thetaMax = 90.25
 #thetaMax = 135.
+thetaMin = 90.25 # degrees
+thetaMax = 90.25 # degrees
 pdgCode = 11 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 magneticField = False
 
