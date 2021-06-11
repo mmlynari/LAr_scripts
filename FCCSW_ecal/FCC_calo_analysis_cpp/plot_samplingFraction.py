@@ -146,7 +146,7 @@ if calo_init.args.sed:
     command = "sed -i 's/samplingFraction =.*,/samplingFraction = %s,/' "%string_for_fccsw
     os.system(command + " run*CaloSim.py") # it has to be launched from FCCSW_ecal folder
     os.system("sed -i 's/samplingFraction =.*,/samplingFraction = %s,/' fcc_ee_upstreamMaterial_inclinedEcal.py"%string_for_fccsw) # it has to be launched from FCCSW_ecal folder
-    print(command + " ../../Reconstruction/RecFCCeeCalorimeter/options/*")
+    #print(command + " ../../k4RecCalorimeter/RecFCCeeCalorimeter/tests/options/* ../../FCCSW/Examples/options/run_calo_fullsim_fccee.py")
 
 canv = prepare_single_canvas('sf_e'+str(energy)+'GeV', 'Sampling fraction for '+str(energy)+'GeV')
 

@@ -6,8 +6,8 @@ use_pythia = False
 
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
 momentum = 10 # in GeV
-thetaMin = 45 # degrees
-thetaMax = 135 # degrees
+thetaMin = 90.25 # degrees
+thetaMax = 90.25 # degrees
 pdgCode = 11 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 magneticField = False
 
