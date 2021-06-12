@@ -287,7 +287,7 @@ ApplicationMgr(
               createEcalBarrelPositionedCells,
               #createHcalBarrelCells,
               createemptycells,
-              createClusters,
+              #createClusters,
               #createEcalBarrelPositionedCaloClusterCells,
               out
               ],
