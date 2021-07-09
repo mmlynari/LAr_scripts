@@ -12,6 +12,8 @@ momentum = 10 # in GeV
 #thetaMax = 135.
 thetaMin = 90.25 # degrees
 thetaMax = 90.25 # degrees
+#thetaMin = 50 # degrees
+#thetaMax = 130 # degrees
 pdgCode = 11 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 magneticField = False
 
