@@ -239,6 +239,7 @@ if __name__ == "__main__":
 
     # write the fcc_analysis script
     fcc_analysis_script_path = os.path.join(campaign_name, "fcc_analysis.sh")
+    fcc_analysis_commands += "cd -\n"
     with open(fcc_analysis_script_path, "w") as f:
         f.write(fcc_analysis_commands)
     st = os.stat(fcc_analysis_script_path)

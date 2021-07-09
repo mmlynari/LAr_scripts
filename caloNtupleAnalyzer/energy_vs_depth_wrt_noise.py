@@ -124,7 +124,6 @@ canvas_cells_xy.Write()
 canvas_cells_xy.Print(os.path.join(plot_dir_name, "th2_cells_xy_" + energy_str_gev + ".png"))
 #canvas_cells_xy.Print(os.path.join(plot_dir_name, 'th2_cells_xy.root'))
 
-
 canvas_signalOverNoise_vs_depth = ROOT.TCanvas("tprof_signalOverNoise_vs_depth_canvas_" + energy_str_gev, "tprof_signalOverNoise_vs_depth_canvas_" + energy_str_gev)
 #tprof_signalOverNoise_vs_depth.Scale(1/tprof_signalOverNoise_vs_depth.Integral())
 #tprof_signalOverNoise_vs_depth.SetMarkerSize(4)

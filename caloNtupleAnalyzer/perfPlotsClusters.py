@@ -52,7 +52,7 @@ def draw_resol_canvas(th1, prefix, variable):
 max_evt = -1
 #cutoff_dR = 0.015
 #cutoff_relE = 0.2
-cutoff_dR = 100000000
+cutoff_dR = 1000
 cutoff_relE = 1000
 dict_energy_relEresol_error = {}
 dict_energy_phiResol_error = {}
@@ -104,32 +104,28 @@ for inputFile in inputFiles:
         for genParticle_idx in range(len(event.genParticle_status)):
             if event.genParticle_status[genParticle_idx] != 1:
                 continue
-            gen_particle_energy = event.genParticle_energy[genParticle_idx]
-            if args.cells:
-                th1_Eresol_cells.Fill((total_energy - gen_particle_energy))
-                th1_relEresol_cells.Fill((total_energy - gen_particle_energy)/total_energy)
             best_genParticle_match_idx = -1
             best_d_R = 100000
             best_d_theta = 100000
             best_d_phi = 100000
             best_d_E = 100000
             best_d_relE = 10000
-            #for caloCluster_idx in range(len(event.CaloClusters_energy)):
-            #    d_theta = event.CaloClusters_theta[caloCluster_idx] - event.genParticle_theta[genParticle_idx]
-            #    d_phi = event.CaloClusters_phi[caloCluster_idx] - event.genParticle_phi[genParticle_idx]
-            #    d_R = sqrt(d_theta * d_theta + d_phi * d_phi)
-            #    d_E = event.CaloClusters_energy[caloCluster_idx] - event.genParticle_energy[genParticle_idx]
-            #    d_relE = (event.CaloClusters_energy[caloCluster_idx] - event.genParticle_energy[genParticle_idx])/event.CaloClusters_energy[caloCluster_idx]
-            #    #d_relE = (event.CaloClusters_energy[caloCluster_idx] - event.genParticle_energy[genParticle_idx])/event.genParticle_energy[genParticle_idx]
+            for caloCluster_idx in range(len(event.CaloClusters_energy)):
+                d_theta = event.CaloClusters_theta[caloCluster_idx] - event.genParticle_theta[genParticle_idx]
+                d_phi = event.CaloClusters_phi[caloCluster_idx] - event.genParticle_phi[genParticle_idx]
+                d_R = sqrt(d_theta * d_theta + d_phi * d_phi)
+                d_E = event.CaloClusters_energy[caloCluster_idx] - event.genParticle_energy[genParticle_idx]
+                d_relE = (event.CaloClusters_energy[caloCluster_idx] - event.genParticle_energy[genParticle_idx])/event.CaloClusters_energy[caloCluster_idx]
+                #d_relE = (event.CaloClusters_energy[caloCluster_idx] - event.genParticle_energy[genParticle_idx])/event.genParticle_energy[genParticle_idx]
 
-            #    if d_R < best_d_R:
-            #        best_genParticle_match_idx = caloCluster_idx
-            #        best_d_R = d_R
-            #        best_d_theta = d_theta
-            #        best_d_phi = d_phi
-            #        best_d_E = d_E
-            #        best_d_relE = d_relE
-            #        gen_particle_energy = event.genParticle_energy[genParticle_idx]
+                if d_R < best_d_R:
+                    best_genParticle_match_idx = caloCluster_idx
+                    best_d_R = d_R
+                    best_d_theta = d_theta
+                    best_d_phi = d_phi
+                    best_d_E = d_E
+                    best_d_relE = d_relE
+                    gen_particle_energy = event.genParticle_energy[genParticle_idx]
 
             # for energy resol, ask for phi and theta closeness and vice versa
             if best_genParticle_match_idx == -1:
@@ -145,6 +141,7 @@ for inputFile in inputFiles:
                 if args.cells:
                     th1_Eresol_cells.Fill((total_energy - gen_particle_energy))
                     th1_relEresol_cells.Fill((total_energy - gen_particle_energy)/total_energy)
+
         evt += 1
         if evt % 1000 == 0:
             print("Event processed: %d"%evt)
@@ -153,26 +150,26 @@ for inputFile in inputFiles:
     output_rootfile = ROOT.TFile(output_rootfile_path, "recreate")
     output_rootfile.cd()
 
-    #phiResolFit = draw_resol_canvas(th1_phiresol, prefix, 'Phi')
-    #thetaResolFit = draw_resol_canvas(th1_thetaresol, prefix, 'Theta')
-    #EresolFit = draw_resol_canvas(th1_Eresol, prefix, 'E')
-    #relEresolFit = draw_resol_canvas(th1_relEresol, prefix, 'relE')
+    phiResolFit = draw_resol_canvas(th1_phiresol, prefix, 'Phi')
+    thetaResolFit = draw_resol_canvas(th1_thetaresol, prefix, 'Theta')
+    EresolFit = draw_resol_canvas(th1_Eresol, prefix, 'E')
+    relEresolFit = draw_resol_canvas(th1_relEresol, prefix, 'relE')
 
-    #dict_energy_relEresol_error[energy].append(relEresolFit.Get().Parameter(2))
-    #dict_energy_relEresol_error[energy].append(relEresolFit.Get().ParError(2))
+    dict_energy_relEresol_error[energy].append(relEresolFit.Get().Parameter(2))
+    dict_energy_relEresol_error[energy].append(relEresolFit.Get().ParError(2))
 
-    #dict_energy_phiResol_error[energy].append(phiResolFit.Get().Parameter(2))
-    #dict_energy_phiResol_error[energy].append(phiResolFit.Get().ParError(2))
+    dict_energy_phiResol_error[energy].append(phiResolFit.Get().Parameter(2))
+    dict_energy_phiResol_error[energy].append(phiResolFit.Get().ParError(2))
 
-    #dict_energy_thetaResol_error[energy].append(thetaResolFit.Get().Parameter(2))
-    #dict_energy_thetaResol_error[energy].append(thetaResolFit.Get().ParError(2))
+    dict_energy_thetaResol_error[energy].append(thetaResolFit.Get().Parameter(2))
+    dict_energy_thetaResol_error[energy].append(thetaResolFit.Get().ParError(2))
 
-    #canvas_angularresol = ROOT.TCanvas(prefix + "angular_resolution", prefix + "angular_resolution")
-    #th1_angularresol.Draw()
-    #th1_angularresol.GetXaxis().SetTitle("#Delta R = #sqrt{#Delta #Phi^{2} + #Delta #Theta^{2}}")
-    #th1_angularresol.GetXaxis().SetTitleOffset(1.2)
-    #canvas_angularresol.Print(os.path.join(plot_dir_name, prefix + "angularresol.png"))
-    #th1_angularresol.Write()
+    canvas_angularresol = ROOT.TCanvas(prefix + "angular_resolution", prefix + "angular_resolution")
+    th1_angularresol.Draw()
+    th1_angularresol.GetXaxis().SetTitle("#Delta R = #sqrt{#Delta #Phi^{2} + #Delta #Theta^{2}}")
+    th1_angularresol.GetXaxis().SetTitleOffset(1.2)
+    canvas_angularresol.Print(os.path.join(plot_dir_name, prefix + "angularresol.png"))
+    th1_angularresol.Write()
 
     if args.cells:
         relEresolFit_cells = draw_resol_canvas(th1_relEresol_cells, prefix, 'relE')
@@ -252,22 +249,20 @@ thetaResol_vs_energy_graph = ROOT.TGraphErrors(prefix + postfix + "_thetaResol_v
 for energy_float in energies_gev_float:
     energy_str = str(energy_float).replace(".", "dot")
 
-    # Cell E resol
+    # E resol
+    relEresol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_relEresol_error[energy_str][0])
+    relEresol_vs_energy_graph.SetPointError(idx, 0, dict_energy_relEresol_error[energy_str][1])
     if args.cells:
         relEresol_vs_energy_cells_graph.SetPoint(idx, energy_float, dict_energy_cells_relEresol_error[energy_str][0])
         relEresol_vs_energy_cells_graph.SetPointError(idx, 0, dict_energy_cells_relEresol_error[energy_str][1])
 
-    ## E resol
-    #relEresol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_relEresol_error[energy_str][0])
-    #relEresol_vs_energy_graph.SetPointError(idx, 0, dict_energy_relEresol_error[energy_str][1])
+    # Phi resol
+    phiResol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_phiResol_error[energy_str][0]*1000)
+    phiResol_vs_energy_graph.SetPointError(idx, 0, dict_energy_phiResol_error[energy_str][1]*1000)
 
-    ## Phi resol
-    #phiResol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_phiResol_error[energy_str][0]*1000)
-    #phiResol_vs_energy_graph.SetPointError(idx, 0, dict_energy_phiResol_error[energy_str][1]*1000)
-
-    ## Theta resol
-    #thetaResol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_thetaResol_error[energy_str][0]*1000)
-    #thetaResol_vs_energy_graph.SetPointError(idx, 0, dict_energy_thetaResol_error[energy_str][1]*1000)
+    # Theta resol
+    thetaResol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_thetaResol_error[energy_str][0]*1000)
+    thetaResol_vs_energy_graph.SetPointError(idx, 0, dict_energy_thetaResol_error[energy_str][1]*1000)
 
     idx +=1
 
@@ -279,17 +274,10 @@ print("Writing %s"%output_rootfile_graph_name)
 output_rootfile_graph = ROOT.TFile(output_rootfile_graph_name, "recreate")
 
 
-<<<<<<< HEAD
 relEresol_vs_energy_fit = plot_resolution_vs_energy_graph('relEresol', "", relEresol_vs_energy_graph)
 relEresol_cell_vs_energy_fit = plot_resolution_vs_energy_graph('relEresolCell', "", relEresol_vs_energy_cells_graph)
 phiResol_vs_energy_fit = plot_resolution_vs_energy_graph('phiResol', "", phiResol_vs_energy_graph)
 thetaResol_vs_energy_fit = plot_resolution_vs_energy_graph('thetaResol', "", thetaResol_vs_energy_graph)
-=======
-#relEresol_vs_energy_fit = plot_resolution_vs_energy_graph('relEresol', "", relEresol_vs_energy_graph)
-relEresol_cell_vs_energy_fit = plot_resolution_vs_energy_graph('relEresolCell', "", relEresol_vs_energy_cells_graph)
-#phiResol_vs_energy_fit = plot_resolution_vs_energy_graph('phiResol', "", phiResol_vs_energy_graph)
-#thetaResol_vs_energy_fit = plot_resolution_vs_energy_graph('thetaResol', "", thetaResol_vs_energy_graph)
->>>>>>> 5866881f9e595322d2278871e211d8da60388218
 
 
 #Fit energy resolution vs energy

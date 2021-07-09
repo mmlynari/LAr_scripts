@@ -4,6 +4,7 @@ from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
 use_pythia = False
 
+<<<<<<< HEAD
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
 momentum = 10 # in GeV
@@ -14,6 +15,12 @@ thetaMin = 90.25 # degrees
 thetaMax = 90.25 # degrees
 #thetaMin = 50 # degrees
 #thetaMax = 130 # degrees
+=======
+# Parameters for the particle gun simulations, dummy if use_pythia is set to True
+momentum = 10 # in GeV
+thetaMin = 90.25 # degrees
+thetaMax = 90.25 # degrees
+>>>>>>> 5866881f9e595322d2278871e211d8da60388218
 pdgCode = 11 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 magneticField = False
 
