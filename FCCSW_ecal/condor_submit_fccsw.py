@@ -74,7 +74,7 @@ if __name__ == "__main__":
     parser.add_argument("-outputFolder", default = "/eos/user/b/brfranco/rootfile_storage/", help = "Output folder absolute path for the rootfile", type = str)
     parser.add_argument("-campaignName", default = date.today().strftime("%y%m%d"), help = "Folder name used to store the submission script, logs, etc, as well as the output rootfile in the outputFolder", type = str)
     parser.add_argument("-gaudiConfig", default = "%s/runSlidingWindowAndCaloSim.py"%os.environ.get("PWD", ""), help = "Absolute path to the gaudi config to use", type = str)
-    parser.add_argument("-jobType", default = "caloReco", help = "Tell the type of job we launch. Can be samplingFraction, caloReco, upstreamCorrection (not implemented yet)", type = str)
+    parser.add_argument("-jobType", default = "caloReco", help = "Tell the type of job we launch. Can be samplingFraction, caloReco, upstream", type = str)
     parser.add_argument("-pythia", default = False, help = "Tell to use Pythia instead of particle gun (the energies, polar angles etc do not matter anymore). Warning: you must also manually set to true 'usePythia' in the FCCSW cfg!", type = str)
     parser.add_argument("-pythiaCfg", default = "%s/MCGeneration/ee_Z_ee.cmd"%os.environ.get("PWD", ""), help = "Absolute path to the Pythia config file", type = str)
     parser.add_argument("-inputFiles", help = "Regex used to get all the input files, if any is needed - not implemented yet.", type = str)
@@ -124,6 +124,16 @@ if __name__ == "__main__":
             f.write(sf_commands)
         st = os.stat(sf_script_path)
         os.chmod(sf_script_path, st.st_mode | stat.S_IEXEC)
+
+    elif args.jobType == 'upstream':
+        command_template = """fccrun %s -n EVT --MomentumMin PMIN --MomentumMax PMAX --filename OUTPUTDIR/fccsw_upstream_output_pMin_PMIN_pMax_PMAX_jobid_JOBID.root --seedValue SEED"""%(gaudi_config_path)
+        path_to_upstream_scripts = os.path.join(os.environ.get("PWD", ""), '../../k4SimGeant4/Detector/DetStudies/scripts/')
+        process_evt_path = os.path.join(path_to_upstream_scripts, 'cec_process_events')
+        derive1_path = os.path.join(path_to_upstream_scripts, 'cec_derive1')
+        upstream_commands = ""
+        downstream_commands = ""
+        derive1_command = derive1_path + " -i CAMPAIGN/fit_results.json -t upstream --plot-file-format png --outputDir CAMPAIGN --functions '[0]+[1]/(x-[2])' '[0]+[1]/(x-[2])'\n".replace('CAMPAIGN', campaign_name)
+        derive1_command_downstream = derive1_command.replace("-t upstream", "-t downstream").replace("'[0]+[1]/(x-[2])' '[0]+[1]/(x-[2])'", "'[0]+[1]*x' '[0]+[1]/sqrt(x)' '[0]+[1]/x'")
 
     elif args.jobType == 'caloReco':
         if args.pythia:
@@ -179,6 +189,8 @@ if __name__ == "__main__":
                     print(pythia_cfg_path)
                     command = command_template.replace('EVT', str(evt_per_job)).replace('OUTPUTDIR', outfile_storage).replace('JOBID', str(job_idx)).replace("PYTHIACFG", pythia_cfg_path)
                     print(command)
+                elif args.jobType == 'upstream':
+                    command = command_template.replace('EVT', str(evt_per_job)).replace('OUTPUTDIR', outfile_storage).replace('JOBID', str(job_idx)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('SEED', str(job_idx))
                 else:
                     command = command_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx)).replace('SEED', str(job_idx))
                 exec_filename = exec_filename_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy)).replace('PMAX', str(energy)).replace('THETAMIN', str(theta)).replace('THETAMAX', str(theta)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
@@ -195,6 +207,8 @@ if __name__ == "__main__":
             if evt_last_job > 0:
                 if args.pythia:
                     command = command_template.replace('EVT', str(evt_per_job)).replace('OUTPUTDIR', outfile_storage).replace('JOBID', str(job_idx))
+                elif args.jobType == 'upstream':
+                    command = command_template.replace('EVT', str(evt_per_job)).replace('OUTPUTDIR', outfile_storage).replace('JOBID', str(job_idx)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('SEED', str(job_idx))
                 else:
                     command = command_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx)).replace('SEED', str(job_idx))
                 exec_filename = exec_filename_template.replace('EVT', str(evt_last_job)).replace('PMIN', str(energy)).replace('PMAX', str(energy)).replace('THETAMIN', str(theta)).replace('THETAMAX', str(theta)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
@@ -211,6 +225,10 @@ if __name__ == "__main__":
                 hadd_commands += "hadd OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                 rm_commands += "cp OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_1.root OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_forTests.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                 rm_commands += "rm OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
+            elif args.jobType == 'upstream':
+                hadd_commands += 'hadd OUTPUTDIR/fccsw_upstream_output_pMin_PMIN_pMax_PMAX.root OUTPUTDIR/fccsw_upstream_output_pMin_PMIN_pMax_PMAX_jobid_*.root\n'.replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage)
+                upstream_commands += process_evt_path + " -i OUTPUTDIR/fccsw_upstream_output_pMin_PMIN_pMax_PMAX.root -t upstream --plot-file-format png -o CAMPAIGN/fit_results.json --plot-directory CAMPAIGN --func-from 0.005 --func-to 0.06\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('CAMPAIGN', campaign_name)
+                downstream_commands += process_evt_path + " -i OUTPUTDIR/fccsw_upstream_output_pMin_PMIN_pMax_PMAX.root -t downstream --function pol2 --plot-file-format png -o CAMPAIGN/fit_results.json --plot-directory CAMPAIGN --func-from 0.005 --func-to 10\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('CAMPAIGN', campaign_name)
             else:
                 if args.pythia:
                     hadd_commands += "hadd  OUTPUTDIR/fccsw_output_pythia_{0}.root OUTPUTDIR/fccsw_output_pythia_{0}_jobid_*.root\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
@@ -252,6 +270,18 @@ if __name__ == "__main__":
         f.write(string_for_perfPlots_script.replace("FCCANAOUTPUT", campaign_name))
     st = os.stat(perfPlots_script_path)
     os.chmod(perfPlots_script_path, st.st_mode | stat.S_IEXEC)
+
+    # write the upstream script
+    if args.jobType == 'upstream':
+        upstream_script_path = os.path.join(campaign_name, "upstream.sh")
+        upstream_commands += derive1_command
+        downstream_commands += derive1_command_downstream
+        with open(upstream_script_path, "w") as f:
+            f.write(upstream_commands)
+            f.write(downstream_commands)
+            f.write("python read_upstream_json.py %s/corr_params_1d.json"%campaign_name)
+        st = os.stat(upstream_script_path)
+        os.chmod(upstream_script_path, st.st_mode | stat.S_IEXEC)
 
     # write the condor submit file
     condor_submit_path = campaign_name + ".sub"

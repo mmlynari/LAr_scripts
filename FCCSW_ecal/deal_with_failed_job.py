@@ -3,6 +3,8 @@ import os, sys, glob, re
 condor_dir = sys.argv[1]
 if '_calib_' in condor_dir:
     n_line_errfile = 1
+elif '_upstream' in condor_dir:
+    n_line_errfile = 2
 else:
     n_line_errfile = 14
 # 201012_pythia/exec_pdgID_22_pMin_0_pMax_0_thetaMin_0_thetaMax_0_evt_200_jobid_369.sh.err
@@ -42,6 +44,9 @@ for errorfile in glob.glob(os.path.join(condor_dir, "*.err")):
                     fixable_shs.append(errorfile.replace(".sh.err", ".sh"))
                 if 'pythia' in condor_dir:
                     corrupted_rootfile = glob.glob(os.path.join(rootfile_dir, "*_%s.root"%jobid))
+                elif '_upstream' in condor_dir:
+                    pMin = errorfile.split('pMin_')[1].split('_')[0]
+                    corrupted_rootfile = glob.glob(os.path.join(rootfile_dir, "fccsw_upstream_output_pMin_%s_pMax_%s_jobid_%s.root"%(pMin, pMin, jobid)))
                 else:
                     file_pattern = errorfile.split('/')[-1]
                     file_pattern = re.sub(r'exec.*_pdgID', '*pdgID', file_pattern).replace(".sh.err", ".root")

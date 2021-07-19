@@ -61,14 +61,30 @@ string_for_layerWidth = string_for_layerWidth[0:-2]
 os.system("sed -i 's/layerWidth\", default = .*,/layerWidth\", default = %s,/' FCC_calo_analysis_cpp/plot_samplingFraction.py"%string_for_layerWidth)
 print("FCC_calo_analysis_cpp/plot_samplingFraction.py modified")
 
-# modify the number of layer in fcc_ee_upstreamMaterial_inclinedEcal.py
-os.system("sed -i 's/numLayers.*,/numLayers = %d,/' fcc_ee_upstreamMaterial_inclinedEcal.py"%numberOfLayer)
-print("fcc_ee_upstreamMaterial_inclinedEcal.py modified")
+# modify the number of layers in fcc_ee_upstreamMaterial_inclinedEcal.py
+os.system("sed -i 's/numLayers.*,/numLayers = %d,/' fcc_ee_upstream_inclinedEcal.py"%numberOfLayer)
+print("fcc_ee_upstream_inclinedEcal.py modified")
+
+# modify the number of layers in fcc_ee_upstreamMaterial_inclinedEcal.py
+os.system("sed -i 's/numLayers.*,/numLayers = [%d],/' runUpstreamSlidingWindowAndCaloSim.py"%numberOfLayer)
+os.system("sed -i 's/lastLayerIDs.*,/lastLayerIDs = [%d],/' runUpstreamSlidingWindowAndCaloSim.py"%(numberOfLayer - 1))
+print("runUpstreamSlidingWindowAndCaloSim.py modified")
 
 # Write upstream correction xml
 # Re-make absorber and readout not sensitive
+added_rmax = False
 for nodeList in input_xml.getElementsByTagName('lccdd'):
     for node in nodeList.childNodes:
+        if node.localName == 'define':
+            for subnode in node.childNodes:
+                if not added_rmax:
+                    rMaxNode = input_xml.createElement('constant')
+                    rMaxNode.setAttribute('name', 'BarECal_rmax')
+                    rMaxNode.setAttribute('value', '3700*mm')
+                    node.insertBefore(rMaxNode, subnode)
+                    added_rmax = True
+                if subnode.localName == 'constant' and subnode.getAttribute('name') == "CryoThicknessBack":
+                    subnode.setAttribute('value', "1100*mm")
         if node.localName == 'detectors':
             for subnode in node.childNodes:
                 if subnode.localName == 'detector':
@@ -83,7 +99,7 @@ for nodeList in input_xml.getElementsByTagName('lccdd'):
                                             subsubsubsubnode.setAttribute('sensitive', 'false') # here we change the abnsorber into sensitive material!
                         if subsubnode.localName == 'cryostat':
                             for subsubsubnode in subsubnode.childNodes:
-                                if subsubsubnode.localName == 'front':
+                                if subsubsubnode.localName in ['front', 'side', 'back']:
                                     subsubsubnode.setAttribute('sensitive', 'true')
 
 with open(output_xml_path_upstream, "w") as f:
