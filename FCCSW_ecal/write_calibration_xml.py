@@ -12,6 +12,8 @@ list_of_pair_layerThickness_numberOfLayer = []
 input_xml = minidom.parse(input_xml_path)
 #print input_xml.toprettyxml()
 numberOfLayer = 0
+n_phi_bins = 0
+eta_bin_size = 0
 #print input_xml.getElementsByTagName('lccdd')
 for nodeList in input_xml.getElementsByTagName('lccdd'):
     for node in nodeList.childNodes:
@@ -41,6 +43,14 @@ for nodeList in input_xml.getElementsByTagName('lccdd'):
                                         if subsubsubsubnode.localName == 'layer':
                                             numberOfLayer += int(subsubsubsubnode.getAttribute('repeat'))
                                             list_of_pair_layerThickness_numberOfLayer.append([subsubsubsubnode.getAttribute('thickness').split('*')[0], subsubsubsubnode.getAttribute('repeat')])
+        if node.localName == 'readouts':
+            for subnode in node.childNodes:
+                if subnode.localName == 'readout' and subnode.getAttribute('name') == 'ECalBarrelPhiEta':
+                    for subsubnode in subnode.childNodes:
+                        if subsubnode.localName == 'segmentation':
+                            n_phi_bins = subsubnode.getAttribute('phi_bins')
+                            eta_bin_size = subsubnode.getAttribute('grid_size_eta')
+
 with open(output_xml_path_sf, "w") as f:
     input_xml.writexml(f)
 print(output_xml_path_sf, " written.") 
@@ -65,10 +75,13 @@ print("FCC_calo_analysis_cpp/plot_samplingFraction.py modified")
 os.system("sed -i 's/numLayers.*,/numLayers = %d,/' fcc_ee_upstream_inclinedEcal.py"%numberOfLayer)
 print("fcc_ee_upstream_inclinedEcal.py modified")
 
-# modify the number of layers in fcc_ee_upstreamMaterial_inclinedEcal.py
+# modify the number of layers in runUpstreamSlidingWindowAndCaloSim
 os.system("sed -i 's/numLayers.*,/numLayers = [%d],/' runUpstreamSlidingWindowAndCaloSim.py"%numberOfLayer)
 os.system("sed -i 's/lastLayerIDs.*,/lastLayerIDs = [%d],/' runUpstreamSlidingWindowAndCaloSim.py"%(numberOfLayer - 1))
-print("runUpstreamSlidingWindowAndCaloSim.py modified")
+
+# modify the tower definition in clustering algorithms
+os.system("sed -i 's/deltaEtaTower.*$/deltaEtaTower = %s, deltaPhiTower = 2*_pi\/%s.,/'  run*SlidingWindowAndCaloSim.py"%(eta_bin_size, n_phi_bins))
+print("run*SlidingWindowAndCaloSim.py modified")
 
 # Write upstream correction xml
 # Re-make absorber and readout not sensitive
