@@ -34,11 +34,11 @@ pcb_thickness = 0.12 # cm
 #Set the active and absorber material
 absorberX0 = X0Pb
 activeX0 = X0LKr
-
-
+allX0 = X0LKr
+allSame = True #Set to true for homogeneous calo
 
 ####################################################################
-factorThicknessLength = 1/sin(pi/2 - plateInclination)
+factorThicknessLength = 1/sin(plateInclination)
 factorThicknessWidth = 1/cos(plateInclination)
 
 
@@ -69,18 +69,15 @@ new_gap_size_inner = ((innerCircumferance/(NCellsRounded*factorThicknessWidth))-
 print("New Gap size = %f*2"%(new_gap_size_inner/2.))
 ####################
 
-
-
-
-
 #uncomment when using pre-defined active gap
 new_gap_size_inner = activeThickness
 
 totalX0 = 0; NLayersNeeded = 0; totalLength = 0; NLayersPreSamp = 0; preSamplerLengthTotal = 0; new_gap_size = 0; gap_growth = 0;
-layerThickness = (absorberThickness + glueThickness + steelThickness + new_gap_size_inner + pcb_thickness)*factorThicknessLength
-nonActiveThickness = (absorberThickness + glueThickness + steelThickness + pcb_thickness)*factorThicknessLength
+layerThickness = (absorberThickness + glueThickness + steelThickness + new_gap_size_inner + pcb_thickness)
+nonActiveThickness = (absorberThickness + glueThickness + steelThickness + pcb_thickness)
 
 dPhi = 2*pi/NCellsRounded
+print(NCellsRounded)
 
 print("")
 print("Radial length layer 0 = %f"%(layerThickness)); print("")
@@ -91,40 +88,56 @@ totalX0 += cryostatThicknessOut/X0Cryo
 totalX0 += extraMarginIn/activeX0
 totalX0 += extraMarginOut/activeX0
 
-
 #Start the calculation loop
 preSamplerLength *= 0.95 # so the pre sampler doesn't get an extra layer when totalLenght = ~1.49
-
 while totalX0 < 22. :
-  if totalLength > 100:
+  if totalLength > 200:
     break
   if totalLength < preSamplerLength and NLayersNeeded < 2:
-    new_gap_size = new_gap_size_inner
+    if NLayersNeeded == 0:
+        new_gap_size = new_gap_size_inner
+        gap_growth = (NLayersNeeded*(nonActiveThickness + new_gap_size)*factorThicknessWidth)*tan(dPhi)
+        layerThickness += gap_growth
+        new_gap_size = (gap_growth + new_gap_size_inner)
     if NLayersNeeded > 0:
-      gap_growth = ((NLayersNeeded*layerThickness)/factorThicknessLength)*tan(dPhi)*factorThicknessLength
+      gap_growth = (NLayersNeeded*(nonActiveThickness + new_gap_size)*factorThicknessWidth)*tan(dPhi)
       layerThickness += gap_growth
-      new_gap_size = gap_growth + new_gap_size_inner*factorThicknessLength
-    totalX0 += (factorThicknessLength*absorberThickness)/X0G10
-    totalX0 += (factorThicknessLength*new_gap_size)/activeX0
-    totalX0 += (factorThicknessLength*steelThickness)/X0G10
-    totalX0 += (factorThicknessLength*glueThickness)/X0G10
-    totalX0 += (factorThicknessLength*pcb_thickness)/X0Pcb
-    totalLength += (nonActiveThickness + new_gap_size)
-    preSamplerLengthTotal += layerThickness
+      new_gap_size = (gap_growth + new_gap_size_inner)
+    if allSame:
+      totalX0 += (factorThicknessLength*absorberThickness)/allX0
+      totalX0 += (factorThicknessLength*new_gap_size)/allX0
+      totalX0 += (factorThicknessLength*steelThickness)/allX0
+      totalX0 += (factorThicknessLength*glueThickness)/allX0
+      totalX0 += (factorThicknessLength*pcb_thickness)/X0Pcb
+    else:
+      totalX0 += (factorThicknessLength*absorberThickness)/X0G10
+      totalX0 += (factorThicknessLength*new_gap_size)/activeX0
+      totalX0 += (factorThicknessLength*steelThickness)/X0G10
+      totalX0 += (factorThicknessLength*glueThickness)/X0G10
+      totalX0 += (factorThicknessLength*pcb_thickness)/X0Pcb
+    totalLength += (nonActiveThickness + new_gap_size)*factorThicknessLength
+    preSamplerLengthTotal += (nonActiveThickness + new_gap_size)*factorThicknessLength
     NLayersPreSamp += 1
     NLayersNeeded += 1
     print("layer %i LAr_gap = %f*2      totalX0 = %f totalRadialLength = %f pre-sampler "%(NLayersNeeded,(gap_growth+new_gap_size_inner)/2,totalX0, totalLength))
   else:
     if NLayersNeeded > 0:
-      gap_growth = (NLayersNeeded*layerThickness/factorThicknessLength)*tan(dPhi)*factorThicknessLength
+      gap_growth = (NLayersNeeded*(nonActiveThickness + new_gap_size)*factorThicknessWidth)*tan(dPhi)
       layerThickness += gap_growth
-      new_gap_size = gap_growth + new_gap_size_inner*factorThicknessLength
-    totalX0 += (factorThicknessLength*absorberThickness)/absorberX0
-    totalX0 += (factorThicknessLength*new_gap_size)/activeX0
-    totalX0 += (factorThicknessLength*steelThickness)/X0Fe
-    totalX0 += (factorThicknessLength*glueThickness)/X0G10
-    totalX0 += (factorThicknessLength*pcb_thickness)/X0Pcb
-    totalLength += (nonActiveThickness + new_gap_size)
+      new_gap_size = (gap_growth + new_gap_size_inner)
+    if allSame:
+      totalX0 += (factorThicknessLength*absorberThickness)/allX0
+      totalX0 += (factorThicknessLength*new_gap_size)/allX0
+      totalX0 += (factorThicknessLength*steelThickness)/allX0
+      totalX0 += (factorThicknessLength*glueThickness)/allX0
+      totalX0 += (factorThicknessLength*pcb_thickness)/X0Pcb
+    else:
+      totalX0 += (factorThicknessLength*absorberThickness)/absorberX0
+      totalX0 += (factorThicknessLength*new_gap_size)/activeX0
+      totalX0 += (factorThicknessLength*steelThickness)/X0Fe
+      totalX0 += (factorThicknessLength*glueThickness)/X0G10
+      totalX0 += (factorThicknessLength*pcb_thickness)/X0Pcb
+    totalLength += (nonActiveThickness + new_gap_size)*factorThicknessLength
     NLayersNeeded += 1
     print("layer %i LAr_gap = %f*2      totalX0 = %f totalRadialLength = %f"%(NLayersNeeded,(gap_growth+new_gap_size_inner)/2,totalX0, totalLength))
 
