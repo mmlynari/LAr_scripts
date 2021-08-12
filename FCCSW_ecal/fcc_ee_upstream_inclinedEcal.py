@@ -103,7 +103,7 @@ energy_in_layers.AuditExecute = True
 from Configurables import PodioOutput
 ### PODIO algorithm
 out = PodioOutput("out",OutputLevel=INFO)
-out.outputCommands = ["keep *i", "drop ECalBarrelCells", "drop ECalBarrelHits"]
+out.outputCommands = ["keep *", "drop ECalBarrelCells", "drop ECalBarrelHits"]
 out.filename = "fccee_deadMaterial_inclinedEcal.root"
 
 # ApplicationMgr
