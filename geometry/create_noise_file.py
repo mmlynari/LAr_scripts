@@ -24,7 +24,7 @@ SFatlas = 0.18
 SFfcc = [0.303451138049] * 1 + [0.111872504159] * 1 + [0.135806495306] * 1 + [0.151772636618] * 1 + [0.163397436122] * 1 + [0.172566977313] * 1 + [0.179855253903] * 1 + [0.186838417657] * 1 + [0.192865946689] * 1 + [0.197420241611] * 1 + [0.202066552306] * 1 + [0.22646764465] * 1
 noisePerCapacitance = 0.018 # MeV/pF
 #noisePerCapacitance = 0.0397372130805
-print "noise per capacitance in ATLAS ", noisePerCapacitance, " MeV/pF"
+print("noise per capacitance in ATLAS ", noisePerCapacitance, " MeV/pF")
 GeV = 1000.
 
 gStyle.SetOptStat(0)
@@ -54,7 +54,7 @@ for i in range (0, nLayers):
 index = 0    
 nbins = hCapShield[index].GetNbinsX()
 etaMax = hCapShield[index].GetXaxis().GetBinUpEdge(nbins)
-print "number of bins ", nbins, ", etaMax ", etaMax
+print("number of bins ", nbins, ", etaMax ", etaMax)
 
 maximumCap = 0.
 maximumNoise = 0.
@@ -127,7 +127,7 @@ for i in range (0, nLayers):
 
     #Correct for different SF in ATLAS and FCC
     noiseConversionFactor = noisePerCapacitance * SFatlas / SFfcc[i]
-    print "-----------------"
+    print("-----------------")
     for ibin in range(0, nbins+1):
         capShield = hCapShield[i].GetBinContent(ibin)
         capTrace = hCapTrace[i].GetBinContent(ibin)
@@ -158,7 +158,7 @@ for i in range (0, nLayers):
         h_elecNoise_trace[i].SetBinContent(ibin, noiseTrace)
         h_elecNoise_detector[i].SetBinContent(ibin, noiseDetector)
         if ibin==1:
-            print "layer %d" %(i+1), "eta==0: capacitance %.0f pF," %( capShield + capTrace + capDetector ), "total elec. noise %.4f GeV" %noise, "elec. noise without trace cap. %.4f GeV" %noiseWithTrace
+            print("layer %d" %(i+1), "eta==0: capacitance %.0f pF," %( capShield + capTrace + capDetector ), "total elec. noise %.4f GeV" %noise, "elec. noise without trace cap. %.4f GeV" %noiseWithTrace)
     line_color_number += 1
     line_style_number += 1
 

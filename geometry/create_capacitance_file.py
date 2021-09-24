@@ -54,7 +54,7 @@ ws = 0.250
 #hm = 0.250
 hm = 0.2075
 pcbThickness = 7 * t + 2 * hhv + 2 * hs + 2 * hm #mm
-print "pcbThickness: %f"%pcbThickness
+print("pcbThickness: %f"%pcbThickness)
 #constants:
 # distance from signal trace to shield (HS) - from impedance vs. trace width vs. distance to ground layer 2D plot (Z = 50 Ohm)
 # trace width (W) - min value
@@ -87,7 +87,7 @@ trace_length_inner = 0
 trace_length_outer = 0
 outer = False
 current_electrode_length = 0
-for idx in xrange(numLayers):# first pass to get all length parallel to the readout, real radial separation, inclination at the middle of the layer
+for idx in range(numLayers):# first pass to get all length parallel to the readout, real radial separation, inclination at the middle of the layer
     readoutLayerRadialLengths[idx] *= 10
     parallel_length = readoutLayerRadialLengths[idx] * dilution_factor
     # Tricky point: in the xml geo, you define 'radial'segmentation, but these depths will be the one parallel to the plates after scaling by the dilution factor --> even when setting constant radial depth, the geoemtry builder will make constant parallel length step, not constant radial steps
@@ -108,7 +108,7 @@ for idx in xrange(numLayers):# first pass to get all length parallel to the read
 
 # second pass to get trace lengths
 outer = False
-for idx in xrange(numLayers):
+for idx in range(numLayers):
     if tracesPerLayer[idx] == 0 and tracesPerLayer[idx - 1] == 0: # we change direction
         outer = True
     if outer:
@@ -121,12 +121,12 @@ for idx in xrange(numLayers):
         trace_length.append(trace_length_inner)
         trace_length_inner += readoutLayerParallelLengths[idx]
 
-print 'Readout radial lengths originally asked: ', readoutLayerRadialLengths
-print 'Readout parallel lengths: ', readoutLayerParallelLengths
-print "Real radial separation: ", real_radial_separation
-print "Real radial depth: ", real_radial_depth
-print "inclinations_wrt_radial_dir_at_middleRadialDepth: ", [degrees(inclinations) for inclinations in inclinations_wrt_radial_dir_at_middleRadialDepth]
-print "Signal trace length per layer: ", trace_length
+print('Readout radial lengths originally asked: ', readoutLayerRadialLengths)
+print('Readout parallel lengths: ', readoutLayerParallelLengths)
+print("Real radial separation: ", real_radial_separation)
+print("Real radial depth: ", real_radial_depth)
+print("inclinations_wrt_radial_dir_at_middleRadialDepth: ", [degrees(inclinations) for inclinations in inclinations_wrt_radial_dir_at_middleRadialDepth])
+print("Signal trace length per layer: ", trace_length)
 
 
 gStyle.SetOptStat(0)
@@ -200,7 +200,7 @@ legend.SetNColumns(4)
 capa_shield_max = 0
 capa_det_max = 0
 for i in range (0, len(readoutLayerParallelLengths)):
-    print "--------------"
+    print("--------------")
     for index in range(0, numEta):
         eta = index * deltaEta
         # take into account the inclination in eta
@@ -237,7 +237,7 @@ for i in range (0, len(readoutLayerParallelLengths)):
         distance += hhv #the capa is between signal plate and absorber --> need to add distance between HV plate and signal pad
         distance += t #the capa is between signal plate and absorber --> need to add distance between HV plate and signal pad
         if eta == 0:
-            print "LAr gap size (perpendicular): %f mm"%distance
+            print("LAr gap size (perpendicular): %f mm"%distance)
         capacitanceDetector = nmult * epsilon0 * epsilonRLAr * area / distance
         if i == 1: #strip layer has smaller capacitance because it is divided in 4 smaller cells
             capacitanceDetector /= ncells_strip_layer
@@ -245,7 +245,7 @@ for i in range (0, len(readoutLayerParallelLengths)):
         if capacitanceDetector > capa_det_max:
             capa_det_max = capacitanceDetector
         if index==0:
-            print "layer %d" %(i+1), "eta==0: capacitanceTrace %.0f pF," %capacitanceTrace, "capacitanceShield %.0f pF" %capacitanceShield, "capacitanceDetector %.0f pF" %capacitanceDetector
+            print("layer %d" %(i+1), "eta==0: capacitanceTrace %.0f pF," %capacitanceTrace, "capacitanceShield %.0f pF" %capacitanceShield, "capacitanceDetector %.0f pF" %capacitanceDetector)
             #, "distance %.1f mm" %distance
 
     #Draw

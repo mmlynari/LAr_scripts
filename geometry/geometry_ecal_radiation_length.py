@@ -92,7 +92,6 @@ x0_presampler = x0_presampler_cell * number_of_presampler_cells_crossed
 x0 += x0_presampler
 
 
-#FIXME AvX[dim_, x0_] := Apply[Plus, dim]/Apply[Plus, dim/x0]
 # Compute X0 when crossing one cell(abs gap pcb gap), taking into account the inclination w.r.t. radial angle
 x0_per_normal_cell = (lar_thickness * lar_x0 * 2 + absorber_thickness * absorber_x0 + glue_thickness * glue_x0 + steel_thickness * steel_x0 + pcb_thickness * pcb_x0) * factor_thicknessPerpendicularPcb_to_radialLength / 10.0 # / 10 because thickness provided in mm while X0 in 1/cm 
 print("X0 per normal cell: ", x0_per_normal_cell)
@@ -124,7 +123,7 @@ print("Ratio outer/inner gap thickness: %f"%(gap_size_outer/new_gap_size_inner))
 print("Smallest phi granularity %f degrees if we read the two gaps from one cell with one trace"%(360/float(total_number_of_cell)))
 print("Smallest phi granularity %f miliradians if we read the two gaps from one cell with one trace"%(radians(360/float(total_number_of_cell))*1000))
 print("Smallest cell size at inner radius %f mm if we read the two gaps from one cell with one trace"%(circumferance/float(total_number_of_cell)))
-print("The above number are a bit wrong because, due to the inclination of the readout pcb, the signal from a given cell has a bigger spread thant that on phi")
+print("Even though the inclination of the readout pcb spread the phi information (large circle imprint), e.g. a MIP will hit more than one cell and taking the barycenter should lead to resolution similar to the above granularity")
 print("Moliere radius ~4cm [to be computed precisely]")
 # checking imprint in phi from pcb segmentation at 90 degrees
 readout_cell_length_parallel = normal_cells_radial_length * factor_radialLength_to_lengthAlongPcb

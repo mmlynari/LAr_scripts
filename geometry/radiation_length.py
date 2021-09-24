@@ -18,13 +18,14 @@ cryostatThicknessIn = 5 #cm
 cryostatThicknessOut = 10 #cm
 extraMarginIn = 1 #cm
 extraMarginOut = 4 #cm
+rmin = cryostatInRadius + cryostatThicknessIn + extraMarginIn
 
 #ratio between pre-sampler radial length and other cells
 preSamplerLength = 1.5     #27.5*(1.5/40) # cm
 cellLength = preSamplerLength*2.333333    #27.5*(3.5/40) # cm
 
 #dimensions
-plateInclination = 40 * pi/180 # first number in degrees
+plateInclination = 50 * pi/180 # first number in degrees
 absorberThickness = 0.18 #cm
 glueThickness = 0.01 #cm
 steelThickness = 0.01 #cm
@@ -32,10 +33,10 @@ activeThickness = 0.1239749*2 #cm at Rmin
 pcb_thickness = 0.12 # cm
 
 #Set the active and absorber material
-absorberX0 = X0Pb
+absorberX0 = X0W
 activeX0 = X0LKr
 allX0 = X0LKr
-allSame = True #Set to true for homogeneous calo
+allSame = False #Set to true for homogeneous calo
 
 ####################################################################
 factorThicknessLength = 1/sin(plateInclination)
@@ -70,7 +71,7 @@ print("New Gap size = %f*2"%(new_gap_size_inner/2.))
 ####################
 
 #uncomment when using pre-defined active gap
-new_gap_size_inner = activeThickness
+#new_gap_size_inner = activeThickness
 
 totalX0 = 0; NLayersNeeded = 0; totalLength = 0; NLayersPreSamp = 0; preSamplerLengthTotal = 0; new_gap_size = 0; gap_growth = 0;
 layerThickness = (absorberThickness + glueThickness + steelThickness + new_gap_size_inner + pcb_thickness)
@@ -91,6 +92,12 @@ totalX0 += extraMarginOut/activeX0
 #Start the calculation loop
 preSamplerLength *= 0.95 # so the pre sampler doesn't get an extra layer when totalLenght = ~1.49
 while totalX0 < 22. :
+  #print(new_gap_size/2.0)
+  new_plateInclination = asin(rmin * sin(plateInclination) / (rmin + totalLength)) # proper way to do it
+  #new_plateInclination = plateInclination # how it was done before
+  print(degrees(new_plateInclination))
+  factorThicknessLength = 1/sin(new_plateInclination)
+  factorThicknessWidth = 1/cos(new_plateInclination)
   if totalLength > 200:
     break
   if totalLength < preSamplerLength and NLayersNeeded < 2:
