@@ -279,17 +279,15 @@ print("Writing %s"%output_rootfile_graph_name)
 output_rootfile_graph = ROOT.TFile(output_rootfile_graph_name, "recreate")
 
 
-<<<<<<< HEAD
-relEresol_vs_energy_fit = plot_resolution_vs_energy_graph('relEresol', "", relEresol_vs_energy_graph)
-relEresol_cell_vs_energy_fit = plot_resolution_vs_energy_graph('relEresolCell', "", relEresol_vs_energy_cells_graph)
-phiResol_vs_energy_fit = plot_resolution_vs_energy_graph('phiResol', "", phiResol_vs_energy_graph)
-thetaResol_vs_energy_fit = plot_resolution_vs_energy_graph('thetaResol', "", thetaResol_vs_energy_graph)
-=======
+#relEresol_vs_energy_fit = plot_resolution_vs_energy_graph('relEresol', "", relEresol_vs_energy_graph)
+#relEresol_cell_vs_energy_fit = plot_resolution_vs_energy_graph('relEresolCell', "", relEresol_vs_energy_cells_graph)
+#phiResol_vs_energy_fit = plot_resolution_vs_energy_graph('phiResol', "", phiResol_vs_energy_graph)
+#thetaResol_vs_energy_fit = plot_resolution_vs_energy_graph('thetaResol', "", thetaResol_vs_energy_graph)
+
 #relEresol_vs_energy_fit = plot_resolution_vs_energy_graph('relEresol', "", relEresol_vs_energy_graph)
 relEresol_cell_vs_energy_fit = plot_resolution_vs_energy_graph('relEresolCell', "", relEresol_vs_energy_cells_graph)
 #phiResol_vs_energy_fit = plot_resolution_vs_energy_graph('phiResol', "", phiResol_vs_energy_graph)
 #thetaResol_vs_energy_fit = plot_resolution_vs_energy_graph('thetaResol', "", thetaResol_vs_energy_graph)
->>>>>>> 5866881f9e595322d2278871e211d8da60388218
 
 
 #Fit energy resolution vs energy
