@@ -6,7 +6,7 @@ if '_calib_' in condor_dir:
 elif '_upstream' in condor_dir:
     n_line_errfile = 2
 else:
-    n_line_errfile = 14
+    n_line_errfile = 2
 # 201012_pythia/exec_pdgID_22_pMin_0_pMax_0_thetaMin_0_thetaMax_0_evt_200_jobid_369.sh.err
 # "fccsw_output_pythia_ee_Z_ee_jobid_313.root"
 rootfile_dir = os.path.join("/eos/user/b/brfranco/rootfile_storage/", condor_dir)
