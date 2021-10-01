@@ -132,7 +132,7 @@ if __name__ == "__main__":
         derive1_path = os.path.join(path_to_upstream_scripts, 'cec_derive1')
         upstream_commands = ""
         downstream_commands = ""
-        derive1_command = derive1_path + " -i CAMPAIGN/fit_results.json -t upstream --plot-file-format png --outputDir CAMPAIGN --functions '[0]+[1]/(x-[2])' '[0]+[1]/(x-[2])'\n".replace('CAMPAIGN', campaign_name)
+        derive1_command = derive1_path + " -i CAMPAIGN/fit_results.json -t upstream --plot-file-format png --plot-directory CAMPAIGN --functions '[0]+[1]/(x-[2])' '[0]+[1]/(x-[2])'\n".replace('CAMPAIGN', campaign_name)
         derive1_command_downstream = derive1_command.replace("-t upstream", "-t downstream").replace("'[0]+[1]/(x-[2])' '[0]+[1]/(x-[2])'", "'[0]+[1]*x' '[0]+[1]/sqrt(x)' '[0]+[1]/x'")
 
     elif args.jobType == 'caloReco':
