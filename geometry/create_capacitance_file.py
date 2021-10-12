@@ -71,6 +71,7 @@ capa_per_mm_stripLayer = 0.062 # pF/mm
 # multiplicative factor
 # factor two because we merge two phi cells together, another factor 2 becasue we have two 1) signal pad / shield capa  2) HV plate / absorber capa per cell
 nmult = 4
+nmult_trace = 2 # for the trace only the number of phi cell merged playes a role
 epsilonRLAr = 1.5 # LAr at 88 K
 epsilon0 = 8.854/1000. #pF/mm
 
@@ -205,9 +206,10 @@ for i in range (0, len(readoutLayerParallelLengths)):
         eta = index * deltaEta
         # take into account the inclination in eta
         traceLength = trace_length[i] / (sin(2. * atan(exp(-eta))))
+        #print("Layer %d trace length %f"%(i+1, traceLength))
         #Trace capacitance (stripline)
         logStripline = log(3.1 * hs / (0.8 * w + t))
-        capacitanceTrace = nmult * 1 / inch2mm * 1.41 * epsilonR / logStripline * traceLength
+        capacitanceTrace = nmult_trace * 1 / inch2mm * 1.41 * epsilonR / logStripline * traceLength
         hCapTrace[i].SetBinContent(index+1, capacitanceTrace)
     
         #Shield capacitance (microstrip)
@@ -272,7 +274,7 @@ plots = TFile(filename,"RECREATE")
 
 for i in range (0, len(readoutLayerParallelLengths)):
     hCapTrace[i].SetMinimum(0)
-    hCapTrace[i].SetMaximum(maximum*1.5)
+    hCapTrace[i].SetMaximum(maximum*1.8)
     hCapTrace[i].Write()
     hCapShield[i].SetMinimum(0)
     hCapShield[i].SetMaximum(capa_shield_max*1.5)
@@ -285,6 +287,8 @@ cTrace.cd()
 legend.Draw()
 cTrace.Update()
 cTrace.Write()
+cTrace.Print("capa_trace.png")
+cTrace.Print("capa_trace.pdf")
 cShield.cd()
 legend.Draw()
 cShield.Update()
