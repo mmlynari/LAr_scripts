@@ -122,7 +122,7 @@ for i in range (0, nLayers):
     hCapTotal[i].SetLineColor(line_color_number)
     hCapTotal[i].SetLineStyle(line_style_number)
     hCapTotal[i].SetLineWidth(3)
-    hCapTotal[i].SetTitle("Total capacitance (no trace); |#eta|; Capacitance [pF]")
+    hCapTotal[i].SetTitle("Total capacitance; |#eta|; Capacitance [pF]")
     hCapTotal[i].SetName("hCapacitance"+str(i))
 
     #Correct for different SF in ATLAS and FCC
@@ -133,8 +133,8 @@ for i in range (0, nLayers):
         capTrace = hCapTrace[i].GetBinContent(ibin)
         capDetector = hCapDetector[i].GetBinContent(ibin)
         #total capacitance
-        #hCapTotal[i].SetBinContent( ibin, capShield + capTrace + capDetector )
-        hCapTotal[i].SetBinContent( ibin, capShield + capDetector )
+        hCapTotal[i].SetBinContent( ibin, capShield + capTrace + capDetector )
+        #hCapTotal[i].SetBinContent( ibin, capShield + capDetector )
         #noise
         noise = noiseConversionFactor * ( capShield + capDetector ) / GeV
         noiseWithTrace = noiseConversionFactor * ( capShield + capTrace + capDetector ) / GeV
@@ -178,7 +178,7 @@ legend.SetHeader("Longitudinal layers")
 legend.SetNColumns(4)
 for i, h in enumerate(hCapTotal):
     h.SetMinimum(0)
-    h.SetMaximum(maximumCap*1.4)
+    h.SetMaximum(maximumCap*1.8)
     h.GetYaxis().SetTitleOffset(1.4)
     if i == 0:
         h.Draw("")
@@ -251,9 +251,9 @@ cCapParts.Divide(3,4)
 for i in range (0, nLayers):
     cCapParts.cd(i+1)
     if i < 7:
-        hCapTotal[i].SetMaximum(350)
+        hCapTotal[i].SetMaximum(450)
     else:
-        hCapTotal[i].SetMaximum(350)
+        hCapTotal[i].SetMaximum(450)
 
     hCapTotal[i].SetTitle("Layer "+str(i+1))
     hCapTotal[i].GetXaxis().SetTitleSize(0.045)
