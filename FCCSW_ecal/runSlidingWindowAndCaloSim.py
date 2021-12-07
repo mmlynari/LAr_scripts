@@ -33,6 +33,14 @@ if use_pythia:
     pythia8gentool.printPythiaStatistics = False
     pythia8gentool.pythiaExtraSettings = [""]
     genAlg.SignalProvider = pythia8gentool
+    # to smear the primary vertex position:
+    #from Configurables import GaussSmearVertex
+    #smeartool = GaussSmearVertex()
+    #smeartool.xVertexSigma =   0.5*units.mm
+    #smeartool.yVertexSigma =   0.5*units.mm
+    #smeartool.zVertexSigma =  40.0*units.mm
+    #smeartool.tVertexSigma = 180.0*units.picosecond
+    #genAlg.VertexSmearingTool = smeartool
 else:
     from Configurables import  MomentumRangeParticleGun
     pgun = MomentumRangeParticleGun("ParticleGun_Electron")
