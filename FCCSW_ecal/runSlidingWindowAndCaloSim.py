@@ -7,12 +7,12 @@ use_pythia = False
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
-momentum = 10 # in GeV
+momentum = 5 # in GeV
 thetaMin = 90.25 # degrees
 thetaMax = 90.25 # degrees
 #thetaMin = 50 # degrees
 #thetaMax = 130 # degrees
-pdgCode = 11 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
+pdgCode = 111 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 magneticField = False
 
 from Gaudi.Configuration import *
@@ -28,7 +28,10 @@ genAlg = GenAlg()
 if use_pythia:
     from Configurables import PythiaInterface
     pythia8gentool = PythiaInterface()
-    pythia8gentool.Filename = "MCGeneration/ee_Z_ee.cmd"
+    pythia8gentool.pythiacard = os.path.join(os.environ.get('PWD', ''), "Pythia_LHEinput.cmd")
+    #pythia8gentool.pythiacard = "MCGeneration/ee_Z_ee.cmd"
+    pythia8gentool.printPythiaStatistics = False
+    pythia8gentool.pythiaExtraSettings = [""]
     genAlg.SignalProvider = pythia8gentool
 else:
     from Configurables import  MomentumRangeParticleGun
@@ -37,8 +40,8 @@ else:
     pgun.MomentumMin = momentum * GeV
     pgun.MomentumMax = momentum * GeV
     pgun.PhiMin = 0
-    #pgun.PhiMax = 0
-    pgun.PhiMax = 2 * _pi
+    pgun.PhiMax = 0
+    #pgun.PhiMax = 2 * _pi
     pgun.ThetaMin = thetaMin * _pi / 180.
     pgun.ThetaMax = thetaMax * _pi / 180.
     genAlg.SignalProvider = pgun
@@ -69,15 +72,15 @@ geoservice.OutputLevel = INFO
 # Geant4 service
 # Configures the Geant simulation: geometry, physics list and user actions
 
-# Uncomment if history from Geant4 decays is needed (e.g. to get the photons from pi0) and set actions=actions in SimG4Svc
-#from Configurables import SimG4FullSimActions, SimG4Alg, SimG4PrimariesFromEdmTool, SimG4SaveParticleHistory
-#actions = SimG4FullSimActions()
+from Configurables import SimG4FullSimActions, SimG4Alg, SimG4PrimariesFromEdmTool, SimG4SaveParticleHistory
+actions = SimG4FullSimActions()
+# Uncomment if history from Geant4 decays is needed (e.g. to get the photons from pi0) and set actions=actions in SimG4Svc + uncomment saveHistTool in SimG4Alg
 #actions.enableHistory=True
-#actions.energyCut = 0.2 * GeV 
+#actions.energyCut = 0.2 * GeV
 #saveHistTool = SimG4SaveParticleHistory("saveHistory")
 
 from Configurables import SimG4Svc
-geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist="SimG4FtfpBert", actions="SimG4FullSimActions")
+geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist="SimG4FtfpBert", actions=actions)
 
 # Fixed seed to have reproducible results, change it for each job if you split one production into several jobs
 # Mind that if you leave Gaudi handle random seed and some job start within the same second (very likely) you will have duplicates
@@ -148,7 +151,7 @@ createEcalBarrelCellsStep1 = CreateCaloCells("CreateECalBarrelCellsStep1",
                                doCellCalibration=True,
                                calibTool = calibEcalBarrel,
                                addCellNoise=False, filterCellNoise=False,
-                               addPosition=True,
+                               #addPosition=True,
                                OutputLevel=INFO,
                                hits=ecalBarrelHitsName,
                                cells="ECalBarrelCellsStep1")
@@ -194,7 +197,6 @@ createHcalBarrelCells = CreateCaloCells("CreateHCaloCells",
                                hits="HCalBarrelHits",
                                cells="HCalBarrelCells")
 
-# sliding window clustering #FIXME not yet ready for key4hep
 #Empty cells for parts of calorimeter not implemented yet
 from Configurables import CreateEmptyCaloCellsCollection
 createemptycells = CreateEmptyCaloCellsCollection("CreateEmptyCaloCells")
@@ -240,6 +242,7 @@ createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
                                                  nEtaDuplicates = dupE, nPhiDuplicates = dupP,
                                                  nEtaFinal = finE, nPhiFinal = finP,
                                                  energyThreshold = threshold,
+                                                 #energySharingCorrection = False,
                                                  #attachCells = True,
                                                  OutputLevel = INFO
                                                  )
