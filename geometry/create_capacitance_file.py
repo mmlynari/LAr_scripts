@@ -70,8 +70,8 @@ capa_per_mm = 0.123 # pF/mm
 capa_per_mm_stripLayer = 0.062 # pF/mm
 # multiplicative factor
 # factor two because we merge two phi cells together, another factor 2 becasue we have two 1) signal pad / shield capa  2) HV plate / absorber capa per cell
-nmult = 4
-nmult_trace = 2 # for the trace only the number of phi cell merged playes a role
+nmult = 2
+nmult_trace = 1 # for the trace only the number of phi cell merged playes a role
 epsilonRLAr = 1.5 # LAr at 88 K
 epsilon0 = 8.854/1000. #pF/mm
 

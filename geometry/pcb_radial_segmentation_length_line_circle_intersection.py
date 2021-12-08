@@ -48,40 +48,40 @@ calo_depth = outer_radius - inner_radius
 
 
 total_pcb_length_parallel = get_cell_length_from_intersection_line_circle(inner_radius, outer_radius, inclination)
-print "Total length from %d to %d with %d inclination: "%(inner_radius, outer_radius, inclination), total_pcb_length_parallel
-print "Pre sampler radial length %f, other cell radial length %f, number of other cells %d."%(first_cell_radial_length, other_cells_radial_lengths, n_cell_after_ps)
+print("Total length from %d to %d with %d inclination: "%(inner_radius, outer_radius, inclination), total_pcb_length_parallel)
+print("Pre sampler radial length %f, other cell radial length %f, number of other cells %d."%(first_cell_radial_length, other_cells_radial_lengths, n_cell_after_ps))
 pre_sampler_length_parallel = get_cell_length_from_intersection_line_circle(inner_radius, inner_radius+first_cell_radial_length, inclination)
 
 cell_lengths_along_pcb_direction = []
 cell_lengths_along_pcb_direction.append(pre_sampler_length_parallel)
 
 regular_cells_radial_segementation = [inner_radius + first_cell_radial_length + i * other_cells_radial_lengths for i in range(0, n_cell_after_ps+1)]
-print "Radius of separation for the regular cells: ", regular_cells_radial_segementation
+print("Radius of separation for the regular cells: ", regular_cells_radial_segementation)
 
 for index in range(len(regular_cells_radial_segementation)-1):
     cell_lengths_along_pcb_direction.append(get_cell_length_from_intersection_line_circle(regular_cells_radial_segementation[index], regular_cells_radial_segementation[index+1], inclination))
 
-print "All cell lengths: ", cell_lengths_along_pcb_direction
-print "Total length from %d to %d  with %d inclination, by summing all cells: "%(inner_radius, outer_radius, inclination), sum(cell_lengths_along_pcb_direction)
-print "Looks like a numerical precision issue?"
+print("All cell lengths: ", cell_lengths_along_pcb_direction)
+print("Total length from %d to %d  with %d inclination, by summing all cells: "%(inner_radius, outer_radius, inclination), sum(cell_lengths_along_pcb_direction))
+print("Looks like a numerical precision issue?")
 
-print "Length of the pre-sampler cell: %f"%(pre_sampler_length_parallel)
-print "Length of the cells after pre-shower to reach total radius: %f"%((total_pcb_length_parallel-pre_sampler_length_parallel)/float(n_cell_after_ps))
-print "--------------------------------"
+print("Length of the pre-sampler cell: %f"%(pre_sampler_length_parallel))
+print("Length of the cells after pre-shower to reach total radius: %f"%((total_pcb_length_parallel-pre_sampler_length_parallel)/float(n_cell_after_ps)))
+print("--------------------------------")
 
 ratio_first_cell = first_cell_radial_length/calo_depth
 ratio_other_cells = other_cells_radial_lengths/calo_depth
 pre_sampler_length_parallel = total_pcb_length_parallel * ratio_first_cell
 normal_cells_length_parallel = total_pcb_length_parallel * ratio_other_cells
 
-print "Length of the pre-sampler cell parallel: %f"%(pre_sampler_length_parallel)
-print "Length of the other cells parallel: %f"%(normal_cells_length_parallel)
-print "Total lenght parallel: %f"%(pre_sampler_length_parallel + n_cell_after_ps * normal_cells_length_parallel)
+print("Length of the pre-sampler cell parallel: %f"%(pre_sampler_length_parallel))
+print("Length of the other cells parallel: %f"%(normal_cells_length_parallel))
+print("Total lenght parallel: %f"%(pre_sampler_length_parallel + n_cell_after_ps * normal_cells_length_parallel))
 
 # angle comprise by lines from  1) IP to inner right edge of a cell, 2) IP to outer left edge of a cell (useful to get the plate angle with radial direction that changes with increasing R)
 # based on scalene triangle sine law A/sin(a) = B/sin(b) = C/sin(c) (outer left edge aligned on the Y axis)
 delta_phi = degrees(asin(total_pcb_length_parallel/outer_radius * sin(radians(inclination))))
-print "Angle sustained by the readout projection: %f"%delta_phi
+print("Angle sustained by the readout projection: %f"%delta_phi)
 
 radial_inclination_end = inclination - delta_phi
 

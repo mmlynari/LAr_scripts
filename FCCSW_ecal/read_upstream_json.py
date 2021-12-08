@@ -42,8 +42,8 @@ for item in data['corr_params']:
 upstream_params_str = up_a + ", " + up_b + ", " + up_c + ", " + up_d + ", " + up_e + ", " + up_f
 downstream_params_str = down_a + ", " + down_b + ", " + down_c + ", " + down_d + ", " + down_e + ", " + down_f
 
-print("sed -i 's/upstreamParameters =.*,/upstreamParameters = [[%s]],/' runUpstreamSlidingWindowAndCaloSim.py"%upstream_params_str)
-print("sed -i 's/downstreamParameters =.*,/downstreamParameters = [[%s]],/' runUpstreamSlidingWindowAndCaloSim.py"%downstream_params_str)
-os.system("sed -i 's/upstreamParameters =.*,/upstreamParameters = [[%s]],/' runUpstreamSlidingWindowAndCaloSim.py"%upstream_params_str)
-os.system("sed -i 's/downstreamParameters =.*,/downstreamParameters = [[%s]],/' runUpstreamSlidingWindowAndCaloSim.py"%downstream_params_str)
+print("sed -i 's/upstreamParameters =.*,/upstreamParameters = [[%s]],/' run*SlidingWindowAndCaloSim.py"%upstream_params_str)
+print("sed -i 's/downstreamParameters =.*,/downstreamParameters = [[%s]],/' run*SlidingWindowAndCaloSim.py"%downstream_params_str)
+os.system("sed -i 's/upstreamParameters =.*,/upstreamParameters = [[%s]],/' run*SlidingWindowAndCaloSim.py"%upstream_params_str)
+os.system("sed -i 's/downstreamParameters =.*,/downstreamParameters = [[%s]],/' run*SlidingWindowAndCaloSim.py"%downstream_params_str)
 

@@ -8,7 +8,7 @@ ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 #rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/outputs/201209/fccsw_output_pythia_ee_Z_ee.root'
 #rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/outputs/201216/fccsw_output_pythia_ee_Z_ee_all131all.root'
-rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/dummy_releases/Mark_Test2/FCCAnalyses/outputs/210720/output_fullCalo_SimAndDigi_withCluster_MagneticField_False_pMin_1000_MeV_ThetaMinMax_90.25_90.25_pdgId_111_pythiaFalse_noClusterSharing.root'
+rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/210607/FCCAnalyses/outputs/211020/output_fullCalo_SimAndDigi_withCluster_MagneticField_False_pMin_3000_MeV_ThetaMinMax_90.25_90.25_pdgId_111_pythiaFalse.root'
 plot_dir_name = 'plots_clusterShape_' + os.path.basename(rootfile_path).replace('.root','')
 if not os.path.isdir(plot_dir_name):
     os.mkdir(plot_dir_name)

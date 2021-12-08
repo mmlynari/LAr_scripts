@@ -28,7 +28,7 @@ genAlg = GenAlg()
 if use_pythia:
     from Configurables import PythiaInterface
     pythia8gentool = PythiaInterface()
-    pythia8gentool.pythiacard = os.path.join(os.environ.get('PWD', ''), "Pythia_LHEinput.cmd")
+    pythia8gentool.pythiacard = os.path.join(os.environ.get('FCCDETECTORS', ''), "../LAr_scripts/FCCSW_ecal/Pythia_LHEinput.cmd")
     #pythia8gentool.pythiacard = "MCGeneration/ee_Z_ee.cmd"
     pythia8gentool.printPythiaStatistics = False
     pythia8gentool.pythiaExtraSettings = [""]
@@ -144,7 +144,7 @@ geantsim = SimG4Alg("SimG4Alg",
 # EM scale calibration (sampling fraction)
 from Configurables import CalibrateInLayersTool
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
-                                   samplingFraction = [0.3015372769511699] * 1 + [0.11149483835280927] * 1 + [0.13606757625633936] * 1 + [0.15166527482797484] * 1 + [0.1632488357891111] * 1 + [0.17266802625003083] * 1 + [0.17979275037206174] * 1 + [0.18684819895019078] * 1 + [0.19186331727529204] * 1 + [0.1974122727924478] * 1 + [0.20215095335650032] * 1 + [0.22557145948990787] * 1,
+                                   samplingFraction = [0.36571381189697705] * 1 + [0.09779064189677973] * 1 + [0.12564152224404024] * 1 + [0.14350599973146283] * 1 + [0.1557126972314961] * 1 + [0.16444759076233928] * 1 + [0.17097165096847836] * 1 + [0.17684775359805122] * 1 + [0.18181154293837265] * 1 + [0.18544247938196395] * 1 + [0.18922747431624687] * 1 + [0.21187001375505543] * 1,
                                    readoutName = ecalBarrelReadoutName,
                                    layerFieldName = "layer")
 
@@ -159,7 +159,7 @@ createEcalBarrelCellsStep1 = CreateCaloCells("CreateECalBarrelCellsStep1",
                                doCellCalibration=True,
                                calibTool = calibEcalBarrel,
                                addCellNoise=False, filterCellNoise=False,
-                               #addPosition=True,
+                               addPosition=True,
                                OutputLevel=INFO,
                                hits=ecalBarrelHitsName,
                                cells="ECalBarrelCellsStep1")
@@ -250,8 +250,8 @@ createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
                                                  nEtaDuplicates = dupE, nPhiDuplicates = dupP,
                                                  nEtaFinal = finE, nPhiFinal = finP,
                                                  energyThreshold = threshold,
-                                                 #energySharingCorrection = False,
-                                                 #attachCells = True,
+                                                 energySharingCorrection = False,
+                                                 attachCells = True,
                                                  OutputLevel = INFO
                                                  )
 createClusters.clusters.Path = "CaloClusters"
@@ -261,6 +261,21 @@ createEcalBarrelPositionedCaloClusterCells = CreateCaloCellPositionsFCCee("ECalB
 createEcalBarrelPositionedCaloClusterCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCaloClusterCells.hits.Path = "CaloClusterCells"
 createEcalBarrelPositionedCaloClusterCells.positionedHits.Path = "PositionedCaloClusterCells"
+
+from Configurables import CorrectCaloClusters
+correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
+                                          inClusters = createClusters.clusters.Path,
+                                          outClusters = "Corrected"+createClusters.clusters.Path,
+                                          numLayers = [12],
+                                          firstLayerIDs = [0],
+                                          lastLayerIDs = [11],
+                                          readoutNames = [ecalBarrelReadoutNamePhiEta],
+                                          upstreamParameters = [[0.09959407679400918, -10.509139028589276, -141.62311185316685, 2.8931723031040435, -397.6783011336018, -317.53288225142427]],
+                                          upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
+                                          downstreamParameters = [[0.002296666086130359, 0.004644766599619741, 1.4031343062273582, -1.8105436592714355, -0.02976924247722723, 12.875501324136625]],
+                                          downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
+                                          OutputLevel = INFO
+                                          )
 
 ################ Output
 from Configurables import PodioOutput
@@ -304,7 +319,8 @@ ApplicationMgr(
               #createHcalBarrelCells,
               createemptycells,
               createClusters,
-              #createEcalBarrelPositionedCaloClusterCells,
+              createEcalBarrelPositionedCaloClusterCells,
+              correctCaloClusters,
               out
               ],
     EvtSel = 'NONE',
