@@ -3,6 +3,7 @@ import os
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
 use_pythia = False
+addNoise = False
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
@@ -153,7 +154,7 @@ calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction="41.66"
 
 # Create cells in ECal barrel
 # 1. step - merge hits into cells with Eta and module segmentation (phi module is a 'physical' cell i.e. lead + LAr + PCB + LAr +lead)
-# 2. step - rewrite the cellId using the Eta-Phi segmentation (merging several modules into one phi readout cell)
+# 2. step - rewrite the cellId using the Eta-Phi segmentation (merging several modules into one phi readout cell). Add noise at this step if you derived the noise already assuming merged cells
 from Configurables import CreateCaloCells
 createEcalBarrelCellsStep1 = CreateCaloCells("CreateECalBarrelCellsStep1",
                                doCellCalibration=True,
@@ -177,6 +178,7 @@ resegmentEcalBarrel = RedoSegmentation("ReSegmentationEcal",
                              inhits = "ECalBarrelCellsStep1",
                              outhits = "ECalBarrelCellsStep2")
 
+# cells without noise
 EcalBarrelCellsName = "ECalBarrelCells"
 createEcalBarrelCells = CreateCaloCells("CreateECalBarrelCells",
                                doCellCalibration=False,
@@ -184,6 +186,52 @@ createEcalBarrelCells = CreateCaloCells("CreateECalBarrelCells",
                                OutputLevel=INFO,
                                hits="ECalBarrelCellsStep2",
                                cells=EcalBarrelCellsName)
+cell_creator_to_use = createEcalBarrelCells
+
+# generate noise for each cell
+if addNoise:
+    ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCSW_201207_geometry/LAr_scripts/geometry/noise_capa/elecNoise_ecalBarrelFCCee.root"
+    ecalBarrelNoiseHistName = "h_elecNoise_fcc_"
+    from Configurables import NoiseCaloCellsFromFileTool
+    noiseBarrel = NoiseCaloCellsFromFileTool("NoiseBarrel",
+                                             readoutName = ecalBarrelReadoutNamePhiEta,
+                                             noiseFileName = ecalBarrelNoisePath,
+                                             elecNoiseHistoName = ecalBarrelNoiseHistName,
+                                             activeFieldName = "layer",
+                                             addPileup = False,
+                                             numRadialLayers = 12)
+
+    from Configurables import TubeLayerPhiEtaCaloTool
+    barrelGeometry = TubeLayerPhiEtaCaloTool("EcalBarrelGeo",
+                                             readoutName = ecalBarrelReadoutNamePhiEta,
+                                             activeVolumeName = "LAr_sensitive",
+                                             activeFieldName = "layer",
+                                             fieldNames = ["system"],
+                                             fieldValues = [4])
+                                             #activeVolumesNumber = 12)
+    # cells with noise not filtered
+    createEcalBarrelCellsNoise = CreateCaloCells("CreateECalBarrelCellsNoise",
+                                   doCellCalibration=False,
+                                   addCellNoise=True, filterCellNoise=False,
+                                   OutputLevel=INFO,
+                                   hits="ECalBarrelCellsStep2",
+                                   noiseTool = noiseBarrel,
+                                   geometryTool = barrelGeometry,
+                                   cells=EcalBarrelCellsName+"Noise")
+
+    # cells with noise filtered
+    createEcalBarrelCellsNoise_filtered = CreateCaloCells("CreateECalBarrelCellsNoise_filtered",
+                                   doCellCalibration=False,
+                                   addCellNoise=True, filterCellNoise=True,
+                                   OutputLevel=INFO,
+                                   hits="ECalBarrelCellsStep2",
+                                   noiseTool = noiseBarrel,
+                                   geometryTool = barrelGeometry,
+                                   cells=EcalBarrelCellsName+"NoiseFiltered")
+
+    cell_creator_to_use = createEcalBarrelCellsNoise
+    EcalBarrelCellsName = EcalBarrelCellsName+"Noise"
+
 
 # Ecal barrel cell positions (good for physics, all coordinates set properly)
 from Configurables import CellPositionsECalBarrelTool
@@ -285,7 +333,7 @@ out = PodioOutput("out",
 out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
 
 import uuid
-out.filename = "output_fullCalo_SimAndDigi_withCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+".root"
+out.filename = "output_fullCalo_SimAndDigi_withCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
@@ -297,7 +345,7 @@ hepmc_converter.AuditExecute = True
 geantsim.AuditExecute = True
 createEcalBarrelCellsStep1.AuditExecute = True
 resegmentEcalBarrel.AuditExecute = True
-createEcalBarrelCells.AuditExecute = True
+cell_creator_to_use.AuditExecute = True
 #createHcalBarrelCells.AuditExecute = True
 out.AuditExecute = True
 
@@ -314,7 +362,8 @@ ApplicationMgr(
               geantsim,
               createEcalBarrelCellsStep1,
               resegmentEcalBarrel,
-              createEcalBarrelCells,
+              #createEcalBarrelCells,
+              cell_creator_to_use,
               createEcalBarrelPositionedCells,
               #createHcalBarrelCells,
               createemptycells,
