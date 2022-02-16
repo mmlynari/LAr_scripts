@@ -97,6 +97,12 @@ if __name__ == "__main__":
 
     # make sure you put the energies in ascending order to have an optimal job splitting
     energies = args.energies  # in MeV
+    energies_gev = ""
+    energies_mev = ""
+    for energy_mev in energies:
+        energies_gev += str(int(float(energy_mev)/1000)) + " "
+        energies_mev += str(energy_mev) + " "
+
     thetas = args.polarAngles # degrees, will transform to radians later
     if args.energiesForDifferentPolarAngles:
         energies_using_other_thetas = args.energiesForDifferentPolarAngles # may not be interested in having all the theta points for all the energies
@@ -117,13 +123,9 @@ if __name__ == "__main__":
 
     if args.jobType == 'samplingFraction':
         command_template = """fccrun %s -n EVT --MomentumMin PMIN --MomentumMax PMAX --ThetaMin THETAMINRADIAN --ThetaMax THETAMAXRADIAN --PdgCodes PDGID --Output.THistSvc "rec DATAFILE='OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root' TYP='ROOT' OPT='RECREATE'" --filename OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root --seedValue SEED"""%(gaudi_config_path)
-        sf_commands = 'python FCC_calo_analysis_cpp/plot_samplingFraction.py OUTPUTDIR/calibration_output_pdgID_22_pMin_?_pMax_?_thetaMin_90_thetaMax_90.root 10 -r 10000 --preview -outputfolder FCC_calo_analysis_cpp/plots_sampling_fraction_$(date +"%y%m%d") --sed'.replace('OUTPUTDIR', outfile_storage)
+        sf_commands = 'python FCC_calo_analysis_cpp/plot_samplingFraction.py OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_?_pMax_?_thetaMin_90_thetaMax_90.root ENERGYGEV -r ENERGYMEV --preview -outputfolder FCC_calo_analysis_cpp/plots_sampling_fraction_$(date +"%y%m%d") --sed'.replace('OUTPUTDIR', outfile_storage)
         # write the sampling fraction derivation script
         sf_script_path = os.path.join(campaign_name, "sf.sh")
-        with open(sf_script_path, "w") as f:
-            f.write(sf_commands)
-        st = os.stat(sf_script_path)
-        os.chmod(sf_script_path, st.st_mode | stat.S_IEXEC)
 
     elif args.jobType == 'upstream':
         command_template = """fccrun %s -n EVT --MomentumMin PMIN --MomentumMax PMAX --filename OUTPUTDIR/fccsw_upstream_output_pMin_PMIN_pMax_PMAX_jobid_JOBID.root --seedValue SEED"""%(gaudi_config_path)
@@ -282,6 +284,14 @@ if __name__ == "__main__":
             f.write("python read_upstream_json.py %s/corr_params_1d.json"%campaign_name)
         st = os.stat(upstream_script_path)
         os.chmod(upstream_script_path, st.st_mode | stat.S_IEXEC)
+    if args.jobType == 'samplingFraction':
+        #sf_commands =  sf_commands.replace('ENERGYGEV', str(int(float(energy)/1000))).replace('ENERGYMEV', energy)
+        sf_commands =  sf_commands.replace('ENERGYGEV', energies_gev).replace('ENERGYMEV', energies_mev).replace('PDGID', str(pdgid))
+        with open(sf_script_path, "w") as f:
+            f.write(sf_commands)
+        st = os.stat(sf_script_path)
+        os.chmod(sf_script_path, st.st_mode | stat.S_IEXEC)
+
 
     # write the condor submit file
     condor_submit_path = campaign_name + ".sub"
