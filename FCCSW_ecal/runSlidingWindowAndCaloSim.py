@@ -3,7 +3,7 @@ import os
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
 use_pythia = False
-addNoise = False
+addNoise = True
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
@@ -13,7 +13,7 @@ thetaMin = 90.25 # degrees
 thetaMax = 90.25 # degrees
 #thetaMin = 50 # degrees
 #thetaMax = 130 # degrees
-pdgCode = 111 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
+pdgCode = 13 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 magneticField = False
 
 from Gaudi.Configuration import *
@@ -49,8 +49,8 @@ else:
     pgun.MomentumMin = momentum * GeV
     pgun.MomentumMax = momentum * GeV
     pgun.PhiMin = 0
-    pgun.PhiMax = 0
-    #pgun.PhiMax = 2 * _pi
+    #pgun.PhiMax = 0
+    pgun.PhiMax = 2 * _pi
     pgun.ThetaMin = thetaMin * _pi / 180.
     pgun.ThetaMax = thetaMax * _pi / 180.
     genAlg.SignalProvider = pgun
@@ -145,7 +145,7 @@ geantsim = SimG4Alg("SimG4Alg",
 # EM scale calibration (sampling fraction)
 from Configurables import CalibrateInLayersTool
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
-                                   samplingFraction = [0.36571381189697705] * 1 + [0.09779064189677973] * 1 + [0.12564152224404024] * 1 + [0.14350599973146283] * 1 + [0.1557126972314961] * 1 + [0.16444759076233928] * 1 + [0.17097165096847836] * 1 + [0.17684775359805122] * 1 + [0.18181154293837265] * 1 + [0.18544247938196395] * 1 + [0.18922747431624687] * 1 + [0.21187001375505543] * 1,
+                                   samplingFraction = [0.36504678560781667] * 1 + [0.09974087165838573] * 1 + [0.12392336840429007] * 1 + [0.1413266332223572] * 1 + [0.15415123193238958] * 1 + [0.1639900875460671] * 1 + [0.17156597031962592] * 1 + [0.17810674932424356] * 1 + [0.18340048249397345] * 1 + [0.18855877603870688] * 1 + [0.19307873042890955] * 1 + [0.21746137329706489] * 1,
                                    readoutName = ecalBarrelReadoutName,
                                    layerFieldName = "layer")
 
@@ -190,7 +190,8 @@ cell_creator_to_use = createEcalBarrelCells
 
 # generate noise for each cell
 if addNoise:
-    ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCSW_201207_geometry/LAr_scripts/geometry/noise_capa/elecNoise_ecalBarrelFCCee.root"
+    #ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCSW_201207_geometry/LAr_scripts/geometry/noise_capa/elecNoise_ecalBarrelFCCee.root"
+    ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/geometry/noise_capa_220215/elecNoise_ecalBarrelFCCee.root"
     ecalBarrelNoiseHistName = "h_elecNoise_fcc_"
     from Configurables import NoiseCaloCellsFromFileTool
     noiseBarrel = NoiseCaloCellsFromFileTool("NoiseBarrel",
@@ -199,6 +200,7 @@ if addNoise:
                                              elecNoiseHistoName = ecalBarrelNoiseHistName,
                                              activeFieldName = "layer",
                                              addPileup = False,
+                                             filterNoiseThreshold = 2,
                                              numRadialLayers = 12)
 
     from Configurables import TubeLayerPhiEtaCaloTool
@@ -217,20 +219,19 @@ if addNoise:
                                    hits="ECalBarrelCellsStep2",
                                    noiseTool = noiseBarrel,
                                    geometryTool = barrelGeometry,
-                                   cells=EcalBarrelCellsName+"Noise")
+                                   cells=EcalBarrelCellsName)
 
     # cells with noise filtered
-    createEcalBarrelCellsNoise_filtered = CreateCaloCells("CreateECalBarrelCellsNoise_filtered",
-                                   doCellCalibration=False,
-                                   addCellNoise=True, filterCellNoise=True,
-                                   OutputLevel=INFO,
-                                   hits="ECalBarrelCellsStep2",
-                                   noiseTool = noiseBarrel,
-                                   geometryTool = barrelGeometry,
-                                   cells=EcalBarrelCellsName+"NoiseFiltered")
+    #createEcalBarrelCellsNoise = CreateCaloCells("CreateECalBarrelCellsNoise_filtered",
+    #                               doCellCalibration=False,
+    #                               addCellNoise=True, filterCellNoise=True,
+    #                               OutputLevel=INFO,
+    #                               hits="ECalBarrelCellsStep2",
+    #                               noiseTool = noiseBarrel,
+    #                               geometryTool = barrelGeometry,
+    #                               cells=EcalBarrelCellsName)
 
     cell_creator_to_use = createEcalBarrelCellsNoise
-    EcalBarrelCellsName = EcalBarrelCellsName+"Noise"
 
 
 # Ecal barrel cell positions (good for physics, all coordinates set properly)
@@ -330,7 +331,8 @@ from Configurables import PodioOutput
 out = PodioOutput("out",
                   OutputLevel=INFO)
 
-out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
+#out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
+out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop %s"%EcalBarrelCellsName, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
 
 import uuid
 out.filename = "output_fullCalo_SimAndDigi_withCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
@@ -368,7 +370,7 @@ ApplicationMgr(
               #createHcalBarrelCells,
               createemptycells,
               createClusters,
-              createEcalBarrelPositionedCaloClusterCells,
+              #createEcalBarrelPositionedCaloClusterCells,
               correctCaloClusters,
               out
               ],

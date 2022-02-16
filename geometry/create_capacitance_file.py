@@ -45,6 +45,7 @@ passiveThickness = 2.0 #mm
 deltaEta = 0.01
 maxEta = 0.881 # 45 degrees
 numEta = int(ceil(maxEta/deltaEta))
+print(numEta)
 #PCB dimensions [mm]
 hhv = 0.1
 hs = 0.17
@@ -235,11 +236,12 @@ for i in range (0, len(readoutLayerParallelLengths)):
         area = ( real_radial_separation[i] * ( 1 / (tan(2. * atan(exp(- (index + 1) * deltaEta)))) -  1 / (tan(2. * atan(exp(- index * deltaEta))) ) )
                  + real_radial_separation[i + 1] * ( 1 / (tan(2. * atan(exp(- (index + 1) * deltaEta)))) -  1 / (tan(2. * atan(exp(- index * deltaEta))) ) )
                  ) / 2. * (real_radial_separation[i+1] - real_radial_separation[i])
+        # get the cell size perpendicular to the plate direction from the cell size on the circle at given radius and the inclination w.r.t. radial dir, then remove the PCB and lead thickness (no need for any factor here because we are perpendicular to the PCB and lead plates) --> gives the LAr gap sizxe perpendicular
         distance = (2 * pi * (real_radial_separation[i+1] + real_radial_separation[i]) / 2. / Nplanes * cos (inclinations_wrt_radial_dir_at_middleRadialDepth[i]) - pcbThickness - passiveThickness) / 2. # divided by two because two lar gap per cell
         distance += hhv #the capa is between signal plate and absorber --> need to add distance between HV plate and signal pad
         distance += t #the capa is between signal plate and absorber --> need to add distance between HV plate and signal pad
         if eta == 0:
-            print("LAr gap size (perpendicular): %f mm"%distance)
+            print("LAr gap size (perpendicular) + hhv + t: %f mm"%distance)
         capacitanceDetector = nmult * epsilon0 * epsilonRLAr * area / distance
         if i == 1: #strip layer has smaller capacitance because it is divided in 4 smaller cells
             capacitanceDetector /= ncells_strip_layer

@@ -12,7 +12,7 @@ ROOT.gStyle.SetPadTickY(1)
 # you need to further get, for each layer, the peak current corresponding to an energy deposit of 1 MeV in the cell (cell considered including the energy in absorber and PCB), the cell merging strategy does not matter yet here to first approximation because the 1 MeV current equivalent will be the same in any merging scenarios (the current will be shared in more gaps when merging many cells, but all these current will then bu 'summed' before to reach the readout). Merging many cells will pay back later, when more signal will be collected per read out channel compared to merging less cells, for the same noise values
 # Parameters impacting the peak current induce by 1 MeV deposit (susceptible to change): sampling fraction, LAr gap size (from ramo shockley, the closer the plate the more the charge drift induce a high current), drift velocity (the electric field is smaller when large gap size). Not changing: critical energy LAr, 
 
-noise_current_rms = 10 # nA
+noise_current_rms = 10 # nA, FIXME in a next iteration, should be defined as a linear function linking cell capacitance and noise ENI
 
 SFfcc = [0.36571381189697705] * 1 + [0.09779064189677973] * 1 + [0.12564152224404024] * 1 + [0.14350599973146283] * 1 + [0.1557126972314961] * 1 + [0.16444759076233928] * 1 + [0.17097165096847836] * 1 + [0.17684775359805122] * 1 + [0.18181154293837265] * 1 + [0.18544247938196395] * 1 + [0.18922747431624687] * 1 + [0.21187001375505543] * 1
 
@@ -98,6 +98,7 @@ gStyle.SetOptStat(0)
 
 # electronic noise histograms
 h_elecNoise_fcc = [] # default total noise shield + detector capacitance (without trace capacitance) -> to be used in FCCSW as noise estimation
+h_1MevEquivCurrent_fcc = [] # default total noise shield + detector capacitance (without trace capacitance) -> to be used in FCCSW as noise estimation
 
 maximumNoise = 0.
 
@@ -117,6 +118,14 @@ for i in range (0, nLayers):
     h_elecNoise_fcc[i].SetTitle("Default electronic noise; |#eta|; Electronic noise [GeV]")
     h_elecNoise_fcc[i].SetName("h_elecNoise_fcc_"+str(i+1))
 
+    h_1MevEquivCurrent_fcc.append( TH1F() )
+    h_1MevEquivCurrent_fcc[i].SetLineWidth(3)
+    h_1MevEquivCurrent_fcc[i].SetLineColor(line_color_number)
+    h_1MevEquivCurrent_fcc[i].SetLineStyle(line_style_number)
+    h_1MevEquivCurrent_fcc[i].SetBins(nbins, 0., maxEta)
+    h_1MevEquivCurrent_fcc[i].SetTitle("1 MeV equivalent current; |#eta|; 1 MeV current [nA]")
+    h_1MevEquivCurrent_fcc[i].SetName("h_1MevEquivCurrent_fcc_"+str(i+1))
+
     for ibin in range(0, nbins+1):
         noise = noise_per_layer[i] / GeV
         #find maximum for drawing of histograms
@@ -124,6 +133,7 @@ for i in range (0, nLayers):
             maximumNoise = noise
         #fill histogram
         h_elecNoise_fcc[i].SetBinContent(ibin, noise)
+        h_1MevEquivCurrent_fcc[i].SetBinContent(ibin, ref_current_1mev[i])
     line_color_number += 1
     line_style_number += 1
 
@@ -140,11 +150,21 @@ legend.SetNColumns(4)
 
 i = 0
 for h in h_elecNoise_fcc:
+    print(h)
     h.SetMinimum(0.)
     h.SetMaximum(maximumNoise*1.5)
     h.GetYaxis().SetTitleOffset(1.4)
     h.Write()
     legend.AddEntry(h, "Layer " + str(i+1),"l")
+    i += 1
+
+i = 0
+for h in h_1MevEquivCurrent_fcc:
+    print(h)
+    h.SetMinimum(0)
+    h.SetMaximum(13)
+    h.GetYaxis().SetTitleOffset(1.1)
+    h.Write()
     i += 1
 
 cNoise = TCanvas("cNoise","Electronic noise per cell",800,600)
@@ -154,9 +174,20 @@ for i, h in enumerate(h_elecNoise_fcc):
         h.Draw("")
     else:
         h.Draw("same")
-
 legend.Draw()
 cNoise.Update()
 cNoise.Write()
 cNoise.Print(os.path.join(output_folder, "cNoise.png"))
 
+cEquivCurrent = TCanvas("cEquivCurrent","Electronic noise per cell",800,600)
+cEquivCurrent.cd()
+for i, h in enumerate(h_1MevEquivCurrent_fcc):
+    if i == 0:
+        h.Draw("")
+    else:
+        h.Draw("same")
+
+legend.Draw()
+cEquivCurrent.Update()
+cEquivCurrent.Write()
+cEquivCurrent.Print(os.path.join(output_folder, "cEquivCurrent.png"))

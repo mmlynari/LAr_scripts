@@ -19,17 +19,21 @@ ROOT.gROOT.SetBatch(ROOT.kTRUE)
 #rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/210217_caloReco/fccsw_output_pdgID_22_pMin_10000_pMax_10000_thetaMin_90_thetaMax_90.root'
 #rootfile_path = sys.argv[1]
 #rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/210401_caloReco_mip/output_fullCalo_SimAndDigi_withCluster_MagneticField_False_pMin_10GeV_ThetaMinMax_90.0_90.0_pdgId_13_pythiaFalse.root'
-rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/outputs/210607/output_fullCalo_SimAndDigi_withCluster_MagneticField_False_pMin_10000_MeV_ThetaMinMax_90.25_90.25_pdgId_13_pythiaFalse_phiFixed.root'
-postfix = ''
+#rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/outputs/210607/output_fullCalo_SimAndDigi_withCluster_MagneticField_False_pMin_10000_MeV_ThetaMinMax_90.25_90.25_pdgId_13_pythiaFalse_phiFixed.root'
+#rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/210607/FCCAnalyses/211001_energies_10kevt_caloReco/fccsw_output_pdgID_22_pMin_1000_pMax_1000_thetaMin_90_thetaMax_90.root'
+rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses/220126_mip_10kevt_slidingWindow_noNoise_caloReco/fccsw_output_pdgID_13_pMin_10000_pMax_10000_thetaMin_90_thetaMax_90.root'
+postfix = 'mip'
 #if sys.argv[2]:
 #    postfix = sys.argv[2]
 #else:
 #    postfix = ''
 
-noise_root_file_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCSW_201207_geometry/LAr_scripts/geometry/noise_capa/elecNoise_ecalBarrelFCCee.root"
+#noise_root_file_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCSW_201207_geometry/LAr_scripts/geometry/noise_capa/elecNoise_ecalBarrelFCCee.root"
+#noise_root_file_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/geometry/noise_constant_vs_capa/elecNoise_ecalBarrelFCCee.root"
+noise_root_file_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/geometry/noise_capa_220216/elecNoise_ecalBarrelFCCee.root"
 noise_root_file = ROOT.TFile(noise_root_file_path, 'r')
 layer_radius_edges = [2160, 2173.6787835669493, 2206.0574015524803, 2239.0593055298277, 2272.657342921452, 2306.825466503636, 2341.5387200310156, 2376.7732184243205, 2412.5061235473704, 2448.71561648303, 2485.3808671070947, 2522.482001655514, 2560.000068884735] # needed to know from which layer to take the noise histogram, obtained from create_capacitance.py
-SFfcc = [0.303451138049] * 1 + [0.111872504159] * 1 + [0.135806495306] * 1 + [0.151772636618] * 1 + [0.163397436122] * 1 + [0.172566977313] * 1 + [0.179855253903] * 1 + [0.186838417657] * 1 + [0.192865946689] * 1 + [0.197420241611] * 1 + [0.202066552306] * 1 + [0.22646764465] * 1
+SFfcc = [0.36504678560781667] * 1 + [0.09974087165838573] * 1 + [0.12392336840429007] * 1 + [0.1413266332223572] * 1 + [0.15415123193238958] * 1 + [0.1639900875460671] * 1 + [0.17156597031962592] * 1 + [0.17810674932424356] * 1 + [0.18340048249397345] * 1 + [0.18855877603870688] * 1 + [0.19307873042890955] * 1 + [0.21746137329706489] * 1
 th1_noise_name_template = 'h_elecNoise_fcc_LAYERID'
 th1_energy_name_template = 'h_energy_layer_LAYERID'
 noise_histos = []
@@ -136,7 +140,7 @@ canvas_signalOverNoise_vs_depth.Write()
 canvas_signalOverNoise_vs_depth.Print(os.path.join(plot_dir_name, "tprof_signalOverNoise_vs_depth_" + energy_str_gev + ".png"))
 
 canvas_energy_vs_depth = ROOT.TCanvas("tprof_energy_vs_depth_canvas_" + energy_str_gev, "tprof_energy_vs_depth_canvas_" + energy_str_gev)
-print("Integral of TProfile (average total energy deposit): ", tprof_energy_vs_depth.Integral())
+print(("Integral of TProfile (average total energy deposit): ", tprof_energy_vs_depth.Integral()))
 #tprof_energy_vs_depth.Scale(1/tprof_energy_vs_depth.Integral())
 #tprof_energy_vs_depth.SetMarkerSize(4)
 tprof_energy_vs_depth.SetLineWidth(3)
@@ -148,7 +152,7 @@ canvas_energy_vs_depth.Write()
 canvas_energy_vs_depth.Print(os.path.join(plot_dir_name, "tprof_energy_vs_depth_" + energy_str_gev + ".png"))
 
 canvas_uncalibratedEnergy_vs_depth = ROOT.TCanvas("tprof_uncalibratedEnergy_vs_depth_canvas_" + energy_str_gev, "tprof_uncalibratedEnergy_vs_depth_canvas_" + energy_str_gev)
-print "Integral of TProfile (average total uncalibratedEnergy deposit): ", tprof_uncalibratedEnergy_vs_depth.Integral()
+print("Integral of TProfile (average total uncalibratedEnergy deposit): ", tprof_uncalibratedEnergy_vs_depth.Integral())
 #tprof_uncalibratedEnergy_vs_depth.Scale(1/tprof_uncalibratedEnergy_vs_depth.Integral())
 #tprof_uncalibratedEnergy_vs_depth.SetMarkerSize(4)
 tprof_uncalibratedEnergy_vs_depth.SetLineWidth(3)
@@ -197,7 +201,7 @@ canvas_signalOverNoise_layer3 = ROOT.TCanvas("th1_signalOverNoise_layer3_canvas_
 #th1_signalOverNoise_layer3.SetLineWidth(3)
 th1_signalOverNoise_layer3.GetXaxis().SetTitle("Signal over noise")
 th1_signalOverNoise_layer3.GetYaxis().SetTitle("count")
-print th1_signalOverNoise_layer3.GetEntries()
+print(th1_signalOverNoise_layer3.GetEntries())
 th1_signalOverNoise_layer3.Draw()
 th1_signalOverNoise_layer3.Write()
 canvas_signalOverNoise_layer3.Write()

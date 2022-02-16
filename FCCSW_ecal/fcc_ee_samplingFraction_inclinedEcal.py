@@ -3,7 +3,7 @@ from Gaudi.Configuration import *
 from GaudiKernel.SystemOfUnits import MeV, GeV
 
 # Electron momentum in GeV
-momentum = 50
+momentum = 10
 # Theta min and max in degrees
 thetaMin = 90.
 thetaMax = 90.
@@ -117,7 +117,7 @@ event_counter.Frequency = 10
 from Configurables import ApplicationMgr
 ApplicationMgr( TopAlg = [event_counter, genalg_pgun, hepmc_converter, geantsim, hist, out],
                 EvtSel = 'NONE',
-                EvtMax = 10,
+                EvtMax = 100,
                 # order is important, as GeoSvc is needed by G4SimSvc
                 ExtSvc = [podioevent, geoservice, geantservice, audsvc],
                 OutputLevel = INFO,
