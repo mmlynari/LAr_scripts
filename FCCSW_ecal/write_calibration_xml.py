@@ -69,7 +69,7 @@ print("Number of layers: %d"%numberOfLayer)
 print("Layer layout {depth : number}: ", list_of_pair_layerThickness_numberOfLayer) 
 
 # modify the number of layer in sampling fraction config
-os.system("sed -i 's/numLayers.*,/numLayers = %d,/' fcc_ee_samplingFraction_inclinedEcal.py"%numberOfLayer)
+os.system("sed -i 's/numLayers.*,/numLayers = %d,/' fcc_ee_samplingFraction_inclinedEcal.py fcc_ee_upstream_inclinedEcal.py"%numberOfLayer)
 print("fcc_ee_samplingFraction_inclinedEcal.py modified")
 
 # modify the layer layout in plot_sampling_fraction script
@@ -82,13 +82,13 @@ string_for_layerWidth = string_for_layerWidth[0:-2]
 os.system("sed -i 's/layerWidth\", default = .*,/layerWidth\", default = %s,/' FCC_calo_analysis_cpp/plot_samplingFraction.py"%string_for_layerWidth)
 print("FCC_calo_analysis_cpp/plot_samplingFraction.py modified")
 
-# modify the number of layers in fcc_ee_upstreamMaterial_inclinedEcal.py
-os.system("sed -i 's/numLayers.*,/numLayers = %d,/' fcc_ee_upstream_inclinedEcal.py"%numberOfLayer)
-print("fcc_ee_upstream_inclinedEcal.py modified")
-
 # modify the number of layers in runUpstreamSlidingWindowAndCaloSim
-os.system("sed -i 's/numLayers.*,/numLayers = [%d],/' runUpstreamSlidingWindowAndCaloSim.py"%numberOfLayer)
-os.system("sed -i 's/lastLayerIDs.*,/lastLayerIDs = [%d],/' runUpstreamSlidingWindowAndCaloSim.py"%(numberOfLayer - 1))
+os.system("sed -i 's/numLayers.*,/numLayers = [%d],/' run*.py"%numberOfLayer)
+os.system("sed -i 's/lastLayerIDs.*,/lastLayerIDs = [%d],/' run*.py"%(numberOfLayer - 1))
+
+# modify the number of layers in noise_map.py
+os.system("sed -i 's/numRadialLayers.*,/numRadialLayers = %d,/' noise_map.py"%numberOfLayer)
+os.system("sed -i 's/activeVolumesNumbers.*,/activeVolumesNumbers = [%d],/' noise_map.py neighbours.py"%numberOfLayer)
 
 # modify the tower definition in clustering algorithms
 os.system("sed -i 's/deltaEtaTower.*$/deltaEtaTower = %s, deltaPhiTower = 2*_pi\/%s.,/'  run*SlidingWindowAndCaloSim.py"%(eta_bin_size, n_phi_bins))
