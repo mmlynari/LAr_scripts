@@ -85,14 +85,14 @@ print("FCC_calo_analysis_cpp/plot_samplingFraction.py modified")
 # modify the number of layers in runUpstreamSlidingWindowAndCaloSim
 os.system("sed -i 's/numLayers.*,/numLayers = [%d],/' run*.py"%numberOfLayer)
 os.system("sed -i 's/lastLayerIDs.*,/lastLayerIDs = [%d],/' run*.py"%(numberOfLayer - 1))
+os.system("sed -i 's/activeVolumesNumber.*,/activeVolumesNumber = %d,/' run*.py"%numberOfLayer)
 
 # modify the number of layers in noise_map.py
 os.system("sed -i 's/numRadialLayers.*,/numRadialLayers = %d,/' noise_map.py"%numberOfLayer)
 os.system("sed -i 's/activeVolumesNumbers.*,/activeVolumesNumbers = [%d],/' noise_map.py neighbours.py"%numberOfLayer)
 
 # modify the tower definition in clustering algorithms
-os.system("sed -i 's/deltaEtaTower.*$/deltaEtaTower = %s, deltaPhiTower = 2*_pi\/%s.,/'  run*SlidingWindowAndCaloSim.py"%(eta_bin_size, n_phi_bins))
-print("run*SlidingWindowAndCaloSim.py modified")
+os.system("sed -i 's/deltaEtaTower.*$/deltaEtaTower = %s, deltaPhiTower = 2*_pi\/%s.,/'  run*.py"%(eta_bin_size, n_phi_bins))
 
 # Write upstream correction xml
 # Re-make absorber and readout not sensitive, make cryostat sensitive and anlarge it to 1.1 m 

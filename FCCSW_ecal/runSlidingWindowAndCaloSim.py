@@ -3,12 +3,12 @@ import os
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
 use_pythia = False
-addNoise = True
+addNoise = False
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
-momentum = 5 # in GeV
+momentum = 20 # in GeV
 thetaMin = 90.25 # degrees
 thetaMax = 90.25 # degrees
 #thetaMin = 50 # degrees
@@ -191,7 +191,7 @@ cell_creator_to_use = createEcalBarrelCells
 # generate noise for each cell
 if addNoise:
     #ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCSW_201207_geometry/LAr_scripts/geometry/noise_capa/elecNoise_ecalBarrelFCCee.root"
-    ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/geometry/noise_capa_220215/elecNoise_ecalBarrelFCCee.root"
+    ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/geometry/noise_capa_220216/elecNoise_ecalBarrelFCCee.root"
     ecalBarrelNoiseHistName = "h_elecNoise_fcc_"
     from Configurables import NoiseCaloCellsFromFileTool
     noiseBarrel = NoiseCaloCellsFromFileTool("NoiseBarrel",
@@ -331,8 +331,8 @@ from Configurables import PodioOutput
 out = PodioOutput("out",
                   OutputLevel=INFO)
 
-#out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
-out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop %s"%EcalBarrelCellsName, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
+out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
+#out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop %s"%EcalBarrelCellsName, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
 
 import uuid
 out.filename = "output_fullCalo_SimAndDigi_withCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
@@ -370,12 +370,12 @@ ApplicationMgr(
               #createHcalBarrelCells,
               createemptycells,
               createClusters,
-              #createEcalBarrelPositionedCaloClusterCells,
+              createEcalBarrelPositionedCaloClusterCells,
               correctCaloClusters,
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 11,
+    EvtMax   = 10000,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )

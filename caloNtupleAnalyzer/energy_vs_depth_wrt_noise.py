@@ -21,7 +21,8 @@ ROOT.gROOT.SetBatch(ROOT.kTRUE)
 #rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/210401_caloReco_mip/output_fullCalo_SimAndDigi_withCluster_MagneticField_False_pMin_10GeV_ThetaMinMax_90.0_90.0_pdgId_13_pythiaFalse.root'
 #rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/outputs/210607/output_fullCalo_SimAndDigi_withCluster_MagneticField_False_pMin_10000_MeV_ThetaMinMax_90.25_90.25_pdgId_13_pythiaFalse_phiFixed.root'
 #rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/210607/FCCAnalyses/211001_energies_10kevt_caloReco/fccsw_output_pdgID_22_pMin_1000_pMax_1000_thetaMin_90_thetaMax_90.root'
-rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses/220126_mip_10kevt_slidingWindow_noNoise_caloReco/fccsw_output_pdgID_13_pMin_10000_pMax_10000_thetaMin_90_thetaMax_90.root'
+#rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses/220126_mip_10kevt_slidingWindow_noNoise_caloReco/fccsw_output_pdgID_13_pMin_10000_pMax_10000_thetaMin_90_thetaMax_90.root'
+rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses/mip_updatedSF/output_fullCalo_SimAndDigi_withCluster_MagneticField_False_pMin_20000_MeV_ThetaMinMax_90.25_90.25_pdgId_13_pythiaFalse_NoiseFalse.root'
 postfix = 'mip'
 #if sys.argv[2]:
 #    postfix = sys.argv[2]
@@ -98,7 +99,7 @@ for event in events:
             layer_radius_higher_edge = layer_radius_edges[layer_idx + 1]
             if hit_radius > layer_radius_lower_edge and hit_radius < layer_radius_higher_edge:
                 final_layer_idx = layer_idx 
-        noise_value = noise_histos[final_layer_idx].GetBinContent(1)
+        noise_value = noise_histos[final_layer_idx].GetBinContent(1)/1000.0
         th2_cells_xy.Fill(event.ECalBarrelPositionedCells_x[cell_idx], event.ECalBarrelPositionedCells_y[cell_idx], 1000*100*event.ECalBarrelPositionedCells_energy[cell_idx]/(float(energy)*n_entries))
         tprof_energy_vs_depth.Fill(sqrt(event.ECalBarrelPositionedCells_x[cell_idx] * event.ECalBarrelPositionedCells_x[cell_idx] + event.ECalBarrelPositionedCells_y[cell_idx] * event.ECalBarrelPositionedCells_y[cell_idx]), 1000*event.ECalBarrelPositionedCells_energy[cell_idx])
         tprof_uncalibratedEnergy_vs_depth.Fill(sqrt(event.ECalBarrelPositionedCells_x[cell_idx] * event.ECalBarrelPositionedCells_x[cell_idx] + event.ECalBarrelPositionedCells_y[cell_idx] * event.ECalBarrelPositionedCells_y[cell_idx]), 1000*event.ECalBarrelPositionedCells_energy[cell_idx]*SFfcc[final_layer_idx])

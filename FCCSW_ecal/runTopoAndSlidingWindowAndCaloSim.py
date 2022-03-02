@@ -4,12 +4,12 @@ import copy
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
 use_pythia = False
-addNoise = False
+addNoise = True
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
-momentum = 20 # in GeV
+momentum = 1 # in GeV
 thetaMin = 90.25 # degrees
 thetaMax = 90.25 # degrees
 #thetaMin = 50 # degrees
@@ -201,7 +201,8 @@ if addNoise:
                                              elecNoiseHistoName = ecalBarrelNoiseHistName,
                                              activeFieldName = "layer",
                                              addPileup = False,
-                                             filterNoiseThreshold = 2,
+                                             filterNoiseThreshold = 0,
+                                             scaleFactor = 1/1000.,
                                              numRadialLayers = 12)
 
     from Configurables import TubeLayerPhiEtaCaloTool
@@ -209,9 +210,9 @@ if addNoise:
                                              readoutName = ecalBarrelReadoutNamePhiEta,
                                              activeVolumeName = "LAr_sensitive",
                                              activeFieldName = "layer",
+                                             activeVolumesNumber = 12,
                                              fieldNames = ["system"],
                                              fieldValues = [4])
-                                             #activeVolumesNumber = 12)
     # cells with noise not filtered
     createEcalBarrelCellsNoise = CreateCaloCells("CreateECalBarrelCellsNoise",
                                    doCellCalibration=False,
@@ -338,7 +339,7 @@ createTopoInput = CaloTopoClusterInputTool("CreateTopoInput",
                                           hcalExtBarrelReadoutName = "",
                                           hcalEndcapReadoutName = "",
                                           hcalFwdReadoutName = "",
-                                          OutputLevel = DEBUG)
+                                          OutputLevel = INFO)
 #createTopoInput.ecalBarrelCells.Path = EcalBarrelCellsName
 createTopoInput.ecalBarrelCells.Path = "ECalBarrelPositionedCells"
 createTopoInput.ecalEndcapCells.Path = "emptyCaloCells" 
@@ -351,13 +352,13 @@ createTopoInput.hcalFwdCells.Path = "emptyCaloCells"
 readNeighboursMap = TopoCaloNeighbours("ReadNeighboursMap",
                                       #fileName = "http://fccsw.web.cern.ch/fccsw/testsamples/calo/neighbours_map_barrel.root",
                                       fileName = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/FCCSW_ecal/neighbours_map_barrel.root",
-                                      OutputLevel = DEBUG)
+                                      OutputLevel = INFO)
 
 #Noise levels per cell
 readNoisyCellsMap = TopoCaloNoisyCells("ReadNoisyCellsMap",
                                        #fileName = "http://fccsw.web.cern.ch/fccsw/testsamples/calo/cellNoise_map_electronicsNoiseLevel.root",
                                        fileName = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/FCCSW_ecal/cellNoise_map_electronicsNoiseLevel.root",
-                                       OutputLevel = DEBUG)
+                                       OutputLevel = INFO)
 
 createTopoClusters = CaloTopoClusterFCCee("CreateTopoClusters",
                                      TopoClusterInput = createTopoInput,
@@ -376,7 +377,7 @@ createTopoClusters = CaloTopoClusterFCCee("CreateTopoClusters",
                                      seedSigma = 4,
                                      neighbourSigma = 2,
                                      lastNeighbourSigma = 0,
-                                     OutputLevel = DEBUG) 
+                                     OutputLevel = INFO) 
 createTopoClusters.clusters.Path ="CaloTopoClusters" 
 createTopoClusters.clusterCells.Path = "CaloTopoClusterCells"
 
@@ -404,6 +405,7 @@ from Configurables import PodioOutput
 out = PodioOutput("out",
                   OutputLevel=INFO)
 
+#out.outputCommands = ["keep *"]
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
 out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop %s"%EcalBarrelCellsName, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
 
