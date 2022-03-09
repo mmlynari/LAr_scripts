@@ -158,7 +158,7 @@ if __name__ == "__main__":
     hadd_commands = ""
     rm_commands = ""
     fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses"
-    fcc_analysis_commands = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nsource /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh\nexport PYTHONPATH=$PWD:$PYTHONPATH\nexport LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH\nexport ROOT_INCLUDE_PATH=$PWD/install/include/FCCAnalyses:$ROOT_INCLUDE_PATH\nexport LD_LIBRARY_PATH=`python -m awkward.config --libdir`:$LD_LIBRARY_PATH"%fcc_analysis_path
+    fcc_analysis_commands = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nsource /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh\nexport PYTHONPATH=$PWD:$PYTHONPATH\nexport LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH\nexport ROOT_INCLUDE_PATH=$PWD/install/include/FCCAnalyses:$ROOT_INCLUDE_PATH\nexport LD_LIBRARY_PATH=`python -m awkward.config --libdir`:$LD_LIBRARY_PATH\n"%fcc_analysis_path
     for index in range(len(energies)):
         energy = energies[index]
         energy_min = energy
