@@ -106,7 +106,7 @@ hist.AuditExecute = True
 from Configurables import PodioOutput
 ### PODIO algorithm
 out = PodioOutput("out",OutputLevel=INFO)
-out.outputCommands = ["keep *"]
+out.outputCommands = ["drop *"]
 out.filename = "fccee_samplingFraction_inclinedEcal.root"
 
 from Configurables import EventCounter

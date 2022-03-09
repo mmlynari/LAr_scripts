@@ -40,7 +40,7 @@ def SubmitToCondor(cmd,nbtrials):
             print(("failed sumbmitting after: "+str(nbtrials)+" trials, will exit"))
             return 0
 
-def get_condor_submit_header(executable_regex, jobFlavour = 'microcentury'):
+def get_condor_submit_header(executable_regex, jobFlavour = 'longlunch'):
     return """executable     = $(filename)
 Log            = $(filename).log
 Output         = $(filename).out
@@ -54,7 +54,8 @@ queue filename matching files {1}
 
 def get_exec_file_header():# assumes you installed FCCSW locally with the 'install' folder at the root of your FCCSW repository
     return """#!/bin/bash
-source /cvmfs/sw.hsf.org/key4hep/setup.sh
+#source /cvmfs/sw.hsf.org/key4hep/setup.sh
+source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
 export K4RECCALORIMETER=%s
 export K4SIMGEANT4=%s
 export K4FWCORE=%s
@@ -75,6 +76,7 @@ if __name__ == "__main__":
     parser.add_argument("-campaignName", default = date.today().strftime("%y%m%d"), help = "Folder name used to store the submission script, logs, etc, as well as the output rootfile in the outputFolder", type = str)
     parser.add_argument("-gaudiConfig", default = "%s/runSlidingWindowAndCaloSim.py"%os.environ.get("PWD", ""), help = "Absolute path to the gaudi config to use", type = str)
     parser.add_argument("-jobType", default = "caloReco", help = "Tell the type of job we launch. Can be samplingFraction, caloReco, upstream", type = str)
+    parser.add_argument("-condorQueue", default = "longlunch", help = "Tells to which queue the jobs should be sent (microcentury = 1 hour, longlunch = 2 hours, workday = 8 hours, tomorrow = 1 day)", type = str)
     parser.add_argument("-pythia", default = False, help = "Tell to use Pythia instead of particle gun (the energies, polar angles etc do not matter anymore). Warning: you must also manually set to true 'usePythia' in the FCCSW cfg!", type = str)
     parser.add_argument("-pythiaCfg", default = "%s/MCGeneration/ee_Z_ee.cmd"%os.environ.get("PWD", ""), help = "Absolute path to the Pythia config file", type = str)
     parser.add_argument("-inputFiles", help = "Regex used to get all the input files, if any is needed - not implemented yet.", type = str)
@@ -156,12 +158,12 @@ if __name__ == "__main__":
     hadd_commands = ""
     rm_commands = ""
     fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses"
-    fcc_analysis_commands = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nsource setup.sh\n"%fcc_analysis_path
+    fcc_analysis_commands = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nsource /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh\nexport PYTHONPATH=$PWD:$PYTHONPATH\nexport LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH\nexport ROOT_INCLUDE_PATH=$PWD/install/include/FCCAnalyses:$ROOT_INCLUDE_PATH\nexport LD_LIBRARY_PATH=`python -m awkward.config --libdir`:$LD_LIBRARY_PATH"%fcc_analysis_path
     for index in range(len(energies)):
         energy = energies[index]
         energy_min = energy
         energy_max = energy
-        if index != 0 and energy > args.energyAtWhichStartingDilution:
+        if index != 0 and energy >= args.energyAtWhichStartingDilution:
             n_jobs = int(math.floor(n_jobs * energy/energies[index-1]))
         else:
             n_jobs = original_n_jobs
@@ -296,7 +298,7 @@ if __name__ == "__main__":
     # write the condor submit file
     condor_submit_path = campaign_name + ".sub"
     with open(condor_submit_path, "w") as f:
-        f.write(get_condor_submit_header(exec_filename_template.replace('EVT', '*').replace('PMIN', '*').replace('PMAX', '*').replace('THETAMIN', '*').replace('THETAMAX', '*').replace('JOBID', '*').replace('PDGID', '*')))
+        f.write(get_condor_submit_header(exec_filename_template.replace('EVT', '*').replace('PMIN', '*').replace('PMAX', '*').replace('THETAMIN', '*').replace('THETAMAX', '*').replace('JOBID', '*').replace('PDGID', '*'), args.condorQueue))
     submit_cmd = "condor_submit %s"%condor_submit_path
     print("%d jobs prepared in %s"%(total_n_job, campaign_name))
     print (submit_cmd)
