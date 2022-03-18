@@ -122,6 +122,9 @@ if __name__ == "__main__":
     outfile_storage = os.path.join(storage_path, campaign_name)
     if not os.path.isdir(outfile_storage):
         os.mkdir(outfile_storage)
+    fcc_ana_output_dir = os.path.join(storage_path, "fcc_analysis_ouput", campaign_name)
+    if not os.path.isdir(fcc_ana_output_dir):
+        os.mkdir(fcc_ana_output_dir)
 
     if args.jobType == 'samplingFraction':
         command_template = """fccrun %s -n EVT --MomentumMin PMIN --MomentumMax PMAX --ThetaMin THETAMINRADIAN --ThetaMax THETAMAXRADIAN --PdgCodes PDGID --Output.THistSvc "rec DATAFILE='OUTPUTDIR/calibration_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root' TYP='ROOT' OPT='RECREATE'" --filename OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_JOBID.root --seedValue SEED"""%(gaudi_config_path)
@@ -158,7 +161,8 @@ if __name__ == "__main__":
     hadd_commands = ""
     rm_commands = ""
     fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses"
-    fcc_analysis_commands = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nsource /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh\nexport PYTHONPATH=$PWD:$PYTHONPATH\nexport LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH\nexport ROOT_INCLUDE_PATH=$PWD/install/include/FCCAnalyses:$ROOT_INCLUDE_PATH\nexport LD_LIBRARY_PATH=`python -m awkward.config --libdir`:$LD_LIBRARY_PATH\n"%fcc_analysis_path
+    fcc_analysis_header = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nsource /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh\nexport PYTHONPATH=$PWD:$PYTHONPATH\nexport LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH\nexport ROOT_INCLUDE_PATH=$PWD/install/include/FCCAnalyses:$ROOT_INCLUDE_PATH\nexport LD_LIBRARY_PATH=`python -m awkward.config --libdir`:$LD_LIBRARY_PATH\n"%fcc_analysis_path
+    fcc_analysis_commands = []
     for index in range(len(energies)):
         energy = energies[index]
         energy_min = energy
@@ -238,12 +242,12 @@ if __name__ == "__main__":
                     hadd_commands += "hadd  OUTPUTDIR/fccsw_output_pythia_{0}.root OUTPUTDIR/fccsw_output_pythia_{0}_jobid_*.root &\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
                     rm_commands += "cp  OUTPUTDIR/fccsw_output_pythia_{0}_jobid_1.root OUTPUTDIR/fccsw_output_pythia_{0}_forTests.root\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
                     rm_commands += "rm  OUTPUTDIR/fccsw_output_pythia_{0}_jobid_*.root\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage)
-                    fcc_analysis_commands += "python examples/FCCee/fullSim/caloNtupleizer/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pythia_{0}.root -outputFolder FCCANAOUTPUT_pythia".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage).replace("FCCANAOUTPUT", campaign_name)
+                    fcc_analysis_commands.append("python examples/FCCee/fullSim/caloNtupleizer/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pythia_{0}.root -outputFolder FCCANAOUTPUT_pythia\n".format(os.path.basename(args.pythiaCfg).split('.')[0]).replace('OUTPUTDIR', outfile_storage).replace("FCCANAOUTPUT", fcc_ana_output_dir))
                 else:
                     hadd_commands += "hadd  OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root &\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                     rm_commands += "cp OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_1.root OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_forTests.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                     rm_commands += "rm OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
-                    fcc_analysis_commands += "python examples/FCCee/fullSim/caloNtupleizer/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root -outputFolder FCCANAOUTPUT_caloReco\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace("FCCANAOUTPUT", campaign_name)
+                    fcc_analysis_commands.append("python examples/FCCee/fullSim/caloNtupleizer/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root -outputFolder FCCANAOUTPUT_caloReco\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace("FCCANAOUTPUT", fcc_ana_output_dir))
 
     # write the hadd script
     hadd_script_path = os.path.join(campaign_name, "hadd.sh")
@@ -261,18 +265,23 @@ if __name__ == "__main__":
     os.chmod(rm_script_path, st.st_mode | stat.S_IEXEC)
 
     # write the fcc_analysis script
-    fcc_analysis_script_path = os.path.join(campaign_name, "fcc_analysis.sh")
-    fcc_analysis_commands += "cd -\n"
-    with open(fcc_analysis_script_path, "w") as f:
-        f.write(fcc_analysis_commands)
-    st = os.stat(fcc_analysis_script_path)
-    os.chmod(fcc_analysis_script_path, st.st_mode | stat.S_IEXEC)
+    fcc_analysis_script_path_tplt = os.path.join(campaign_name, "fcc_analysis_NUM.sh")
+    num = 0
+    for fcc_analysis_command in fcc_analysis_commands:
+        fcc_analysis_script_path = fcc_analysis_script_path_tplt.replace("NUM", str(num))
+        with open(fcc_analysis_script_path, "w") as f:
+            f.write(fcc_analysis_header)
+            f.write(fcc_analysis_command)
+            f.write("cd -\n")
+        num += 1
+        st = os.stat(fcc_analysis_script_path)
+        os.chmod(fcc_analysis_script_path, st.st_mode | stat.S_IEXEC)
 
     # write the perfPlots script
     perfPlots_script_path = os.path.join(campaign_name, "perfPlots.sh")
     with open(perfPlots_script_path, "w") as f:
-        string_for_perfPlots_script = "cd %s/../caloNtupleAnalyzer/\npython perfPlotsCorrectedClusters.py -inputFiles '%s/FCCANAOUTPUT_caloReco/*.root' -outputPostfix FCCANAOUTPUT_condor"%(os.environ.get("PWD", ""), fcc_analysis_path)
-        f.write(string_for_perfPlots_script.replace("FCCANAOUTPUT", campaign_name))
+        string_for_perfPlots_script = "cd %s/../caloNtupleAnalyzer/\npython perfPlotsCorrectedClusters.py -inputFiles '%s/FCCANAOUTPUT_caloReco/*.root' -outputPostfix %s_perfPlots_condor"%(os.environ.get("PWD", ""), fcc_analysis_path, campaign_name)
+        f.write(string_for_perfPlots_script.replace("FCCANAOUTPUT", os.path.join(fcc_ana_output_dir, campaign_name)))
     st = os.stat(perfPlots_script_path)
     os.chmod(perfPlots_script_path, st.st_mode | stat.S_IEXEC)
 
@@ -296,7 +305,7 @@ if __name__ == "__main__":
         os.chmod(sf_script_path, st.st_mode | stat.S_IEXEC)
 
 
-    # write the condor submit file
+    # write the condor submit file for the simulation step
     condor_submit_path = campaign_name + ".sub"
     with open(condor_submit_path, "w") as f:
         f.write(get_condor_submit_header(exec_filename_template.replace('EVT', '*').replace('PMIN', '*').replace('PMAX', '*').replace('THETAMIN', '*').replace('THETAMAX', '*').replace('JOBID', '*').replace('PDGID', '*'), args.condorQueue))
@@ -306,5 +315,11 @@ if __name__ == "__main__":
     if args.submit:
         job=SubmitToCondor(submit_cmd, 10)
     print("Will write the output in %s"%outfile_storage)
+
+    # write the condor submit file for the fccanalysis step
+    fccana_condor_submit_path = campaign_name + "_fccana.sub"
+    with open(fccana_condor_submit_path, "w") as f:
+        f.write(get_condor_submit_header(os.path.join(campaign_name, "fcc_analysis_*.sh")))
+    print ("When the simulation is done, run condor_submit ", fccana_condor_submit_path)
 
 
