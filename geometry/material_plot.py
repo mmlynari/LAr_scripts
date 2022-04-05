@@ -4,6 +4,7 @@ import argparse
 from plotstyle import FCCStyle
 
 import ROOT
+ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 def main():
     parser = argparse.ArgumentParser(description='Material Plotter')
@@ -54,6 +55,7 @@ def main():
             ths.Add(histDict[material][plot])
             legend.AddEntry(histDict[material][plot], material, "f")
 
+        ths.SetMaximum(1.5 * ths.GetMaximum())
         cv = ROOT.TCanvas()
         ths.Draw()
         ths.GetXaxis().SetTitle("#eta")
@@ -61,9 +63,11 @@ def main():
 
         legend.Draw()
         cv.Print(plot + ".pdf")
+        cv.Print(plot + ".png")
 
         ths.GetXaxis().SetRangeUser(0, args.etaMax)
         cv.Print(plot + "pos.pdf")
+        cv.Print(plot + "pos.png")
 
 if __name__ == "__main__":
     FCCStyle.initialize()
