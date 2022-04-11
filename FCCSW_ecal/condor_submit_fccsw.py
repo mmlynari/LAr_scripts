@@ -280,7 +280,7 @@ if __name__ == "__main__":
     # write the perfPlots script
     perfPlots_script_path = os.path.join(campaign_name, "perfPlots.sh")
     with open(perfPlots_script_path, "w") as f:
-        string_for_perfPlots_script = "cd %s/../caloNtupleAnalyzer/\npython perfPlotsCorrectedClusters.py -inputFiles '%s/FCCANAOUTPUT_caloReco/*.root' -outputPostfix %s_perfPlots_condor"%(os.environ.get("PWD", ""), fcc_analysis_path, campaign_name)
+        string_for_perfPlots_script = "cd %s/../caloNtupleAnalyzer/\npython perfPlots.py -inputFiles '%s/FCCANAOUTPUT_caloReco/*.root' -outputPostfix %s_perfPlots_condor"%(os.environ.get("PWD", ""), fcc_analysis_path, campaign_name)
         f.write(string_for_perfPlots_script.replace("FCCANAOUTPUT", os.path.join(fcc_ana_output_dir, campaign_name)))
     st = os.stat(perfPlots_script_path)
     os.chmod(perfPlots_script_path, st.st_mode | stat.S_IEXEC)
