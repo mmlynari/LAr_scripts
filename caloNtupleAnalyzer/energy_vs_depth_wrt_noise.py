@@ -9,9 +9,10 @@ print("Careful: only works for eta == 0 at the moment")
 
 #import gStyle
 ROOT.gStyle.SetOptStat(0000)
-ROOT.gStyle.SetPadRightMargin(0.2)
+#ROOT.gStyle.SetPadRightMargin(0.2)
 ROOT.gStyle.SetPalette(ROOT.kBlueGreenYellow)
 ROOT.gStyle.SetPadTickY(1)
+ROOT.gStyle.SetOptTitle(0)
 
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
@@ -71,7 +72,8 @@ th2_cells_xy = ROOT.TH2F("th2_cells_xy_energy_" + energy_str_gev, "th2_cells_xy_
 #tprof_energy_vs_depth = ROOT.TProfile("tprof_energy_vs_depth_" + energy_str_gev, "tprof_energy_vs_depth_" + energy_str_gev, 20, 2150, 2550, "s")
 tprof_energy_vs_depth = ROOT.TProfile("tprof_energy_vs_depth_" + energy_str_gev, "tprof_energy_vs_depth_" + energy_str_gev, len(layer_radius_edges) - 1, np.array(layer_radius_edges, 'd'), "s")
 tprof_uncalibratedEnergy_vs_depth = ROOT.TProfile("tprof_uncalibratedEnergy_vs_depth_" + energy_str_gev, "tprof_uncalibratedEnergy_vs_depth_" + energy_str_gev, len(layer_radius_edges) - 1, np.array(layer_radius_edges, 'd'), "s")
-tprof_signalOverNoise_vs_depth = ROOT.TProfile("tprof_signalOverNoise_vs_depth_" + energy_str_gev, "tprof_signalOverNoise_vs_depth_" + energy_str_gev, len(layer_radius_edges) - 1, np.array(layer_radius_edges, 'd'), "s")
+tprof_signalOverNoise_vs_depth = ROOT.TProfile("tprof_signalOverNoise_vs_depth_" + energy_str_gev, "tprof_signalOverNoise_vs_depth_" + energy_str_gev, len(layer_radius_edges) - 1, np.array(layer_radius_edges, 'd'))
+tprof_signalOverNoise_vs_depth.SetMinimum(0)
 th1_signalOverNoise_layer3 = ROOT.TH1F("th1_signalOverNoise_layer3_" + energy_str_gev, "th1_signalOverNoise_layer3_" + energy_str_gev, 50, 0, 30)
 tprof_noise_vs_depth = ROOT.TProfile("tprof_noise_vs_depth_" + energy_str_gev, "tprof_noise_vs_depth_" + energy_str_gev, len(layer_radius_edges) - 1, np.array(layer_radius_edges, 'd'), "s")
 tprof_nFiredCell_vs_depth = ROOT.TProfile("tprof_nFiredCell_vs_depth_" + energy_str_gev, "tprof_nFiredCell_vs_depth_" + energy_str_gev, len(layer_radius_edges) - 1, np.array(layer_radius_edges, 'd'), "s")

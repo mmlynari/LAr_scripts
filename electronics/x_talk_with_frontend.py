@@ -10,9 +10,10 @@ import os
 #f_sig = "signal_csvs/cell7_input_hv_0_shields_allCells.csv"
 #f_sig = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/electronics/signal_csvs/cell7_input_hv_0_shields_allCells_83Ohms_longXrange.csv"
 #f_sig = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/electronics/signal_csvs/cell7_input_hv_0_shields_allCells_83Ohms_longXrange_zeroPaddedUntil200ns.csv"
-f_sig = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/electronics/signal_csvs/cell7_input_hv_0_shields_allCells_83Ohms_100psStepUniform_2usecrange.csv"
+#f_sig = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/electronics/signal_csvs/cell7_input_hv_0_shields_allCells_83Ohms_100psStepUniform_2usecrange.csv"
+f_sig = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/electronics/signal_csvs/cell7_input_hv_1_shields_allCells_83Ohm_2usecXrange.csv"
 #plotfolder = "xtalk_plots_cell7input_0shields_longXrange_zeroPaddedTill200ns"
-plotfolder = "xtalk_plots_cell7input_0shields_83Ohms_100psStepUniform"
+plotfolder = "xtalk_plots_cell7input_1shields_83Ohms_100psStepUniform"
 if not os.path.isdir(plotfolder):
     os.mkdir(plotfolder)
 
@@ -48,14 +49,14 @@ max_time_from_ansys = df_sig[x_axis_string_from_csv].max()
 
 dict_shapingTime_cell_peakShaper = {}
 sampling_frequency = 1 / df_sig[x_axis_string_from_csv].diff()[1]
-#print(sampling_frequency)
-taus = [0, 20, 50, 100, 150, 200, 300]
+print("Sampling frequency: ", sampling_frequency)
+taus = [0, 20, 50, 70, 100, 150, 200, 300]
 for tau in taus:
     print("Shaping time: ", tau)
     # define CR-RC^2 filter
     # order of the filter, critical (cut-off) frequency of the filter, filter type, analog or digital, type of output (pole zero, num/dem or second order section), sampling frequency
     if tau == 0:# means no shaper
-        ylabel = "Current on PCB output port [nA]"
+        ylabel = "Current at PCB output port [nA]"
         extra_title = ", no shaper"
         CR = signal.butter(0, 1, btype='highpass', analog=False, output='sos', fs=sampling_frequency)
         RC = signal.butter(0, 1, btype='lowpass', analog=False, output='sos', fs=sampling_frequency)

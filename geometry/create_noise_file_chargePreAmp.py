@@ -8,6 +8,7 @@ from numpy.linalg import lstsq
 
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
 ROOT.gStyle.SetPadTickY(1)
+ROOT.gStyle.SetOptTitle(0)
 
 # you know the noise charge rms from Martin (as a function of capacitance): https://indico.cern.ch/event/1066234/contributions/4708987/attachments/2387716/4080914/20220209_Brieuc_Francois_Noble_Liquid_Calorimetry_forFCCee_FCCworkshop2022.pdf#page=7
 # you need to further get, for each layer, the collected charge corresponding to an energy deposit of 1 MeV in the cell (cell considered including the energy in absorber and PCB), the cell merging strategy does not matter yet here to first approximation because the 1 MeV current equivalent will be the same in any merging scenarios (the current will be shared in more gaps when merging many cells, but all these current will then be 'summed' before to reach the readout). Merging many cells will pay back later, when more signal will be collected per read out channel compared to merging less cells, for the same noise values

@@ -11,6 +11,7 @@ from copy import copy
 import gStyle
 
 #ROOT.gROOT.ProcessLine(".L FCCAnalysesDict.C+")
+ROOT.gROOT.ProcessLine(".L /afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses/install/lib/libFCCAnalyses.C+")
 
 parser = argparse.ArgumentParser()
 #parser.add_argument("-inputFiles", default = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/outputs/eGun1GeV_10kevt_originalGeometry_allCells/output_fullCalo_SimAndDigi_withCluster_noMagneticField_1GeV_pythiaFalse.root", help = "Name of the input file.", type = str)
