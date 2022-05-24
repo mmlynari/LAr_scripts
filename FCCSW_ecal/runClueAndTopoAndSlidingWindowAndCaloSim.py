@@ -30,7 +30,7 @@ genAlg = GenAlg()
 if use_pythia:
     from Configurables import PythiaInterface
     pythia8gentool = PythiaInterface()
-    pythia8gentool.pythiacard = os.path.join(os.environ.get('FCCDETECTORS', ''), "../LAr_scripts/FCCSW_ecal/Pythia_LHEinput.cmd")
+    pythia8gentool.pythiacard = os.path.join(os.environ.get('PWD', ''), "MCGeneration/ee_Zgamma_inclusive.cmd")
     #pythia8gentool.pythiacard = "MCGeneration/ee_Z_ee.cmd"
     pythia8gentool.printPythiaStatistics = False
     pythia8gentool.pythiaExtraSettings = [""]

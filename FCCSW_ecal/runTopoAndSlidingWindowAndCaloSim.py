@@ -30,7 +30,7 @@ genAlg = GenAlg()
 if use_pythia:
     from Configurables import PythiaInterface
     pythia8gentool = PythiaInterface()
-    pythia8gentool.pythiacard = os.path.join(os.environ.get('FCCDETECTORS', ''), "../LAr_scripts/FCCSW_ecal/Pythia_LHEinput.cmd")
+    pythia8gentool.pythiacard = os.path.join(os.environ.get('PWD', ''), "MCGeneration/ee_Zgamma_inclusive.cmd")
     #pythia8gentool.pythiacard = "MCGeneration/ee_Z_ee.cmd"
     pythia8gentool.printPythiaStatistics = False
     pythia8gentool.pythiaExtraSettings = [""]
@@ -292,7 +292,7 @@ dupP = 13
 finE = 9
 finP = 17
 # Minimal energy to create a cluster in GeV (FCC-ee detectors have to reconstruct low energy particles)
-threshold = 0.1
+threshold = 0.040
 
 from Configurables import CreateCaloClustersSlidingWindow
 createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
@@ -303,7 +303,7 @@ createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
                                                  nEtaFinal = finE, nPhiFinal = finP,
                                                  energyThreshold = threshold,
                                                  energySharingCorrection = False,
-                                                 attachCells = True,
+                                                 attachCells = False,
                                                  OutputLevel = INFO
                                                  )
 createClusters.clusters.Path = "CaloClusters"
@@ -407,7 +407,8 @@ out = PodioOutput("out",
 
 #out.outputCommands = ["keep *"]
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
-out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop %s"%EcalBarrelCellsName, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
+#out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop %s"%EcalBarrelCellsName, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
+out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop *ells*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells"]
 
 import uuid
 out.filename = "output_fullCalo_SimAndDigi_withTopoCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
@@ -429,7 +430,7 @@ out.AuditExecute = True
 
 from Configurables import EventCounter
 event_counter = EventCounter('event_counter')
-event_counter.Frequency = 1
+event_counter.Frequency = 10
 
 from Configurables import ApplicationMgr
 ApplicationMgr(
@@ -454,7 +455,7 @@ ApplicationMgr(
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 1,
+    EvtMax   = 100,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )

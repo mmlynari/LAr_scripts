@@ -2,18 +2,18 @@ import os
 
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
-use_pythia = False
+use_pythia = True
 addNoise = False
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
-momentum = 20 # in GeV
+momentum = 0.1 # in GeV
 thetaMin = 90.25 # degrees
 thetaMax = 90.25 # degrees
 #thetaMin = 50 # degrees
 #thetaMax = 130 # degrees
-pdgCode = 13 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
+pdgCode = 22 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 magneticField = False
 
 from Gaudi.Configuration import *
@@ -29,7 +29,7 @@ genAlg = GenAlg()
 if use_pythia:
     from Configurables import PythiaInterface
     pythia8gentool = PythiaInterface()
-    pythia8gentool.pythiacard = os.path.join(os.environ.get('FCCDETECTORS', ''), "../LAr_scripts/FCCSW_ecal/Pythia_LHEinput.cmd")
+    pythia8gentool.pythiacard = os.path.join(os.environ.get('PWD', ''), "MCGeneration/ee_Zgamma_inclusive.cmd")
     #pythia8gentool.pythiacard = "MCGeneration/ee_Z_ee.cmd"
     pythia8gentool.printPythiaStatistics = False
     pythia8gentool.pythiaExtraSettings = [""]
@@ -289,7 +289,7 @@ dupP = 13
 finE = 9
 finP = 17
 # Minimal energy to create a cluster in GeV (FCC-ee detectors have to reconstruct low energy particles)
-threshold = 0.1
+threshold = 0.05
 
 from Configurables import CreateCaloClustersSlidingWindow
 createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
@@ -299,7 +299,7 @@ createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
                                                  nEtaDuplicates = dupE, nPhiDuplicates = dupP,
                                                  nEtaFinal = finE, nPhiFinal = finP,
                                                  energyThreshold = threshold,
-                                                 energySharingCorrection = False,
+                                                 energySharingCorrection = True,
                                                  attachCells = True,
                                                  OutputLevel = INFO
                                                  )
@@ -375,7 +375,7 @@ ApplicationMgr(
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 10000,
+    EvtMax   = 100,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )
