@@ -160,8 +160,9 @@ if __name__ == "__main__":
     total_n_job = 0
     hadd_commands = ""
     rm_commands = ""
-    fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses"
-    fcc_analysis_header = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nsource /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh\nexport PYTHONPATH=$PWD:$PYTHONPATH\nexport LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH\nexport ROOT_INCLUDE_PATH=$PWD/install/include/FCCAnalyses:$ROOT_INCLUDE_PATH\nexport LD_LIBRARY_PATH=`python -m awkward.config --libdir`:$LD_LIBRARY_PATH\n"%fcc_analysis_path
+    #fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses"
+    fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/220106/FCCAnalyses"
+    fcc_analysis_header = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nsource setup.sh"%fcc_analysis_path
     fcc_analysis_commands = []
     for index in range(len(energies)):
         energy = energies[index]
