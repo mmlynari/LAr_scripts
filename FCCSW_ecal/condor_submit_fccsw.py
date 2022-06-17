@@ -162,7 +162,7 @@ if __name__ == "__main__":
     rm_commands = ""
     #fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses"
     fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/220106/FCCAnalyses"
-    fcc_analysis_header = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nsource setup.sh"%fcc_analysis_path
+    fcc_analysis_header = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nsource setup.sh\n"%fcc_analysis_path
     fcc_analysis_commands = []
     for index in range(len(energies)):
         energy = energies[index]
