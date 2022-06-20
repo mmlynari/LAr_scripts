@@ -140,15 +140,21 @@ def resol_curve(x, a, b, c):
 
 def extract_values(df, name, clusters, do_fit = False, fit_fcn=resol_curve):
     cols = df.Filter(f'ClusterType == "{clusters}"').AsNumpy(["E_truth", name, f"{name}_err"])
-    cols[name] *= 100
-    cols[f"{name}_err"] *= 100
+    if 'E' in name:
+    # Put in % for energy resol
+        cols[name] *= 100
+        cols[f"{name}_err"] *= 100
+    else:
+    # Put in mrad for angles
+        cols[name] *= 1000
+        cols[f"{name}_err"] *= 1000
     popt = None
     if do_fit:
         popt, pcov = opt.curve_fit(fit_fcn, cols["E_truth"], cols[name], sigma=cols[f"{name}_err"], p0=(0, 10, 1))
     return cols["E_truth"], cols[name], cols[f"{name}_err"], popt
 
 def prepare_fig(name, tag=None):
-    fig, ax = plt.subplots(constrained_layout = True)
+    fig, ax = plt.subplots(figsize = (4.8, 4.8), constrained_layout = True, subplot_kw=dict(box_aspect=1))
     ax.set_xlabel("E (GeV)")
     if "resp" in name:
         what = "Response"
@@ -159,54 +165,62 @@ def prepare_fig(name, tag=None):
     elif 'Phi'in name:
         var = r'$\phi$'
     elif 'Theta' in name:
-        var = r'$\theta'
-    ax.set_ylabel(f"{what} (%)")
+        var = r'$\theta$'
+    if 'E' in name:
+        ax.set_ylabel(f"{what} (%)")
+    else:
+        ax.set_ylabel(f"{what} (mrad)")
     if tag:
         ax.set_title(f"{var} {what} {tag}")
     else:
         ax.set_title(f"{var} {what}")
-    ax.set_box_aspect(1)
     return fig, ax
 
-def postprocess_fig(fig, ax, name):
+def postprocess_fig(fig, ax, name, leg_entries):
     if "resol" in name:
         ax.set_ylim(ymin=0)
     ax.set_xlim(xmin=0)
-    plt.legend(loc='upper right')
+    ax.legend(handles=leg_entries, loc='upper right')
 
-def plot_fit(energies, popts, color=None):
+def plot_fit(ax, energies, popts, color=None):
     xvals_curve = np.linspace(energies.min(), energies.max(), 200)
-    plt.plot(xvals_curve, resol_curve(xvals_curve, *popts),
+    curve, = ax.plot(xvals_curve, resol_curve(xvals_curve, *popts),
             linestyle='-', color=color,
             label="$\\frac{{{0:.1f}}}{{E}}\oplus \\frac{{{1:.1f}}}{{\\sqrt{{E}}}}\\oplus {2:.1f}$".format(*popts))
+    return curve
 
 def simple_plot(df, name, clusters, do_fit=False, tag=None):
     energies, yvals, yvals_err, popts = extract_values(df, name, clusters, do_fit)
     fig, ax = prepare_fig(name, tag)
-    plt.errorbar(energies, yvals, yerr=yvals_err, label=f"{name}, {clusters}", marker='o', linestyle='none')
+    leg_entries = [ax.errorbar(energies, yvals, yerr=yvals_err, label=f"{name}, {clusters}", marker='o',
+        linestyle='none')]
     if do_fit and "resol" in name:
-        plot_fit(energies, popts)
-    postprocess_fig(fig, ax, name)
+        leg_entries.append(plot_fit(ax, energies, popts))
+    postprocess_fig(fig, ax, name, leg_entries)
     return fig
 
 def comparison_plot_clusters(df, name, clusters, do_fit=False, tag=None):
     fig, ax = prepare_fig(name, tag)
+    leg_entries = []
     for cl in clusters:
         energies, yvals, yvals_err, popts = extract_values(df, name, cl, do_fit)
-        plotline, _, _ = plt.errorbar(energies, yvals, yerr=yvals_err, label=f"{name}, {cl}", marker='o', linestyle='none')
+        errbar = ax.errorbar(energies, yvals, yerr=yvals_err, label=f"{name}, {cl}", marker='o', linestyle='none')
+        leg_entries.append(errbar)
         if do_fit and "resol" in name:
-            plot_fit(energies, popts, color=plotline.get_color())
-    postprocess_fig(fig, ax, name)
+            leg_entries.append(plot_fit(ax, energies, popts, color=errbar[0].get_color()))
+    postprocess_fig(fig, ax, name, leg_entries)
     return fig
 
 def comparison_plot_files(dfs, tags, name, clusters, do_fit=False):
     fig, ax = prepare_fig(name, clusters)
+    leg_entries = []
     for df, tag in zip(dfs, tags):
         energies, yvals, yvals_err, popts = extract_values(df, name, clusters, do_fit)
-        plotline, _, _ = plt.errorbar(energies, yvals, yerr=yvals_err, label=f"{tag}", marker='o', linestyle='none')
+        errbar = ax.errorbar(energies, yvals, yerr=yvals_err, label=f"{tag}", marker='o', linestyle='none')
+        leg_entries.append(errbar)
         if do_fit and "resol" in name:
-            plot_fit(energies, popts, color=plotline.get_color())
-    postprocess_fig(fig, ax, name)
+            leg_entries.append(plot_fit(ax, energies, popts, color=errbar[0].get_color()))
+    postprocess_fig(fig, ax, name, leg_entries)
     return fig
 
 
