@@ -20,7 +20,7 @@ class JobProcessor:
 
     def hadd(self, energy):
         filestub = f"{self.outdir}/{self.output_tag}_energy_{energy}"
-        return subprocess.run([f"hadd {filestub}.root {filestub}_jobid_*.root"], shell=True)
+        return subprocess.run([f"hadd -f {filestub}.root {filestub}_jobid_*.root"], shell=True)
 
     def rm(self, energy):
         return subprocess.run([f"rm -f {self.outdir}/{self.output_tag}_energy_{energy}_jobid_*.root"], shell=True)
@@ -99,7 +99,7 @@ def run_the_jobs(jobProcessor, energies, nEvt, do_process, do_postprocess):
 def main():
     energies = [500, 1000, 5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000]
     #energies = [1000]
-    nEvt = 10000
+    nEvt = 1000
     outdir = "baseline_LAr_testResol_1"
     #upJobPr = UpstreamJobProcessor(outdir)
     #run_the_jobs(upJobPr, energies, nEvt, True, True)
