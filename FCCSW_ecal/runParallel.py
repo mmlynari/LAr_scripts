@@ -12,11 +12,12 @@ class JobProcessor:
         self.script=script
         self.outdir=outdir
         self.output_tag = output_tag
+        self.extra_args = ""
         os.makedirs(outdir, exist_ok=True)
 
     def process(self, nevt, energy, jobId):
         return subprocess.run([f"fccrun {self.script} -n {nevt} --MomentumMin {energy} --MomentumMax {energy} \
-            --filename {self.outdir}/{self.output_tag}_energy_{energy}_jobid_{jobId}.root --seedValue {jobId}"], shell=True)
+            --filename {self.outdir}/{self.output_tag}_energy_{energy}_jobid_{jobId}.root --seedValue {jobId} {self.extra_args}"], shell=True)
 
     def hadd(self, energy):
         filestub = f"{self.outdir}/{self.output_tag}_energy_{energy}"
@@ -26,11 +27,27 @@ class JobProcessor:
         return subprocess.run([f"rm -f {self.outdir}/{self.output_tag}_energy_{energy}_jobid_*.root"], shell=True)
 
 
+class SamplingJobProcessor(JobProcessor):
+    def __init__(self, outdir):
+        script = "fcc_ee_samplingFraction_inclinedEcal.py"
+        output_tag = "sampling_output"
+        super().__init__(script, outdir, output_tag)
+
+    def postprocess(self, energy):
+        energy_GeV = energy/1.e3
+        subprocess.run([f"python FCC_calo_analysis_cpp/plot_samplingFraction.py
+            {self.outdir}/{self.output_tag}_energy_{energy}.root {energy_GeV}  --totalNumLayers 12
+            --preview -outputfolder {self.outdir} --json {self.outdir}/SF.json"], shell=True)
+        return 0
+
 class UpstreamJobProcessor(JobProcessor):
-    def __init__(self, outdir, postprocess_scripts_dir=None):
+    def __init__(self, outdir, sampling_fracs=None, postprocess_scripts_dir=None):
         script = "fcc_ee_upstream_inclinedEcal.py"
         output_tag = "upstream_output"
         super().__init__(script, outdir, output_tag)
+        if sampling_fracs:
+            self.extra_args += "--samplingFractions "
+            self.extra_args += ' '.join([str(s) for s in sampling_fracs])
         self.postprocess_dir = os.path.join(os.getenv("FCCBASEDIR"), 'k4SimGeant4/Detector/DetStudies/scripts/')
 
     def postprocess(self, energy):
@@ -49,9 +66,12 @@ class UpstreamJobProcessor(JobProcessor):
 
 
 class ClusterJobProcessor(JobProcessor):
-    def __init__(self, outdir, postprocess_scripts_dir=None):
+    def __init__(self, outdir, sampling_fracs=None):
         script = "runTopoAndSlidingWindowAndCaloSim.py"
         output_tag = "upstream_output"
+        if sampling_fracs:
+            self.extra_args += "--samplingFraction "
+            self.extra_args += ' '.join([str(s) for s in sampling_fracs])
         super().__init__(script, outdir, output_tag)
 
 
@@ -103,21 +123,27 @@ def main():
     parser.add_argument('--energies', default=[10000], action='extend', nargs='+', type=int,
             help='energies to process')
     group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--sampling', action='store_true', help='compute the sampling fractions')
     group.add_argument('--upstream', action='store_true', help='compute the upstream corrections')
     group.add_argument('--clusters', action='store_true', help='run fixed size and topo clusterings')
+    parser.add_argument('--SF', default='', type=str, help='JSON file containing sampling fractions')
     args = parser.parse_args()
 
-    try:
-        os.makedirs(args.outDir)
-    except:
-        pass
+    sampling_fracs=None
+    if args.SF:
+        with open(args.SF, 'r') as jsonfile:
+            sampling_fracs = json.load(jsonfile)
+            print("Applying sampling fractions:", sampling_fracs)
 
     #energies = [500, 1000, 5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000]
+    if args.sampling:
+        samJobPr = SamplingJobProcessor(outDir)
+        run_the_jobs(samJobPr, energies, nEvt, True, True)
     if args.upstream:
-        upJobPr = UpstreamJobProcessor(outDir)
+        upJobPr = UpstreamJobProcessor(outDir, sampling_fracs=sampling_fracs)
         run_the_jobs(upJobPr, energies, nEvt, True, True)
     elif args.clusters:
-        clJobPr = ClusterJobProcessor(outDir)
+        clJobPr = ClusterJobProcessor(outDir, sampling_fracs=sampling_fracs)
         run_the_jobs(clJobPr, energies, nEvt, True, False)
 
 

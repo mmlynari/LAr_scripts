@@ -48,10 +48,7 @@ def main():
     parser_cl_g.add_argument('--distributions', nargs='+', type=str, help='distributions to plot')
 
     args = parser.parse_args()
-    try:
-        os.makedirs(args.outDir)
-    except:
-        pass
+    os.makedirs(args.outDir, exist_ok=True)
     args.func(args)
 
 def plot(args):
