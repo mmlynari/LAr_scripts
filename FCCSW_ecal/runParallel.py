@@ -97,16 +97,28 @@ def run_the_jobs(jobProcessor, energies, nEvt, do_process, do_postprocess):
 
 
 def main():
-    energies = [500, 1000, 5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000]
-    #energies = [1000]
-    nEvt = 1000
-    outdir = "baseline_LAr_testResol_1"
-    #upJobPr = UpstreamJobProcessor(outdir)
-    #run_the_jobs(upJobPr, energies, nEvt, True, True)
-    clJobPr = ClusterJobProcessor(outdir)
-    run_the_jobs(clJobPr, energies, nEvt, True, False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--outDir', default='./', type=str, help='output directory for plots')
+    parser.add_argument('--nEvt', default=1000, type=int, help='number of events to process per point')
+    parser.add_argument('--energies', default=[10000], action='extend', nargs='+', type=int,
+            help='energies to process')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--upstream', action='store_true', help='compute the upstream corrections')
+    group.add_argument('--clusters', action='store_true', help='run fixed size and topo clusterings')
+    args = parser.parse_args()
 
-    #return
+    try:
+        os.makedirs(args.outDir)
+    except:
+        pass
+
+    #energies = [500, 1000, 5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000]
+    if args.upstream:
+        upJobPr = UpstreamJobProcessor(outDir)
+        run_the_jobs(upJobPr, energies, nEvt, True, True)
+    elif args.clusters:
+        clJobPr = ClusterJobProcessor(outDir)
+        run_the_jobs(clJobPr, energies, nEvt, True, False)
 
 
 if __name__ == "__main__":
