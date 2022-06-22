@@ -186,7 +186,7 @@ def plot_fit(ax, energies, popts, color=None):
     xvals_curve = np.linspace(energies.min(), energies.max(), 200)
     curve, = ax.plot(xvals_curve, resol_curve(xvals_curve, *popts),
             linestyle='-', color=color,
-            label="$\\frac{{{0:.1f}}}{{E}}\oplus \\frac{{{1:.1f}}}{{\\sqrt{{E}}}}\\oplus {2:.1f}$".format(*popts))
+            label="$\\frac{{{0:.2f}}}{{E}}\oplus \\frac{{{1:.1f}\\%}}{{\\sqrt{{E}}}}\\oplus {2:.1f}\\%$".format(popts[0]*0.01, popts[1], popts[2]))
     return curve
 
 def simple_plot(df, name, clusters, do_fit=False, tag=None):
