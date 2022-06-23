@@ -115,9 +115,10 @@ else:
 # ECAL
 ecalBarrelReadoutName = "ECalBarrelEta"
 ecalBarrelReadoutNamePhiEta = "ECalBarrelPhiEta"
+ecalEndcapReadoutName = "ECalEndcapPhiEta"
 # HCAL
-hcalReadoutName = "HCalBarrelReadout"
-extHcalReadoutName = "HCalExtBarrelReadout"
+hcalBarrelReadoutName = "HCalBarrelReadout"
+hcalEndcapReadoutName = "HCalEndcapReadout"
 
 # Configure saving of calorimeter hits
 ecalBarrelHitsName = "ECalBarrelPositionedHits"
@@ -125,8 +126,14 @@ from Configurables import SimG4SaveCalHits
 saveECalBarrelTool = SimG4SaveCalHits("saveECalBarrelHits", readoutNames = [ecalBarrelReadoutName])
 saveECalBarrelTool.CaloHits.Path = ecalBarrelHitsName
 
-saveHCalTool = SimG4SaveCalHits("saveHCalBarrelHits", readoutNames = [hcalReadoutName])
+saveECalEndcapTool = SimG4SaveCalHits("saveECalEndcapHits", readoutNames = [ecalEndcapReadoutName])
+saveECalEndcapTool.CaloHits.Path = "ECalEndcapHits"
+
+saveHCalTool = SimG4SaveCalHits("saveHCalBarrelHits", readoutNames = [hcalBarrelReadoutName])
 saveHCalTool.CaloHits.Path = "HCalBarrelPositionedHits"
+
+#saveHCalEndcapTool = SimG4SaveCalHits("saveHCalEndcapHits", readoutNames = [hcalEndcapReadoutName])
+#saveHCalEndcapTool.CaloHits.Path = "HCalEndcapHits"
 
 # next, create the G4 algorithm, giving the list of names of tools ("XX/YY")
 from Configurables import SimG4PrimariesFromEdmTool
@@ -137,6 +144,8 @@ from Configurables import SimG4Alg
 geantsim = SimG4Alg("SimG4Alg",
                        outputs= [saveECalBarrelTool,
                                  saveHCalTool,
+                                 saveECalEndcapTool,
+                                 #saveHCalEndcapTool
                                  #saveHistTool
                        ],
                        eventProvider=particle_converter,
@@ -151,7 +160,9 @@ calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
                                    layerFieldName = "layer")
 
 from Configurables import CalibrateCaloHitsTool
-calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction="41.66")
+calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction="31.4")
+calibEcalEndcap = CalibrateCaloHitsTool("CalibrateECalEndcap", invSamplingFraction="4.27")
+calibHcalEndcap = CalibrateCaloHitsTool("CalibrateHCalEndcap", invSamplingFraction="31.7")
 
 # Create cells in ECal barrel
 # 1. step - merge hits into cells with Eta and module segmentation (phi module is a 'physical' cell i.e. lead + LAr + PCB + LAr +lead)
@@ -256,6 +267,23 @@ createHcalBarrelCells = CreateCaloCells("CreateHCaloCells",
                                hits="HCalBarrelHits",
                                cells="HCalBarrelCells")
 
+createEcalEndcapCells = CreateCaloCells("CreateEcalEndcapCaloCells",
+                                    doCellCalibration=True,
+                                    calibTool=calibEcalEndcap,
+                                    addCellNoise=False, filterCellNoise=False,
+                                    OutputLevel=INFO)
+createEcalEndcapCells.hits.Path="ECalEndcapHits"
+createEcalEndcapCells.cells.Path="ECalEndcapCells"
+
+#createHcalEndcapCells = CreateCaloCells("CreateHcalEndcapCaloCells",
+#                                    doCellCalibration=True,
+#                                    calibTool=calibHcalEndcap,
+#                                    addCellNoise=False, filterCellNoise=False,
+#                                    OutputLevel=INFO)
+#createHcalEndcapCells.hits.Path="HCalEndcapHits"
+#createHcalEndcapCells.cells.Path="HCalEndcapCells"
+
+
 #Empty cells for parts of calorimeter not implemented yet
 from Configurables import CreateEmptyCaloCellsCollection
 createemptycells = CreateEmptyCaloCellsCollection("CreateEmptyCaloCells")
@@ -267,15 +295,15 @@ towers = CaloTowerTool("towers",
                                deltaEtaTower = 0.01, deltaPhiTower = 2*_pi/768.,
                                radiusForPosition = 2160 + 40 / 2.0,
                                ecalBarrelReadoutName = ecalBarrelReadoutNamePhiEta,
-                               ecalEndcapReadoutName = "",
+                               ecalEndcapReadoutName = ecalEndcapReadoutName,
                                ecalFwdReadoutName = "",
-                               hcalBarrelReadoutName = "",
+                               hcalBarrelReadoutName = hcalBarrelReadoutName,
                                hcalExtBarrelReadoutName = "",
                                hcalEndcapReadoutName = "",
                                hcalFwdReadoutName = "",
                                OutputLevel = INFO)
 towers.ecalBarrelCells.Path = EcalBarrelCellsName
-towers.ecalEndcapCells.Path = "emptyCaloCells"
+towers.ecalEndcapCells.Path = "ECalEndcapCells"
 towers.ecalFwdCells.Path = "emptyCaloCells"
 towers.hcalBarrelCells.Path = "emptyCaloCells"
 towers.hcalExtBarrelCells.Path = "emptyCaloCells"
@@ -408,7 +436,7 @@ out = PodioOutput("out",
 #out.outputCommands = ["keep *"]
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop %s"%EcalBarrelCellsName, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
-out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop *ells*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells"]
+out.outputCommands = ["keep *", "drop ECalBarrelHits",  "drop ECalEndcapHits", "drop HCal*", "drop *ells*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells"]
 
 import uuid
 out.filename = "output_fullCalo_SimAndDigi_withTopoCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
@@ -444,14 +472,16 @@ ApplicationMgr(
               #createEcalBarrelCells,
               cell_creator_to_use,
               createEcalBarrelPositionedCells,
+              createEcalEndcapCells,
               #createHcalBarrelCells,
+              #createHcalEndcapCells,
               createemptycells,
               createClusters,
               createEcalBarrelPositionedCaloClusterCells,
               correctCaloClusters,
-              createTopoClusters,
-              createEcalBarrelPositionedCaloTopoClusterCells,
-              correctCaloTopoClusters,
+              #createTopoClusters,
+              #createEcalBarrelPositionedCaloTopoClusterCells,
+              #correctCaloTopoClusters,
               out
               ],
     EvtSel = 'NONE',
