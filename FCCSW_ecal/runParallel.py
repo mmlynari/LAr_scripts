@@ -35,8 +35,8 @@ class SamplingJobProcessor(JobProcessor):
 
     def postprocess(self, energy):
         energy_GeV = energy/1.e3
-        subprocess.run([f"python FCC_calo_analysis_cpp/plot_samplingFraction.py
-            {self.outdir}/{self.output_tag}_energy_{energy}.root {energy_GeV}  --totalNumLayers 12
+        subprocess.run([f"python FCC_calo_analysis_cpp/plot_samplingFraction.py \
+            {self.outdir}/{self.output_tag}_energy_{energy}.root {energy_GeV}  --totalNumLayers 12 \
             --preview -outputfolder {self.outdir} --json {self.outdir}/SF.json"], shell=True)
         return 0
 
