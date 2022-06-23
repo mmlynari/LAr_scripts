@@ -66,12 +66,17 @@ class UpstreamJobProcessor(JobProcessor):
 
 
 class ClusterJobProcessor(JobProcessor):
-    def __init__(self, outdir, sampling_fracs=None):
+    def __init__(self, outdir, sampling_fracs=None, corrections=None):
         script = "runTopoAndSlidingWindowAndCaloSim.py"
         output_tag = "upstream_output"
         if sampling_fracs:
             self.extra_args += "--samplingFraction "
             self.extra_args += ' '.join([str(s) for s in sampling_fracs])
+        if corrections:
+            self.extra_args += "--upstreamParameters "
+            self.extra_args += ' '.join([str(s) for s in corrections['up']])
+            self.extra_args += "--downstreamParameters "
+            self.extra_args += ' '.join([str(s) for s in corrections['do']])
         super().__init__(script, outdir, output_tag)
 
 
@@ -127,13 +132,24 @@ def main():
     group.add_argument('--upstream', action='store_true', help='compute the upstream corrections')
     group.add_argument('--clusters', action='store_true', help='run fixed size and topo clusterings')
     parser.add_argument('--SF', default='', type=str, help='JSON file containing sampling fractions')
+    parser.add_argument('--corrections', default='', type=str, help='JSON file containing upstream and downstream corrections')
     args = parser.parse_args()
 
-    sampling_fracs=None
+    sampling_fracs = None
     if args.SF:
         with open(args.SF, 'r') as jsonfile:
             sampling_fracs = json.load(jsonfile)
             print("Applying sampling fractions:", sampling_fracs)
+
+    corrections = None
+    if args.corrections:
+        with open(args.corrections, 'r') as jsonfile:
+            source = json.load(jsonfile)
+            dict_up = {e['name'] : e for e in source['corr_params'] if e['type']=='upstream'}
+            dict_do = {e['name'] : e for e in source['corr_params'] if e['type']=='downstream'}
+            corrections = {}
+            corrections['up'] = [dict_up['a'], dict_up['b'], dict_up['c'], dict_up['d'], dict_up['e']]
+            corrections['do'] = [dict_do['a'], dict_do['b'], dict_do['c'], dict_do['d'], dict_do['e']]
 
     #energies = [500, 1000, 5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000]
     if args.sampling:
@@ -143,7 +159,7 @@ def main():
         upJobPr = UpstreamJobProcessor(outDir, sampling_fracs=sampling_fracs)
         run_the_jobs(upJobPr, energies, nEvt, True, True)
     elif args.clusters:
-        clJobPr = ClusterJobProcessor(outDir, sampling_fracs=sampling_fracs)
+        clJobPr = ClusterJobProcessor(outDir, sampling_fracs=sampling_fracs, corrections=corrections)
         run_the_jobs(clJobPr, energies, nEvt, True, False)
 
 
