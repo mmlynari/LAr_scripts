@@ -20,7 +20,7 @@ calo_init.parser.add_argument("--preview", help="Plot preview of fits", action =
 calo_init.parser.add_argument("--plotSFvsEnergy", help="Plot sf as a function of energy", action = 'store_true')
 calo_init.parser.add_argument("--theta", help="Plot sf as a function of theta instead of energy, plotSFvsEnergy must also be set to true", action = 'store_true')
 calo_init.parser.add_argument("--sed", help="Modify the sampling fraction in the FCCSW python configs", action = 'store_true')
-calo_init.parser.add_argument("--json", help="Store the sampling fractions in a json file", type='str', default = '')
+calo_init.parser.add_argument("--json", help="Store the sampling fractions in a json file", type=str, default = '')
 calo_init.parser.add_argument("--specialLabel", help="Additional label to be plotted", type=str, default = "")
 calo_init.parse_args()
 calo_init.print_config()
