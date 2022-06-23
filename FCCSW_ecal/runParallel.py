@@ -154,14 +154,14 @@ def main():
 
     #energies = [500, 1000, 5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000]
     if args.sampling:
-        samJobPr = SamplingJobProcessor(outDir)
-        run_the_jobs(samJobPr, energies, nEvt, True, True)
+        samJobPr = SamplingJobProcessor(args.outDir)
+        run_the_jobs(samJobPr, args.energies, args.nEvt, True, True)
     if args.upstream:
-        upJobPr = UpstreamJobProcessor(outDir, sampling_fracs=sampling_fracs)
-        run_the_jobs(upJobPr, energies, nEvt, True, True)
+        upJobPr = UpstreamJobProcessor(args.outDir, sampling_fracs=sampling_fracs)
+        run_the_jobs(upJobPr, args.energies, args.nEvt, True, True)
     elif args.clusters:
-        clJobPr = ClusterJobProcessor(outDir, sampling_fracs=sampling_fracs, corrections=corrections)
-        run_the_jobs(clJobPr, energies, nEvt, True, False)
+        clJobPr = ClusterJobProcessor(args.outDir, sampling_fracs=sampling_fracs, corrections=corrections)
+        run_the_jobs(clJobPr, args.energies, args.nEvt, True, False)
 
 
 if __name__ == "__main__":
