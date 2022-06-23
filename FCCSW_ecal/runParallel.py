@@ -6,6 +6,7 @@ import subprocess
 import multiprocessing as mp
 import shutil
 import sys
+import argparse
 
 class JobProcessor:
     def __init__(self, script, outdir, output_tag):
