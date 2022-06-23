@@ -1,4 +1,4 @@
-#!/ust/bin/bash
+#!/usr/bin/bash
 
 runname="baseline_LAr_testResol_2/"
 
