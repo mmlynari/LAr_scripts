@@ -101,6 +101,7 @@ for ifile, filename in enumerate(calo_init.filenamesIn):
     else:
         fitoptions = "SQRN"
     for islice, h in enumerate(hmerged):
+        h.Print()
         fitPre = TF1("fitPre","gaus", h.GetMean() - 1. * h.GetRMS(), h.GetMean() + 1. * h.GetRMS())
         #h.Rebin(10)
         resultPre = h.Fit(fitPre, fitoptions)

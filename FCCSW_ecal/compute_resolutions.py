@@ -69,10 +69,26 @@ def get_resolutions(in_directory, clusters_colls):
                 .Define(f"response_theta", f"ROOT::VecOps::DeltaPhi(e_theta[0], good_clusters_theta[leading_cluster_idx])")
                 .Define(f"response_phi", f"ROOT::VecOps::DeltaPhi(e_phi[0], good_clusters_phi[leading_cluster_idx])")
                 )
+            h_phi = df2.Histo1D("response_phi")
+            h_theta = df2.Histo1D("response_theta")
+            h_e = df2.Histo1D("response_e")
             num_pass = df2.Count()
             resol_e = df2.StdDev("response_e")
             resol_theta = df2.StdDev("response_theta")
             resol_phi = df2.StdDev("response_phi")
+            h_phi.SetName(f"Phi_{clusters}_{truth_e}")
+            h_theta.SetName(f"Theta_{clusters}_{truth_e}")
+            h_e.SetName(f"E_{clusters}_{truth_e}")
+
+            c = ROOT.TCanvas()
+            h_phi.Draw()
+            c.Print(in_directory+'/'+h_phi.GetName()+'.png')
+            h_theta.Draw()
+            c.Print(in_directory+'/'+h_theta.GetName()+'.png')
+            h_e.Draw()
+            c.Print(in_directory+'/'+h_e.GetName()+'.png')
+
+
             results_f[clusters] = [num_init, num_pass, df2.Mean("response_e"), resol_e, df2.Mean("response_theta"), resol_theta, df2.Mean("response_phi"), resol_phi]
 
         for k, v in results_f.items():

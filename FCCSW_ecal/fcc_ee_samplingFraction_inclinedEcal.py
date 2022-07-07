@@ -10,7 +10,7 @@ thetaMax = 90.
 
 # Data service
 from Configurables import FCCDataSvc
-podioevent = FCCDataSvc("EventDataSvc")
+podioevent  = FCCDataSvc("EventDataSvc")
 
 ################## Particle gun setup
 _pi = 3.14159
@@ -119,7 +119,7 @@ ApplicationMgr( TopAlg = [event_counter, genalg_pgun, hepmc_converter, geantsim,
                 EvtSel = 'NONE',
                 EvtMax = 100,
                 # order is important, as GeoSvc is needed by G4SimSvc
-                ExtSvc = [podioevent, geoservice, geantservice, audsvc],
+                ExtSvc = [geoservice, podioevent, geantservice, audsvc],
                 OutputLevel = INFO,
                 StopOnSignal = True
 )
