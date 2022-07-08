@@ -37,6 +37,20 @@ def init_stuff():
     ROOT.gInterpreter.Declare("using namespace FCCAnalyses::CaloNtupleizer;")
     ROOT.ROOT.EnableImplicitMT(32)
 
+class Results:
+    def __init__(self, n_init, n_pass, resp_e, resol_e, h_e, resp_theta, resol_theta, h_theta, resp_phi, resol_phi, h_phi):
+        self.n_init = n_init
+        self.n_pass = n_pass
+        self.resp_e = resp_e
+        self.resol_e = resol_e
+        self.h_e = h_e
+        self.resp_theta = resp_theta
+        self.resol_theta = resol_theta
+        self.h_theta = h_theta
+        self.resp_phi = resp_phi
+        self.resol_phi = resol_phi
+        self.h_phi = h_phi
+
 
 def get_resolutions(in_directory, clusters_colls):
     in_files = glob.glob(in_directory+"/*.root")
@@ -76,27 +90,35 @@ def get_resolutions(in_directory, clusters_colls):
             resol_e = df2.StdDev("response_e")
             resol_theta = df2.StdDev("response_theta")
             resol_phi = df2.StdDev("response_phi")
-            h_phi.SetName(f"Phi_{clusters}_{truth_e}")
-            h_theta.SetName(f"Theta_{clusters}_{truth_e}")
-            h_e.SetName(f"E_{clusters}_{truth_e}")
 
-            c = ROOT.TCanvas()
-            h_phi.Draw()
-            c.Print(in_directory+'/'+h_phi.GetName()+'.png')
-            h_theta.Draw()
-            c.Print(in_directory+'/'+h_theta.GetName()+'.png')
-            h_e.Draw()
-            c.Print(in_directory+'/'+h_e.GetName()+'.png')
-
-
-            results_f[clusters] = [num_init, num_pass, df2.Mean("response_e"), resol_e, df2.Mean("response_theta"), resol_theta, df2.Mean("response_phi"), resol_phi]
+            results_f[clusters] = Results(num_init, num_pass, df2.Mean("response_e"), resol_e, h_e, df2.Mean("response_theta"), resol_theta, h_theta, df2.Mean("response_phi"), resol_phi, h_phi)
 
         for k, v in results_f.items():
-            row = [truth_e, k] + [future.GetValue() for future in v]
+            v.h_phi.SetName(f"Phi_{clusters}_{truth_e}")
+            v.h_theta.SetName(f"Theta_{clusters}_{truth_e}")
+            v.h_e.SetName(f"E_{clusters}_{truth_e}")
+            c = ROOT.TCanvas()
+            v.h_phi.Draw()
+            resp_phi_v, resol_phi_v = get_response_and_resol(v.h_phi, v.resp_phi.GetValue(), v.resol_phi.GetValue())
+            c.Print(in_directory+'/'+h_phi.GetName()+'.png')
+            h_theta.Draw()
+            resp_theta_v, resol_theta_v = get_response_and_resol(v.h_theta, v.resp_theta.GetValue(), v.resol_theta.GetValue())
+            c.Print(in_directory+'/'+h_theta.GetName()+'.png')
+            h_e.Draw()
+            resp_e_v, resol_e_v = get_response_and_resol(v.h_e, v.resp_e.GetValue(), v.resol_e.GetValue())
+            c.Print(in_directory+'/'+h_e.GetName()+'.png')
+
+            row = [truth_e, k, v.n_init.GetValue(), v.n_pass.GetValue(), resp_e_v, resol_e_v, resp_theta_v, resol_theta_v, resp_phi_v, resol_phi_v]
             results.append(row)
+
 
     results.sort(key=lambda it: it[0])
     return results
+
+
+def get_response_and_resol(h, mean_guess=0, resol_guess=1):
+    res = h.Fit("gaus", "LS", "", mean_guess-2*resol_guess, mean_guess+2*resol_guess)
+    return (res.Parameter(1), res.Parameter(2))
 
 def write_output(results, out_file):
     with open(out_file, 'w') as csvfile:
