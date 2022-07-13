@@ -39,7 +39,7 @@ for event in events:
         firstCell = event.CaloClusters_firstCell[caloCluster_idx]
         lastCell = event.CaloClusters_lastCell[caloCluster_idx]
         print(firstCell, lastCell)
-        for PositionedCaloClusterCell_idx in range(len(event.PositionedCaloClusterCells_x[firstCell:lastCell])):
+        for PositionedCaloClusterCell_idx in range(lastCell - firstCell):
             if caloCluster_idx == 0:
                 th2_clusterCell1_xy.Fill(event.PositionedCaloClusterCells_x[firstCell+PositionedCaloClusterCell_idx], event.PositionedCaloClusterCells_y[firstCell+PositionedCaloClusterCell_idx])
             if caloCluster_idx == 1:
