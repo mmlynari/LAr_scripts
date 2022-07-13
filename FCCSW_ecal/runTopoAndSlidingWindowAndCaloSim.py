@@ -4,7 +4,7 @@ import copy
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
 use_pythia = False
-addNoise = True
+addNoise = False
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
@@ -322,9 +322,9 @@ correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                           firstLayerIDs = [0],
                                           lastLayerIDs = [11],
                                           readoutNames = [ecalBarrelReadoutNamePhiEta],
-                                          upstreamParameters = [[0.17614929754101488, -50.541456620685615, -336.8761096903023, 1.71363569888976, -0.5745759873221622, -0.7736442057417935]],
+                                          upstreamParameters = [[0.10117975886467132, -11.148652656150412, -153.83069140265266, 1.027178560683188, -2.0737543169883708, -15.145433453051092]],
                                           upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          downstreamParameters = [[0.037499999999999874, -2.8904999325053e-19, 1.4581782236406087e-16, 1.4826551947379402e-15, -3.545753309192094e-17, -3.854456911169764e-15]],
+                                          downstreamParameters = [[-0.005560462362280864, 0.00730077810678934, 0.9139740737889959, -0.5787743437971242, 0.05648861283780275, 11.13272832953268]],
                                           downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel = INFO
                                           )
@@ -395,9 +395,9 @@ correctCaloTopoClusters = CorrectCaloClusters("correctCaloTopoClusters",
                                           firstLayerIDs = [0],
                                           lastLayerIDs = [11],
                                           readoutNames = [ecalBarrelReadoutNamePhiEta],
-                                          upstreamParameters = [[0.17614929754101488, -50.541456620685615, -336.8761096903023, 1.71363569888976, -0.5745759873221622, -0.7736442057417935]],
+                                          upstreamParameters = [[0.10117975886467132, -11.148652656150412, -153.83069140265266, 1.027178560683188, -2.0737543169883708, -15.145433453051092]],
                                           upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          downstreamParameters = [[0.037499999999999874, -2.8904999325053e-19, 1.4581782236406087e-16, 1.4826551947379402e-15, -3.545753309192094e-17, -3.854456911169764e-15]],
+                                          downstreamParameters = [[-0.005560462362280864, 0.00730077810678934, 0.9139740737889959, -0.5787743437971242, 0.05648861283780275, 11.13272832953268]],
                                           downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel = INFO
                                           )

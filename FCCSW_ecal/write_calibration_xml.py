@@ -44,7 +44,7 @@ for nodeList in input_xml.getElementsByTagName('lccdd'):
                                 if subsubsubnode.localName == 'passive':
                                     print("        ", subsubsubnode.localName)
                                     for subsubsubsubnode in subsubsubnode.childNodes:
-                                        if subsubsubsubnode.localName in ['inner', 'glue', 'outer']:
+                                        if subsubsubsubnode.localName in ['inner', 'innerMax', 'glue', 'outer']:
                                             print("            ", subsubsubsubnode.localName)
                                             #print subsubsubsubnode.getAttribute('sensitive')
                                             subsubsubsubnode.setAttribute('sensitive', 'true') # here we change the absorber into sensitive material
@@ -137,7 +137,7 @@ for nodeList in input_xml.getElementsByTagName('lccdd'):
                                     subsubsubnode.setAttribute('sensitive', 'false')
                                 if subsubsubnode.localName == 'passive':
                                     for subsubsubsubnode in subsubsubnode.childNodes:
-                                        if subsubsubsubnode.localName in ['inner', 'glue', 'outer']:
+                                        if subsubsubsubnode.localName in ['inner', 'innerMax', 'glue', 'outer']:
                                             subsubsubsubnode.setAttribute('sensitive', 'false') # here we change the abnsorber into sensitive material!
                         if subsubnode.localName == 'cryostat':
                             for subsubsubnode in subsubnode.childNodes:

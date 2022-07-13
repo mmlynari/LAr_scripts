@@ -94,19 +94,19 @@ def get_resolutions(in_directory, clusters_colls):
             results_f[clusters] = Results(num_init, num_pass, df2.Mean("response_e"), resol_e, h_e, df2.Mean("response_theta"), resol_theta, h_theta, df2.Mean("response_phi"), resol_phi, h_phi)
 
         for k, v in results_f.items():
-            v.h_phi.SetName(f"Phi_{clusters}_{truth_e}")
-            v.h_theta.SetName(f"Theta_{clusters}_{truth_e}")
-            v.h_e.SetName(f"E_{clusters}_{truth_e}")
+            v.h_phi.SetName(f"Phi_{k}_{truth_e}")
+            v.h_theta.SetName(f"Theta_{k}_{truth_e}")
+            v.h_e.SetName(f"E_{k}_{truth_e}")
             c = ROOT.TCanvas()
             v.h_phi.Draw()
             resp_phi_v, resol_phi_v = get_response_and_resol(v.h_phi, v.resp_phi.GetValue(), v.resol_phi.GetValue())
-            c.Print(in_directory+'/'+h_phi.GetName()+'.png')
-            h_theta.Draw()
+            c.Print(in_directory+'/'+v.h_phi.GetName()+'.png')
+            v.h_theta.Draw()
             resp_theta_v, resol_theta_v = get_response_and_resol(v.h_theta, v.resp_theta.GetValue(), v.resol_theta.GetValue())
-            c.Print(in_directory+'/'+h_theta.GetName()+'.png')
-            h_e.Draw()
+            c.Print(in_directory+'/'+v.h_theta.GetName()+'.png')
+            v.h_e.Draw()
             resp_e_v, resol_e_v = get_response_and_resol(v.h_e, v.resp_e.GetValue(), v.resol_e.GetValue())
-            c.Print(in_directory+'/'+h_e.GetName()+'.png')
+            c.Print(in_directory+'/'+v.h_e.GetName()+'.png')
 
             row = [truth_e, k, v.n_init.GetValue(), v.n_pass.GetValue(), resp_e_v, resol_e_v, resp_theta_v, resol_theta_v, resp_phi_v, resol_phi_v]
             results.append(row)

@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-runname="baseline_LAr_testResol_3/"
+runname="trapezoid_LKr_angleScaling_1mm_13factor_noNoise_1/"
 
 # Compute sampling fractions
 python runParallel.py --outDir $runname/sampling --nEvt 1000 --energies 10000 --sampling
