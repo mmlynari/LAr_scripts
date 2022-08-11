@@ -8,13 +8,20 @@ import sys
 
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
-#file_path = "/eos/user/b/brfranco/rootfile_storage/fcc_analysis_ouput/220810_gamma_flat_1_100_noNoise_caloReco/fccsw_output_pdgID_22_pMin_1000_pMax_100000_thetaMin_50_thetaMax_130.root"
-file_path = "/eos/user/b/brfranco/rootfile_storage/fcc_analysis_ouput/220808_pi0_flat_1_100_noNoise_caloReco/fccsw_output_pdgID_111_pMin_1000_pMax_100000_thetaMin_50_thetaMax_130.root"
-# TO BE MODIFIED AFTER
-#file_path = "test.root"
+parser = argparse.ArgumentParser()
+#parser.add_argument("-inputFile", default = "/eos/user/b/brfranco/rootfile_storage/fcc_analysis_ouput/220810_gamma_flat_1_100_noNoise_caloReco/fccsw_output_pdgID_22_pMin_1000_pMax_100000_thetaMin_50_thetaMax_130.root", help = "Path to the input rootfile. Output rootfile path will be based on it.", type = str)
+parser.add_argument("-inputFile", default = "/eos/user/b/brfranco/rootfile_storage/fcc_analysis_ouput/220810_gamma_flat_1_100_noNoise_caloReco/fccsw_output_pdgID_22_pMin_1000_pMax_100000_thetaMin_50_thetaMax_130.root", help = "Path to the input rootfile. Output rootfile path will be based on it.", type = str)
+parser.add_argument("-postfix", default = "test", help = "Postfix to append to the output rootfile.", type = str)
+parser.add_argument("-startEvt", default = 0, help = "First event to process in the input rootfile (to allow splitting in many jobsi when running on a single rootfile). Event count starts at 0.", type = int)
+parser.add_argument("-endEvt", default = 10, help = "Last event to process in the input rootfile (to allow splitting in many jobsi when running on a single rootfile). Event count starts at 0. Set to -1 for all events.", type = int)
+
+args = parser.parse_args()
+
+file_path = args.inputFile
+#file_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/develop_strip_layer/LAr_scripts/caloNtupleAnalyzer/test.root"
 #file_path = "old_test.root"
 eta_rebinning_factor = 4
-output_file_path = file_path.replace(".root", "_agregatedCells.root")
+output_file_path = file_path.replace(".root", "_withAggregatedCells_" + args.postfix + ".root")
 rootfile = ROOT.TFile(file_path)
 output_rootfile = ROOT.TFile(output_file_path, "recreate")
 
@@ -25,14 +32,14 @@ output_tree = ROOT.TTree('events', 'events')
 
 # split the list of branches in the one with Cells info (to be use for the new eta segmentation), cluster info (we have to altered FirstCell and LastCell) and other branches (we copy them as is)
 listOfBranches = [events.GetListOfBranches().At(i).GetName() for i in range(len(events.GetListOfBranches()))]
-print(listOfBranches)
+#print(listOfBranches)
 cell_branch_families = set()
 cell_branch_suffixes = set()
 cluster_branches = set()
 other_branches = set()
 dict_branchName_vectorForFilling = {}
 for branch in listOfBranches:
-    print(branch)
+    #print(branch)
     dict_branchName_vectorForFilling[branch] = ROOT.RVec('float')()
     output_tree.Branch(branch, dict_branchName_vectorForFilling[branch])
     if "Cells" in branch:
@@ -42,8 +49,8 @@ for branch in listOfBranches:
         cluster_branches.add(branch)
     else:
         other_branches.add(branch)
-print(cell_branch_families)
-print(cell_branch_suffixes)
+#print(cell_branch_families)
+#print(cell_branch_suffixes)
 
 # use the input rootfile info to get old eta segmentation from whatever cell collection
 events.GetEntry(0)
@@ -65,13 +72,14 @@ eta_etaBinEqualZero = round(anEta - anEtaBin * etaStep, 6)
 eta_etaBinEqualMax = abs(eta_etaBinEqualZero)
 new_eta_etaBinEqualZero = round(((eta_etaBinEqualZero + (eta_rebinning_factor - 1) * etaStep) + eta_etaBinEqualZero) / 2, 6)
 etaBinMax = (eta_etaBinEqualMax - eta_etaBinEqualZero) / float(etaStep)
+new_etaBinMax = (eta_etaBinEqualMax - eta_etaBinEqualZero) / float(new_etaStep)
 print("Old eta step ", etaStep)
+print("New eta step ", new_etaStep)
 print("Eta corresponding to etaBin == 0 ", eta_etaBinEqualZero)
 print("New eta corresponding to etaBin == 0 ", new_eta_etaBinEqualZero)
 print("Eta bin max ", etaBinMax)
+print("New eta bin max ", new_etaBinMax)
 # define the new eta, theta, z for the new cell size
-n_original_eta_bins = 192
-original_delta_eta = 0.0025
 old_eta_bin_groups = []
 new_etas = []
 new_thetas = []
@@ -84,13 +92,18 @@ while i < etaBinMax:
     new_thetas.append(2 * atan(exp(-new_eta)))
     i += eta_rebinning_factor
     idx_for_new_binning += 1
-print("new etas:",  new_etas)
-print("new thetas:", new_thetas)
+#print("new etas:",  new_etas)
+#print("new thetas:", new_thetas)
+#print(old_eta_bin_groups)
 
 n_evt = 0
 for event in events:
-    if(n_evt == 100):
+    if(n_evt < args.startEvt):
+        continue
+    if(n_evt > args.endEvt and not args.endEvt == -1):
         break
+    if n_evt % 10 == 0:
+        print("Treating event %d"%n_evt)
     # deal with branches that we do not touch
     for branch in other_branches:
         dict_branchName_vectorForFilling[branch].clear()
@@ -118,6 +131,7 @@ for event in events:
 
     # deal with cell branches that we have to aggregate in eta everywhere except in strip layer 
     for cell_branch_family in cell_branch_families:
+        n_cell_merged = 0
         for cell_branch_suffix in cell_branch_suffixes:
             dict_branchName_vectorForFilling[cell_branch_family + "_" + cell_branch_suffix].clear()
         dict_layer_phiBin_etaGroup_cellIdx = {} # used to see to which coarse eta bin the old cell belong
@@ -150,47 +164,57 @@ for event in events:
                     # save the current index in the output vector to be able to add later cell energy to the right eta bini(if size is called before the push_back it gives directly the index
                     dict_layer_phiBin_etaGroup_cellIdx[str(getattr(event, cell_branch_family + "_layer")[cell_idx])][str(getattr(event, cell_branch_family + "_phiBin")[cell_idx])][str(current_etaGroup)] = dict_branchName_vectorForFilling[cell_branch_family + "_layer"].size() # use layer here but any other member would work
                     for cell_branch_suffix in cell_branch_suffixes:
-                        if cell_branch_suffixes == 'etaBin':
-                            dict_branchName_vectorForFilling[cell_branch_family + "_" + cell_branch_suffix].push_back(old_eta_bin_groups.index(etaGroup))
-                        elif cell_branch_suffixes == 'eta':
-                            dict_branchName_vectorForFilling[cell_branch_family + "_" + cell_branch_suffix].push_back(new_etas[old_eta_bin_groups.index(etaGroup)])
-                        elif cell_branch_suffixes == 'theta':
-                            dict_branchName_vectorForFilling[cell_branch_family + "_" + cell_branch_suffix].push_back(new_thetas[old_eta_bin_groups.index(etaGroup)])
-                        elif cell_branch_suffixes == 'z':
+                        if cell_branch_suffix == 'etaBin':
+                            dict_branchName_vectorForFilling[cell_branch_family + "_" + cell_branch_suffix].push_back(old_eta_bin_groups.index(current_etaGroup))
+                        elif cell_branch_suffix == 'eta':
+                            dict_branchName_vectorForFilling[cell_branch_family + "_" + cell_branch_suffix].push_back(new_etas[old_eta_bin_groups.index(current_etaGroup)])
+                        elif cell_branch_suffix == 'theta':
+                            dict_branchName_vectorForFilling[cell_branch_family + "_" + cell_branch_suffix].push_back(new_thetas[old_eta_bin_groups.index(current_etaGroup)])
+                        elif cell_branch_suffix == 'z':
                             radius = sqrt(getattr(event, cell_branch_family + "_x")[cell_idx] * getattr(event, cell_branch_family + "_x")[cell_idx] + getattr(event, cell_branch_family + "_y")[cell_idx] * getattr(event, cell_branch_family + "_y")[cell_idx])
-                            dict_branchName_vectorForFilling[cell_branch_family + "_" + cell_branch_suffix].push_back(radius / tan(pi - new_thetas[index(etaGroup)]))
+                            dict_branchName_vectorForFilling[cell_branch_family + "_" + cell_branch_suffix].push_back(radius / tan(new_thetas[old_eta_bin_groups.index(current_etaGroup)]))
                         else:
                             dict_branchName_vectorForFilling[cell_branch_family + "_" + cell_branch_suffix].push_back(getattr(event, cell_branch_family + "_" + cell_branch_suffix)[cell_idx])
                 else:# if we had already one cell populating this coarse eta bin, just add present cell energy to the existing entry
                     dict_branchName_vectorForFilling[cell_branch_family + "_energy"][dict_layer_phiBin_etaGroup_cellIdx[str(getattr(event, cell_branch_family + "_layer")[cell_idx])][str(getattr(event, cell_branch_family + "_phiBin")[cell_idx])][str(current_etaGroup)]] += getattr(event, cell_branch_family + "_energy")[cell_idx]
-                    if "Cluster" in cell_branch_family:
+                    n_cell_merged += 1
+                    if "Cluster" in cell_branch_family: # because it  makes sense only for cell collections that are attached to a cluster
                         need_to_decrement_cluster_index = True
             if need_to_decrement_cluster_index:
                 cluster_type = re.search('Positioned(.*)Cells', cell_branch_family).group(1) + "s"
                 for clusterIdx in range(len(dict_clusterType_firstCells[cluster_type + "_firstCell"])):
                     tmp_firstCell = dict_clusterType_firstCells[cluster_type + "_firstCell"][clusterIdx]
                     tmp_lastCell = dict_clusterType_lastCells[cluster_type + "_lastCell"][clusterIdx]
-                    if cell_idx in [tmp_firstCell, tmp_lastCell]:
+                    if tmp_firstCell <= cell_idx < tmp_lastCell:
                         dict_clusterType_newlastCells[cluster_type + "_lastCell"][clusterIdx] -= 1
                         for second_clusterIdx in range(clusterIdx+1, len(dict_clusterType_firstCells[cluster_type + "_firstCell"])):
                             dict_clusterType_newfirstCells[cluster_type + "_firstCell"][second_clusterIdx] -= 1
                             dict_clusterType_newlastCells[cluster_type + "_lastCell"][second_clusterIdx] -= 1
+        #if "CaloCluster" in cell_branch_family:
+        #    print("Cell to be merged: ", n_cell_merged)
         #end of loop on cells
     #end of loop on cell branch family
 
     # store cluster info
     for branch in cluster_branches:
+        if "Corrected" in branch or not "CaloCluster" in branch:
+            continue
         dict_branchName_vectorForFilling[branch].clear()
         if "firstCell" in branch:
             for clusterIdx in range(len(dict_clusterType_firstCells[branch])):
-                dict_branchName_vectorForFilling[branch].push_back(dict_clusterType_firstCells[branch][clusterIdx])
+                #print("Old first cell: ", getattr(event, branch)[clusterIdx])
+                #print("New first cell: ", dict_clusterType_newfirstCells[branch][clusterIdx])
+                dict_branchName_vectorForFilling[branch].push_back(dict_clusterType_newfirstCells[branch][clusterIdx])
         elif "lastCell" in branch:
             for clusterIdx in range(len(dict_clusterType_lastCells[branch])):
-                dict_branchName_vectorForFilling[branch].push_back(dict_clusterType_lastCells[branch][clusterIdx])
+                #print("Old last cell: ", getattr(event, branch)[clusterIdx])
+                #print("New last cell: ", dict_clusterType_newlastCells[branch][clusterIdx])
+                dict_branchName_vectorForFilling[branch].push_back(dict_clusterType_newlastCells[branch][clusterIdx])
         else:
             for idx in range(len(getattr(event, branch))):
                 dict_branchName_vectorForFilling[branch].push_back(getattr(event, branch)[idx])
     output_tree.Fill()
+    print("##################")
     n_evt += 1
     #end of loop on events
 output_rootfile.Write()
