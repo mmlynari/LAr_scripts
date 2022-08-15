@@ -12,8 +12,8 @@ parser = argparse.ArgumentParser()
 #parser.add_argument("-inputFile", default = "/eos/user/b/brfranco/rootfile_storage/fcc_analysis_ouput/220810_gamma_flat_1_100_noNoise_caloReco/fccsw_output_pdgID_22_pMin_1000_pMax_100000_thetaMin_50_thetaMax_130.root", help = "Path to the input rootfile. Output rootfile path will be based on it.", type = str)
 parser.add_argument("-inputFile", default = "/eos/user/b/brfranco/rootfile_storage/fcc_analysis_ouput/220810_gamma_flat_1_100_noNoise_caloReco/fccsw_output_pdgID_22_pMin_1000_pMax_100000_thetaMin_50_thetaMax_130.root", help = "Path to the input rootfile. Output rootfile path will be based on it.", type = str)
 parser.add_argument("-postfix", default = "test", help = "Postfix to append to the output rootfile.", type = str)
-parser.add_argument("-startEvt", default = 0, help = "First event to process in the input rootfile (to allow splitting in many jobsi when running on a single rootfile). Event count starts at 0.", type = int)
-parser.add_argument("-endEvt", default = 10, help = "Last event to process in the input rootfile (to allow splitting in many jobsi when running on a single rootfile). Event count starts at 0. Set to -1 for all events.", type = int)
+parser.add_argument("-startEvt", default = 10, help = "First event to process in the input rootfile (to allow splitting in many jobsi when running on a single rootfile). Event count starts at 0.", type = int)
+parser.add_argument("-endEvt", default = 20, help = "Last event to process in the input rootfile (to allow splitting in many jobsi when running on a single rootfile). Event count starts at 0. Set to -1 for all events.", type = int)
 
 args = parser.parse_args()
 
@@ -25,13 +25,13 @@ output_file_path = file_path.replace(".root", "_withAggregatedCells_" + args.pos
 rootfile = ROOT.TFile(file_path)
 output_rootfile = ROOT.TFile(output_file_path, "recreate")
 
-events = rootfile.Get('events')
+event = rootfile.Get('events')
 output_tree = ROOT.TTree('events', 'events')
 #output_tree = events.CloneTree()
 #events.GetListOfClones().Remove(output_tree)
 
 # split the list of branches in the one with Cells info (to be use for the new eta segmentation), cluster info (we have to altered FirstCell and LastCell) and other branches (we copy them as is)
-listOfBranches = [events.GetListOfBranches().At(i).GetName() for i in range(len(events.GetListOfBranches()))]
+listOfBranches = [event.GetListOfBranches().At(i).GetName() for i in range(len(event.GetListOfBranches()))]
 #print(listOfBranches)
 cell_branch_families = set()
 cell_branch_suffixes = set()
@@ -53,16 +53,16 @@ for branch in listOfBranches:
 #print(cell_branch_suffixes)
 
 # use the input rootfile info to get old eta segmentation from whatever cell collection
-events.GetEntry(0)
+event.GetEntry(0)
 random_cell_family = next(iter(cell_branch_families))
-anEtaBin = getattr(events, random_cell_family + "_etaBin")[0]
-anEta = getattr(events, random_cell_family + "_eta")[0]
-anotherEtaBin = getattr(events, random_cell_family + "_etaBin")[1]
-anotherEta = getattr(events, random_cell_family + "_eta")[1]
+anEtaBin = getattr(event, random_cell_family + "_etaBin")[0]
+anEta = getattr(event, random_cell_family + "_eta")[0]
+anotherEtaBin = getattr(event, random_cell_family + "_etaBin")[1]
+anotherEta = getattr(event, random_cell_family + "_eta")[1]
 tmp_bin = 2
 while(anotherEtaBin == anEtaBin):
-    anotherEtaBin = getattr(events, random_cell_family + "_etaBin")[tmp_bin]
-    anotherEta = getattr(events, random_cell_family + "_eta")[tmp_bin]
+    anotherEtaBin = getattr(event, random_cell_family + "_etaBin")[tmp_bin]
+    anotherEta = getattr(event, random_cell_family + "_eta")[tmp_bin]
     tmp_bin += 1
 binDifference = abs(anEtaBin - anotherEtaBin)
 etaDifference = abs(anEta - anotherEta)
@@ -96,14 +96,20 @@ while i < etaBinMax:
 #print("new thetas:", new_thetas)
 #print(old_eta_bin_groups)
 
-n_evt = 0
-for event in events:
-    if(n_evt < args.startEvt):
-        continue
-    if(n_evt > args.endEvt and not args.endEvt == -1):
-        break
-    if n_evt % 10 == 0:
-        print("Treating event %d"%n_evt)
+if args.endEvt == -1 or args.endEvt > event.GetEntries():
+    endEvt = event.GetEntries()
+else:
+    endEvt = args.endEvt
+
+for event_idx in range(args.startEvt, endEvt):
+    #if(n_evt < args.startEvt):
+    #    n_evt += 1
+    #    continue
+    #if(n_evt > args.endEvt and not args.endEvt == -1):
+    #    break
+    if event_idx % 10 == 0:
+        print("Treating event %d"%event_idx)
+    event.GetEntry(event_idx)
     # deal with branches that we do not touch
     for branch in other_branches:
         dict_branchName_vectorForFilling[branch].clear()
@@ -197,8 +203,6 @@ for event in events:
 
     # store cluster info
     for branch in cluster_branches:
-        if "Corrected" in branch or not "CaloCluster" in branch:
-            continue
         dict_branchName_vectorForFilling[branch].clear()
         if "firstCell" in branch:
             for clusterIdx in range(len(dict_clusterType_firstCells[branch])):
@@ -214,8 +218,6 @@ for event in events:
             for idx in range(len(getattr(event, branch))):
                 dict_branchName_vectorForFilling[branch].push_back(getattr(event, branch)[idx])
     output_tree.Fill()
-    print("##################")
-    n_evt += 1
     #end of loop on events
 output_rootfile.Write()
 output_rootfile.Close()

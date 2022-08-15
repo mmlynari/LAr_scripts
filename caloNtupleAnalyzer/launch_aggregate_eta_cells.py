@@ -20,7 +20,7 @@ python PATHTOAGGREGATECODE/aggregate_eta_cells.py -inputFile INPUTFILE -postfix 
 """
 
 
-pi0 = False
+pi0 = True
 #condor_dir = "condor_dir_eta_aggregation_" + date.today().strftime("%y%m%d")
 if pi0:
     condor_dir = "condor_dir_eta_aggregation_pi0"
@@ -40,7 +40,7 @@ evt_tot = 100000
 for jobID in range(int(evt_tot/float(evt_btach))):
     exec_file_name_path = os.path.join(condor_dir, exec_file_name_path_template.replace("ID", str(jobID)))
     with open(exec_file_name_path, "w") as f:
-        f.write( exec_file_template.replace("PATHTOAGGREGATECODE", os.environ.get("PWD", "")).replace("INPUTFILE", inputFile).replace("POSTFIX", str(jobID)).replace("STARTEVT", str(jobID * evt_btach)).replace("ENDEVT", str((jobID + 1) * evt_btach - 1)) )
+        f.write( exec_file_template.replace("PATHTOAGGREGATECODE", os.environ.get("PWD", "")).replace("INPUTFILE", inputFile).replace("POSTFIX", str(jobID)).replace("STARTEVT", str(jobID * evt_btach)).replace("ENDEVT", str((jobID + 1) * evt_btach)) )
 
 with open(condor_submit_file, "w") as f:
     f.write(get_condor_submit_header(os.path.join(os.environ.get("PWD", ""), condor_dir, exec_file_name_path_template.replace("ID", "*"))))
