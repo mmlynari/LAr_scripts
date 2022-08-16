@@ -6,11 +6,11 @@ from scipy import signal, integrate
 import os, glob, sys
 
 #input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/day3_testInjection_xtalk_v2/"
-input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/50OhmInjector/"
+input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/50OhmInjectorComplete/"
 #input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/TrialWithStrips/"
-data_file_pattern = "*tower02*absorber*.txt"
+data_file_pattern = "*tower02*.txt"
 #output_plot_folder = os.path.join(input_data_folder, "plots_trialWithStrips")
-output_plot_folder = os.path.join(input_data_folder, "plots_50OhmInjector_gnd_merge_close_gndedAbsorber")
+output_plot_folder = os.path.join(input_data_folder, "plots_50OhmInjector_twoshields")
 if not os.path.isdir(output_plot_folder):
     os.mkdir(output_plot_folder)
 
@@ -212,7 +212,7 @@ for data_file in data_files:
         #plt.xticks(np.arange(0, maxXrange + 1, 10))
         plt.grid(True)
         #print(label, " ", sig_shaped.max())
-        plot_path = os.path.join(output_plot_folder, 'sig_shaped_' + label + '_tau_' + str(tau) + '.png')
+        plot_path = os.path.join(output_plot_folder, 'sig_afterShaper_' + label.replace(".txt", "") + '_tau_' + str(tau) + '.png')
         plt.savefig(plot_path.replace(" ", ""), bbox_inches='tight')
         try:
             dict_shapingTime_towercellstring_peakShaper[str(tau)][output_tower+output_cell] = sig_shaped.max()
