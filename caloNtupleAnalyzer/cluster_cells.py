@@ -8,7 +8,9 @@ ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 #rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/outputs/201209/fccsw_output_pythia_ee_Z_ee.root'
 #rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/FCCAnalyses/outputs/201216/fccsw_output_pythia_ee_Z_ee_all131all.root'
-rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/210607/FCCAnalyses/outputs/211020/output_fullCalo_SimAndDigi_withCluster_MagneticField_False_pMin_3000_MeV_ThetaMinMax_90.25_90.25_pdgId_111_pythiaFalse.root'
+#rootfile_path = '/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/210607/FCCAnalyses/outputs/211020/output_fullCalo_SimAndDigi_withCluster_MagneticField_False_pMin_3000_MeV_ThetaMinMax_90.25_90.25_pdgId_111_pythiaFalse.root'
+rootfile_path = 'test_agregatedCells.root'
+#rootfile_path = 'test.root'
 plot_dir_name = 'plots_clusterShape_' + os.path.basename(rootfile_path).replace('.root','')
 if not os.path.isdir(plot_dir_name):
     os.mkdir(plot_dir_name)
@@ -36,8 +38,8 @@ for event in events:
         print("we dont have two clusters")
         continue
     for caloCluster_idx in range(len(event.CaloClusters_energy)):
-        firstCell = event.CaloClusters_firstCell[caloCluster_idx]
-        lastCell = event.CaloClusters_lastCell[caloCluster_idx]
+        firstCell = int(event.CaloClusters_firstCell[caloCluster_idx])
+        lastCell = int(event.CaloClusters_lastCell[caloCluster_idx])
         print(firstCell, lastCell)
         for PositionedCaloClusterCell_idx in range(lastCell - firstCell):
             if caloCluster_idx == 0:

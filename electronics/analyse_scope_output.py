@@ -5,16 +5,22 @@ import numpy as np
 from scipy import signal, integrate
 import os, glob, sys
 
-input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/day3_testInjection_xtalk_v2/"
-data_file_pattern = "*tower08*.txt"
-output_plot_folder = os.path.join(input_data_folder, "plots_v3")
+#input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/day3_testInjection_xtalk_v2/"
+input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/50OhmInjectorComplete/"
+#input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/TrialWithStrips/"
+data_file_pattern = "*tower02*.txt"
+#output_plot_folder = os.path.join(input_data_folder, "plots_trialWithStrips")
+output_plot_folder = os.path.join(input_data_folder, "plots_50OhmInjector_twoshields")
 if not os.path.isdir(output_plot_folder):
     os.mkdir(output_plot_folder)
 
 data_files = glob.glob(os.path.join(input_data_folder, data_file_pattern))
+if len(data_files) == 0:
+    print("Error: no data file found in %s"%os.path.join(input_data_folder, data_file_pattern))
+    exit(1)
 file_reference_signal = ""
+n_ref = 0
 for data_file in data_files:
-    n_ref = 0
     words = os.path.basename(data_file).split("-")
     if len(words) < 6:
         continue
@@ -38,8 +44,14 @@ ref_data = pd.read_csv(file_reference_signal, sep=',', skiprows=6, header=None)
 # switch to nanoseconds
 ref_data[3] = ref_data[3] * 1e9
 sampling_frequency = round(1 / ref_data[3].diff()[1])
+# plot the raw signals
+plt.clf()
+ref_data.plot(x = 3, y = 4, xlabel = "Time (ns)", ylabel = "Voltage [V]", grid = True)
+plot_path = os.path.join(output_plot_folder, 'raw_main_signal.png')
+plt.savefig(plot_path)
+print(plot_path, " written")
 print("Sampling frequency per nano second: ", sampling_frequency)
-min_idx = ref_data[4].idxmin() + 15
+min_idx = ref_data[4][100:round((100+301)/ref_data[3].diff()[1])].idxmin()
 min_voltage = ref_data[4][min_idx]
 min_time = ref_data[3][min_idx]
 print("Start time = ", min_time)
@@ -61,7 +73,7 @@ if ref_tower == str(8):
 if ref_tower == str(7):
     input_tower_type = " one shield "
 if ref_tower == str(4):
-    input_tower_type = " shield cell7/8 "
+    input_tower_type = " shield cell7/8 + common GND "
 if ref_tower == str(5):
     input_tower_type = " GND plate "
 if ref_tower == str(6):
@@ -122,7 +134,9 @@ for data_file in data_files:
     df_sig[3] = df_sig[3] * 1e9 - min_time
     start_value = df_sig[4][0]
     #start_value = df_sig[4][0:10].mean()
+
     df_sig[4] = df_sig[4] - start_value
+
     #df_sig = df_sig.append(zeros) do this only if you want to see what enters the filter, otherwise the plots shows the zero padded curve
     n_columns = df_sig.shape[1]
 
@@ -171,19 +185,34 @@ for data_file in data_files:
         #zeros_before = zeros.copy()
         #zeros_before[3] = zeros_before[3] - ((max_idx - min_idx) * df_sig[3].diff()[1] + round(6 * tau))
 
-        #sig_shaped = signal.sosfilt(np.asarray([CR[0], RC[0]]), zeros_before.append(df_sig.append(zeros))[4])
-        sig_shaped = signal.sosfilt(np.asarray([CR[0], RC[0]]), df_sig.append(zeros)[4])
+        #save the signal feeding the shaper
         plt.clf()
-        #plt.rcParams.update({'font.size': 18})
-        #plt.xlim(0, maxXrange - min_time)
-        plt.plot(df_sig.append(zeros)[3], sig_shaped)
+        plt.plot(df_sig.append(zeros)[3], df_sig.append(zeros)[4])
+        #plt.plot(zeros_before.append(df_sig.append(zeros))[3], zeros_before.append(df_sig.append(zeros))[4])
         plt.xlabel('Time [ns]')
         plt.ylabel(ylabel)
         plt.title(plot_label + extra_plot_label)
         #plt.xticks(np.arange(0, maxXrange + 1, 10))
         plt.grid(True)
         #print(label, " ", sig_shaped.max())
-        plot_path = os.path.join(output_plot_folder, 'sig_shaped_' + label + '_tau_' + str(tau) + '.png')
+        plot_path = os.path.join(output_plot_folder, 'sig_forShaper_' + label + '_tau_' + str(tau) + '.png')
+        plt.savefig(plot_path.replace(" ", ""), bbox_inches='tight')
+
+        #sig_shaped = signal.sosfilt(np.asarray([CR[0], RC[0]]), zeros_before.append(df_sig.append(zeros))[4])
+        sig_shaped = signal.sosfilt(np.asarray([CR[0], RC[0]]), df_sig.append(zeros)[4])
+
+        plt.clf()
+        #plt.rcParams.update({'font.size': 18})
+        #plt.xlim(0, maxXrange - min_time)
+        plt.plot(df_sig.append(zeros)[3], sig_shaped)
+        #plt.plot(zeros_before.append(df_sig.append(zeros))[3], sig_shaped)
+        plt.xlabel('Time [ns]')
+        plt.ylabel(ylabel)
+        plt.title(plot_label + extra_plot_label)
+        #plt.xticks(np.arange(0, maxXrange + 1, 10))
+        plt.grid(True)
+        #print(label, " ", sig_shaped.max())
+        plot_path = os.path.join(output_plot_folder, 'sig_afterShaper_' + label.replace(".txt", "") + '_tau_' + str(tau) + '.png')
         plt.savefig(plot_path.replace(" ", ""), bbox_inches='tight')
         try:
             dict_shapingTime_towercellstring_peakShaper[str(tau)][output_tower+output_cell] = sig_shaped.max()
