@@ -8,9 +8,9 @@ import os, glob, sys
 #input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/day3_testInjection_xtalk_v2/"
 input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/50OhmInjectorComplete/"
 #input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/TrialWithStrips/"
-data_file_pattern = "*tower02*.txt"
+data_file_pattern = "*tower08*-notouches-*.txt"
 #output_plot_folder = os.path.join(input_data_folder, "plots_trialWithStrips")
-output_plot_folder = os.path.join(input_data_folder, "plots_50OhmInjector_twoshields")
+output_plot_folder = os.path.join(input_data_folder, "plots_50OhmInjector_zeroshield_notouches")
 if not os.path.isdir(output_plot_folder):
     os.mkdir(output_plot_folder)
 
@@ -256,7 +256,10 @@ for tau in taus:
     body_string = body_string[:-1] + " \\\\\n"
 body_string = body_string[:-1]
 template_string_xtalk_table = template_string_xtalk_table.replace('BODY', body_string)
-print(template_string_xtalk_table)
 
+with open(os.path.join(output_plot_folder, "table.txt"), "a") as texFile:
+    texFile.write(template_string_xtalk_table)
+print(template_string_xtalk_table)
+print(os.path.join(output_plot_folder, "table.txt"), " written.")
 
 
