@@ -6,11 +6,14 @@ from scipy import signal, integrate
 import os, glob, sys
 
 #input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/day3_testInjection_xtalk_v2/"
-input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/50OhmInjectorComplete/"
+#input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/50OhmInjectorComplete/"
+#input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/1MOhmInjectorComplete/"
+#input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/1MOhmInjectorComplete/tests/"
+input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/1MOhmInjectorComplete_GNDshortcut/"
 #input_data_folder = "/Users/brieucfrancois/Document/Fellowship/ElectrodesDesign/Prototype/V0/Measurements/TrialWithStrips/"
-data_file_pattern = "*tower08*-notouches-*.txt"
+data_file_pattern = "*input-tower08cell07*.txt"
 #output_plot_folder = os.path.join(input_data_folder, "plots_trialWithStrips")
-output_plot_folder = os.path.join(input_data_folder, "plots_50OhmInjector_zeroshield_notouches")
+output_plot_folder = os.path.join(input_data_folder, "plots_1MOhmInjector_complete_zeroShields_GNDshortcut")
 if not os.path.isdir(output_plot_folder):
     os.mkdir(output_plot_folder)
 
@@ -214,11 +217,14 @@ for data_file in data_files:
         #print(label, " ", sig_shaped.max())
         plot_path = os.path.join(output_plot_folder, 'sig_afterShaper_' + label.replace(".txt", "") + '_tau_' + str(tau) + '.png')
         plt.savefig(plot_path.replace(" ", ""), bbox_inches='tight')
+        # the division by four in the signal range to check maximum is to make sure we do not select a second maximum
         try:
-            dict_shapingTime_towercellstring_peakShaper[str(tau)][output_tower+output_cell] = sig_shaped.max()
+            #dict_shapingTime_towercellstring_peakShaper[str(tau)][output_tower+output_cell] = sig_shaped.max()
+            dict_shapingTime_towercellstring_peakShaper[str(tau)][output_tower+output_cell] = sig_shaped[0:round(len(sig_shaped)/4.0)].max()
         except:
             dict_shapingTime_towercellstring_peakShaper[str(tau)] = {}
-            dict_shapingTime_towercellstring_peakShaper[str(tau)][output_tower+output_cell] = sig_shaped.max()
+            #dict_shapingTime_towercellstring_peakShaper[str(tau)][output_tower+output_cell] = sig_shaped.max()
+            dict_shapingTime_towercellstring_peakShaper[str(tau)][output_tower+output_cell] = sig_shaped[0:round(len(sig_shaped)/4.0)].max()
         if(main_signal):
             dict_shapingTime_ref_peakShaper[str(tau)] = sig_shaped.max()
 
@@ -251,6 +257,7 @@ for tau in taus:
         if current_tower == ref_tower and current_cell == ref_cell:
             continue
         #x_talk = round(dict_shapingTime_towercellstring_peakShaper[str(tau)][cell] * 100 / dict_shapingTime_towercellstring_peakShaper[str(tau)][string_aggressor_cell], 2)
+        #print(cell, " ", tau, " ", dict_shapingTime_towercellstring_peakShaper[str(tau)][cell.replace("-", "")])
         x_talk = round(dict_shapingTime_towercellstring_peakShaper[str(tau)][cell.replace("-", "")] * 100 / dict_shapingTime_ref_peakShaper[str(tau)], 2)
         body_string += " " + str(x_talk) + " &"
     body_string = body_string[:-1] + " \\\\\n"
