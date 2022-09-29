@@ -56,12 +56,6 @@ def run(in_directory, clusters, out_file, json_updo):
     # Training is so fast it can be done online
     cols = d.AsNumpy(v_cols_to_use)
 
-    from clustercorrections import UpDownStreamCorrector, LayerCorrector, MVAUpDownCorrector
-    updo_corr = UpDownStreamCorrector(json_updo)
-    layer_corr = LayerCorrector("layer_corrections.json")
-    mva_corr = MVAUpDownCorrector("tr_up_N4.json", "tr_do_N4.json")
-
-
     layers = np.array(
     [
         cols["Cluster_E0"],
@@ -78,18 +72,6 @@ def run(in_directory, clusters, out_file, json_updo):
         cols["Cluster_E11"],
     ]
     )
-
-    #corrected_layers = layer_corr.layers_corrections(layers)
-    #cluster_E = corrected_layers.sum(axis=0)
-    #normalized_layers = np.divide(corrected_layers, cluster_E)
-
-    #upstream_std = updo_corr.upstream_correction(cluster_E, corrected_layers[0])
-    #downstream_std = updo_corr.downstream_correction(cluster_E, corrected_layers[11])
-
-    #data_updo = np.vstack([normalized_layers, cluster_E, upstream_std, downstream_std])
-
-    #upstream_MVA = mva_corr.upstream_correction(data_updo) * upstream_std
-    #downstream_MVA = mva_corr.downstream_correction(data_updo) * downstream_std
 
     cluster_E = layers.sum(axis=0)
     normalized_layers = np.divide(layers, cluster_E)
@@ -112,7 +94,7 @@ def run(in_directory, clusters, out_file, json_updo):
                       'subsample': stats.uniform(0.5, 1)} 
 
     #reg = xgb.XGBRegressor(tree_method="approx", objective='reg:squaredlogerror')
-    reg = xgb.XGBRegressor(tree_method="approx")
+    reg = xgb.XGBRegressor(tree_method="hist")
 
     #gsearch = RandomizedSearchCV(estimator = reg, 
                         #param_distributions = param_dist_XGB, n_iter=10,cv=3)

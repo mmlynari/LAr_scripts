@@ -20,17 +20,16 @@ def main():
             help = "Cluster collections to use", type=str)
     parser.add_argument("--MVAcalib", help = "Path to XGBoost json file used to calibrate CaloClusters",
     type=str)
-    parser.add_argument("--json", help = "json file containing Up/Down corrections", type=str)
     args = parser.parse_args()
-    run(args.inputDir, args.clusters, args.outFile, args.MVAcalib, args.json)
+    run(args.inputDir, args.clusters, args.outFile, args.MVAcalib)
 
 
-def run(in_directory, clusters_colls, out_file, MVAcalib, json_updo):
+def run(in_directory, clusters_colls, out_file, MVAcalib):
     """Actual processing"""
     init_stuff()
     res = []
     if(MVAcalib):
-        res += get_MVAcalib_resolution(in_directory, MVAcalib, json_updo)
+        res += get_MVAcalib_resolution(in_directory, MVAcalib)
     res += get_resolutions(in_directory, clusters_colls)
     res.sort(key=lambda it: it[0])
     print("All raw results")
@@ -140,7 +139,7 @@ def get_resolutions(in_directory, clusters_colls):
     return results
 
 
-def get_MVAcalib_resolution(in_directory, MVAcalib_file, json_updo):
+def get_MVAcalib_resolution(in_directory, MVAcalib_file):
     import xgboost as xgb
     reg = xgb.XGBRegressor(tree_method="hist")
     reg.load_model(MVAcalib_file)
@@ -179,11 +178,6 @@ def get_MVAcalib_resolution(in_directory, MVAcalib_file, json_updo):
         num_pass = df2.Count()
         #df2.Report().Print()
 
-        from clustercorrections import UpDownStreamCorrector, LayerCorrector, MVAUpDownCorrector
-        updo_corr = UpDownStreamCorrector(json_updo)
-        layer_corr = LayerCorrector("layer_corrections.json")
-        mva_corr = MVAUpDownCorrector("tr_up_N4.json", "tr_do_N4.json")
-
         layers = np.array(
         [
             cols["Cluster_E0"],
@@ -201,37 +195,8 @@ def get_MVAcalib_resolution(in_directory, MVAcalib_file, json_updo):
         ]
         )
 
-        corrected_layers = layer_corr.layers_corrections(layers)
-        cluster_E = corrected_layers.sum(axis=0)
-        normalized_layers = np.divide(corrected_layers, cluster_E)
-
-        upstream_std = updo_corr.upstream_correction(cluster_E, corrected_layers[0])
-        downstream_std = updo_corr.downstream_correction(cluster_E, corrected_layers[11])
-
-        data_updo = np.vstack([normalized_layers, cluster_E, upstream_std, downstream_std])
-
-        upstream_MVA = mva_corr.upstream_correction(data_updo) * upstream_std
-        downstream_MVA = mva_corr.downstream_correction(data_updo) * downstream_std
-
-        corr_layer_e = cluster_E + upstream_MVA + downstream_MVA
-        h_e_c = ROOT.TH1D("hCorr", "hCorr", 500, -0.5, 0.5)
-        for e in corr_layer_e:
-            h_e_c.Fill((e - truth_e)/truth_e)
-
-        h_e_c.SetName(f"E_LayerCorrectedCaloClusters_{truth_e}")
-        c = ROOT.TCanvas()
-        h_e_c.Draw()
-        resp_e_c_v, resol_e_c_v = get_response_and_resol(h_e_c, h_e_c.GetMean(), h_e_c.GetStdDev())
-        c.Print(in_directory+'/'+h_e_c.GetName()+'.png')
-
-        row = [truth_e, "LayerCorrectedCaloClusters", num_init.GetValue(), num_pass.GetValue(), resp_e_c_v, resol_e_c_v, 0, 0, 0, 0]
-        results.append(row)
-
         cluster_E = layers.sum(axis=0)
         normalized_layers = np.divide(layers, cluster_E)
-
-        #data = np.vstack([normalized_layers, cluster_E, upstream_std, downstream_std])
-        #data = np.vstack([normalized_layers, cluster_E, upstream_MVA, downstream_MVA])
         data = np.vstack([normalized_layers, cluster_E])
 
         calib_e = reg.predict(data.T) * cluster_E
@@ -240,6 +205,7 @@ def get_MVAcalib_resolution(in_directory, MVAcalib_file, json_updo):
         for e in calib_e:
             h_e.Fill((e - truth_e)/truth_e)
 
+        c = ROOT.TCanvas()
         h_e.SetName(f"E_CalibratedCaloClusters_{truth_e}")
         h_e.Draw()
         c.SetLogy()
