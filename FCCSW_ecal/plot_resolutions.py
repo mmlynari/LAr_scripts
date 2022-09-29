@@ -32,7 +32,7 @@ def main():
     parser_f.set_defaults(func=compare_files)
     parser_f.add_argument('inputFile1', type=str, help='first input CSV file')
     parser_f.add_argument('inputFiles', nargs='+', type=str, help='other input CSV files')
-    parser_f.add_argument('-d', '--filesDescr', type=str, help='one-word description of each file (e.g geometry)')
+    parser_f.add_argument('-d', '--filesDescr', nargs='*', type=str, help='one-word description of each file (e.g geometry)')
     parser_f.add_argument('--all', action='store_true', help='make all possible plots')
     parser_f.add_argument('--clusters', nargs='+', type=str, help='cluster collections to plot')
     parser_f.add_argument('--distributions', nargs='+', type=str, help='distributions to plot')
@@ -101,7 +101,7 @@ def compare_files(args):
         if len(args.filesDescr) != len(all_files):
             print("ERROR: {0} descriptions provided for {1} files !".format(len(args.filesDescr), len(all_files)))
             return
-        tags = args.fileDescr
+        tags = args.filesDescr
     else:
         tags = [os.path.splitext(os.path.basename(f))[0] for f in all_files]
 
@@ -177,7 +177,8 @@ def postprocess_fig(fig, ax, name, leg_entries):
     if "resol" in name:
         ax.set_ylim(ymin=0)
     ax.set_xlim(xmin=0)
-    ax.legend(handles=leg_entries, loc='upper right')
+    loc = 'lower right' if "response" in name else 'upper right'
+    ax.legend(handles=leg_entries, loc=loc)
 
 def plot_fit(ax, energies, popts, color=None):
     xvals_curve = np.linspace(energies.min(), energies.max(), 200)
@@ -187,35 +188,41 @@ def plot_fit(ax, energies, popts, color=None):
     return curve
 
 def simple_plot(df, name, clusters, do_fit=False, tag=None):
+    if not "resol" in name:
+        do_fit = False
     energies, yvals, yvals_err, popts = extract_values(df, name, clusters, do_fit)
     fig, ax = prepare_fig(name, tag)
     leg_entries = [ax.errorbar(energies, yvals, yerr=yvals_err, label=f"{name}, {clusters}", marker='o',
         linestyle='none')]
-    if do_fit and "resol" in name:
+    if do_fit:
         leg_entries.append(plot_fit(ax, energies, popts))
     postprocess_fig(fig, ax, name, leg_entries)
     return fig
 
 def comparison_plot_clusters(df, name, clusters, do_fit=False, tag=None):
+    if not "resol" in name:
+        do_fit = False
     fig, ax = prepare_fig(name, tag)
     leg_entries = []
     for cl in clusters:
         energies, yvals, yvals_err, popts = extract_values(df, name, cl, do_fit)
         errbar = ax.errorbar(energies, yvals, yerr=yvals_err, label=f"{name}, {cl}", marker='o', linestyle='none')
         leg_entries.append(errbar)
-        if do_fit and "resol" in name:
+        if do_fit:
             leg_entries.append(plot_fit(ax, energies, popts, color=errbar[0].get_color()))
     postprocess_fig(fig, ax, name, leg_entries)
     return fig
 
 def comparison_plot_files(dfs, tags, name, clusters, do_fit=False):
+    if not "resol" in name:
+        do_fit = False
     fig, ax = prepare_fig(name, clusters)
     leg_entries = []
     for df, tag in zip(dfs, tags):
         energies, yvals, yvals_err, popts = extract_values(df, name, clusters, do_fit)
         errbar = ax.errorbar(energies, yvals, yerr=yvals_err, label=f"{tag}", marker='o', linestyle='none')
         leg_entries.append(errbar)
-        if do_fit and "resol" in name:
+        if do_fit:
             leg_entries.append(plot_fit(ax, energies, popts, color=errbar[0].get_color()))
     postprocess_fig(fig, ax, name, leg_entries)
     return fig

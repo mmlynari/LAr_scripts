@@ -303,7 +303,7 @@ createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
                                                  nEtaFinal = finE, nPhiFinal = finP,
                                                  energyThreshold = threshold,
                                                  energySharingCorrection = False,
-                                                 attachCells = False,
+                                                 attachCells = True,
                                                  OutputLevel = INFO
                                                  )
 createClusters.clusters.Path = "CaloClusters"
@@ -410,7 +410,8 @@ out = PodioOutput("out",
 #out.outputCommands = ["keep *"]
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop %s"%EcalBarrelCellsName, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
-out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop *ells*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells"]
+#out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop *ells*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells"]
+out.outputCommands = ["keep *", "drop HCal*", "drop ECalBarrel*", "drop emptyCaloCells"]
 
 import uuid
 out.filename = "output_fullCalo_SimAndDigi_withTopoCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
@@ -449,10 +450,10 @@ ApplicationMgr(
               #createHcalBarrelCells,
               createemptycells,
               createClusters,
-              createEcalBarrelPositionedCaloClusterCells,
+              #createEcalBarrelPositionedCaloClusterCells,
               correctCaloClusters,
               createTopoClusters,
-              createEcalBarrelPositionedCaloTopoClusterCells,
+              #createEcalBarrelPositionedCaloTopoClusterCells,
               correctCaloTopoClusters,
               out
               ],

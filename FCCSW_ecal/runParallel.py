@@ -120,6 +120,53 @@ class ClusterJobProcessor(JobProcessor):
         subprocess.run([command], shell=True)
 
 
+class ProductionJobProcessor(JobProcessor):
+    def __init__(self, script, outdir, output_tag):
+        super().__init__(script, outdir, output_tag)
+
+    def process(self, nevt, jobId):
+        return subprocess.run([f"fccrun {self.script} -n {nevt} --MomentumMin 200 --MomentumMax 120000 \
+            --filename {self.outdir}/{self.output_tag}_jobid_{jobId}.root --seedValue {jobId} {self.extra_args}"], shell=True)
+
+    def hadd(self):
+        filestub = f"{self.outdir}/{self.output_tag}"
+        return subprocess.run([f"hadd -f {filestub}.root {filestub}_jobid_*.root"], shell=True)
+
+    def rm(self):
+        return subprocess.run([f"rm -f {self.outdir}/{self.output_tag}_jobid_*.root"], shell=True)
+
+
+class ClusterProductionJobProcessor(ProductionJobProcessor):
+    def __init__(self, outdir, sampling_fracs=None, corrections=None):
+        script = "runTopoAndSlidingWindowAndCaloSim.py"
+        output_tag = "cluster_output"
+        super().__init__(script, outdir, output_tag)
+        if sampling_fracs:
+            self.extra_args += "--samplingFraction "
+            self.extra_args += ' '.join([str(s) for s in sampling_fracs])
+            self.extra_args += ' '
+        self.corrections = corrections
+
+    def preprocess(self):
+        upstream_str = ', '.join([str(s) for s in self.corrections['up']])
+        downstream_str = ', '.join([str(s) for s in self.corrections['do']])
+        command = f"sed -i 's/upstreamParameters =.*,/upstreamParameters = [[{upstream_str}]],/' run*SlidingWindowAndCaloSim.py"
+        subprocess.run([command], shell=True)
+        command = f"sed -i 's/downstreamParameters =.*,/downstreamParameters = [[{downstream_str}]],/' run*SlidingWindowAndCaloSim.py"
+        subprocess.run([command], shell=True)
+
+
+class UpstreamProductionJobProcessor(ProductionJobProcessor):
+    def __init__(self, outdir, sampling_fracs=None):
+        script = "fcc_ee_upstream_with_clusters.py"
+        output_tag = "upstream_output"
+        super().__init__(script, outdir, output_tag)
+        if sampling_fracs:
+            self.extra_args += "--samplingFraction.CreateCaloCellsBarrel.CalibrateECalBarrel "
+            self.extra_args += ' '.join([str(s) for s in sampling_fracs])
+            self.extra_args += ' '
+
+
 def run_the_jobs(jobProcessor, energies, nEvt, do_preprocess, do_process, do_postprocess):
     if do_preprocess:
         print("Doing preprocessing")
@@ -127,7 +174,7 @@ def run_the_jobs(jobProcessor, energies, nEvt, do_preprocess, do_process, do_pos
 
     with mp.Pool() as p:
         if do_process:
-            nEvtMaxPerJob = [int(3000*10000/e) for e in energies] # 3000 evts for 10GeV, with linear scaling
+            nEvtMaxPerJob = [int(3000*(10000./e)**1.5) for e in energies] # 3000 evts for 10GeV, with power scaling
             nEvtPerJob = [min(nEvt, nMax) for nMax in nEvtMaxPerJob]
             args = []
             jobId = 1
@@ -166,17 +213,52 @@ def run_the_jobs(jobProcessor, energies, nEvt, do_preprocess, do_process, do_pos
             jobProcessor.postprocess_glob()
 
 
+def run_production(jobProcessor, nEvt, do_preprocess, do_process):
+    if do_preprocess:
+        print("Doing preprocessing")
+        jobProcessor.preprocess()
+
+    with mp.Pool() as p:
+        if do_process:
+            nEvtMaxPerJob = 300
+            nEvtPerJob = min(nEvt, nEvtMaxPerJob)
+            args = []
+            jobId = 1
+            nEvtToLaunch = nEvt
+            while nEvtToLaunch>0:
+                nLaunched = min(nEvtToLaunch, nEvtPerJob)
+                args.append((nLaunched, jobId))
+                jobId += 1
+                nEvtToLaunch -= nLaunched
+
+            print("About to send jobs with parameters:")
+            for a in args:
+                print(a)
+            res = p.starmap_async(jobProcessor.process, args)
+            print("Retcodes of the jobs:")
+            print (res.get())
+            print()
+
+            print("Hadd'ing results:")
+            jobProcessor.hadd()
+
+            print("Removing intermediate files:")
+            jobProcessor.rm()
+
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--outDir', default='./', type=str, help='output directory for plots')
     parser.add_argument('--nEvt', default=1000, type=int, help='number of events to process per point')
-    parser.add_argument('--energies', default=[], action='extend', nargs='+', type=int,
+    parser.add_argument('--energies', default=[], action='extend', nargs='*', type=int,
             help='energies to process')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--sampling', action='store_true', help='compute the sampling fractions')
     group.add_argument('--upstream', action='store_true', help='compute the upstream corrections')
     group.add_argument('--clusters', action='store_true', help='run fixed size and topo clusterings')
+    group.add_argument('--production', action='store_true', help='production run of clusters of all energies')
+    group.add_argument('--upstreamProd', action='store_true', help='production run of all energies for upstream')
     parser.add_argument('--SF', default='', type=str, help='JSON file containing sampling fractions')
     parser.add_argument('--corrections', default='', type=str, help='JSON file containing upstream and downstream corrections')
     args = parser.parse_args()
@@ -209,6 +291,12 @@ def main():
     elif args.clusters:
         clJobPr = ClusterJobProcessor(args.outDir, sampling_fracs=sampling_fracs, corrections=corrections)
         run_the_jobs(clJobPr, args.energies, args.nEvt, True, True, False)
+    elif args.production:
+        clJobPr = ClusterProductionJobProcessor(args.outDir, sampling_fracs=sampling_fracs, corrections=corrections)
+        run_production(clJobPr, args.nEvt, True, True)
+    elif args.upstreamProd:
+        upJobPr = UpstreamProductionJobProcessor(args.outDir, sampling_fracs=sampling_fracs)
+        run_production(upJobPr, args.nEvt, False, True)
 
 
 if __name__ == "__main__":
