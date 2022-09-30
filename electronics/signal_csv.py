@@ -18,7 +18,7 @@ current = []
 with open("input_signal.txt", 'w') as current_data:
     current_data.write("# ns uA\n")
     for time in times:
-        current_data.write("%d %f\n"%(time, get_signal_current(time)))
+        current_data.write("%f %f\n"%(time, get_signal_current(time)))
         current.append(get_signal_current(time))
     current_data.close()
 
@@ -26,7 +26,7 @@ with open("input_signal.txt", 'w') as current_data:
 plt.figure("Input current")
 plt.plot(np.array(times), np.array(current))
 axes = plt.gca()
-axes.set_xscale('log')
+#axes.set_xscale('log')
 #axes.set_xlim([0-step, rise_time + drift_time + step])
 #axes.set_xlim([p1x_rising - 5, drift_time + rise_time + 5])
 #axes.set_ylim([p1y_rising, p2y_rising + p2y_rising * 0.1])

@@ -3,18 +3,18 @@ import copy
 
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
-use_pythia = False
-addNoise = True
+use_pythia = True
+addNoise = False
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
-momentum = 1 # in GeV
+momentum = 10 # in GeV
 #thetaMin = 90.25 # degrees
 #thetaMax = 90.25 # degrees
 thetaMin = 50 # degrees
 thetaMax = 130 # degrees
-pdgCode = 11 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
+pdgCode = 22 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 magneticField = False
 
 from Gaudi.Configuration import *
@@ -30,10 +30,15 @@ genAlg = GenAlg()
 if use_pythia:
     from Configurables import PythiaInterface
     pythia8gentool = PythiaInterface()
-    pythia8gentool.pythiacard = os.path.join(os.environ.get('PWD', ''), "MCGeneration/ee_Zgamma_inclusive.cmd")
+    pythia8gentool.pythiacard = os.path.join(os.environ.get('PWD', ''), "MCGeneration/ee_Zgamma_tautau.cmd")
     #pythia8gentool.pythiacard = "MCGeneration/ee_Z_ee.cmd"
     pythia8gentool.printPythiaStatistics = False
     pythia8gentool.pythiaExtraSettings = [""]
+    pythia8gentool.doEvtGenDecays = True
+    pythia8gentool.EvtGenDecayFile = "MCGeneration/DECAY.DEC"
+    pythia8gentool.UserDecayFile = "MCGeneration/tauDecay.dec"
+    pythia8gentool.EvtGenParticleDataFile = "MCGeneration/evt.pdl"
+
     genAlg.SignalProvider = pythia8gentool
     # to smear the primary vertex position:
     #from Configurables import GaussSmearVertex
@@ -94,8 +99,10 @@ geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist=
 
 # Fixed seed to have reproducible results, change it for each job if you split one production into several jobs
 # Mind that if you leave Gaudi handle random seed and some job start within the same second (very likely) you will have duplicates
-geantservice.randomNumbersFromGaudi = False
-geantservice.seedValue = 4242
+#geantservice.randomNumbersFromGaudi = False
+#geantservice.seedValue = 42
+geantservice.randomNumbersFromGaudi = True
+geantservice.seedValue = 3
 
 # Range cut
 geantservice.g4PreInitCommands += ["/run/setCut 0.1 mm"]
@@ -192,7 +199,7 @@ cell_creator_to_use = createEcalBarrelCells
 # generate noise for each cell
 if addNoise:
     #ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCSW_201207_geometry/LAr_scripts/geometry/noise_capa/elecNoise_ecalBarrelFCCee.root"
-    ecalBarrelNoisePath = os.environ['FCCBASEDIR']+"/LAr_scripts/geometry/noise_capa_220216/elecNoise_ecalBarrelFCCee.root"
+    ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/geometry/noise_capa_220216/elecNoise_ecalBarrelFCCee.root"
     ecalBarrelNoiseHistName = "h_elecNoise_fcc_"
     from Configurables import NoiseCaloCellsFromFileTool
     noiseBarrel = NoiseCaloCellsFromFileTool("NoiseBarrel",
@@ -322,9 +329,9 @@ correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                           firstLayerIDs = [0],
                                           lastLayerIDs = [11],
                                           readoutNames = [ecalBarrelReadoutNamePhiEta],
-                                          upstreamParameters = [[0.10117975886467132, -11.148652656150412, -153.83069140265266, 1.027178560683188, -2.0737543169883708, -15.145433453051092]],
+                                          upstreamParameters = [[0.09959407679400918, -10.509139028589276, -141.62311185316685, 2.8931723031040435, -397.6783011336018, -317.53288225142427]],
                                           upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          downstreamParameters = [[-0.005560462362280864, 0.00730077810678934, 0.9139740737889959, -0.5787743437971242, 0.05648861283780275, 11.13272832953268]],
+                                          downstreamParameters = [[0.002296666086130359, 0.004644766599619741, 1.4031343062273582, -1.8105436592714355, -0.02976924247722723, 12.875501324136625]],
                                           downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel = INFO
                                           )
@@ -351,15 +358,13 @@ createTopoInput.hcalFwdCells.Path = "emptyCaloCells"
 
 readNeighboursMap = TopoCaloNeighbours("ReadNeighboursMap",
                                       #fileName = "http://fccsw.web.cern.ch/fccsw/testsamples/calo/neighbours_map_barrel.root",
-                                      #fileName = "/eos/user/b/brfranco/rootfile_storage/neighbours_map_barrel.root",
-                                      fileName = os.environ['FCCBASEDIR']+"/LAr_scripts/FCCSW_ecal/neighbours_map_barrel.root",
+                                      fileName = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/test_recipe_April2022/LAr_scripts/FCCSW_ecal/neighbours_map_barrel.root",
                                       OutputLevel = INFO)
 
 #Noise levels per cell
 readNoisyCellsMap = TopoCaloNoisyCells("ReadNoisyCellsMap",
                                        #fileName = "http://fccsw.web.cern.ch/fccsw/testsamples/calo/cellNoise_map_electronicsNoiseLevel.root",
-                                       #fileName = "/eos/user/b/brfranco/rootfile_storage/cellNoise_map_electronicsNoiseLevel.root",
-                                       fileName = os.environ['FCCBASEDIR']+"/LAr_scripts/FCCSW_ecal/cellNoise_map_electronicsNoiseLevel.root",
+                                       fileName = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/FCCSW_ecal/cellNoise_map_electronicsNoiseLevel.root",
                                        OutputLevel = INFO)
 
 createTopoClusters = CaloTopoClusterFCCee("CreateTopoClusters",
@@ -395,9 +400,9 @@ correctCaloTopoClusters = CorrectCaloClusters("correctCaloTopoClusters",
                                           firstLayerIDs = [0],
                                           lastLayerIDs = [11],
                                           readoutNames = [ecalBarrelReadoutNamePhiEta],
-                                          upstreamParameters = [[0.10117975886467132, -11.148652656150412, -153.83069140265266, 1.027178560683188, -2.0737543169883708, -15.145433453051092]],
+                                          upstreamParameters = [[0.09959407679400918, -10.509139028589276, -141.62311185316685, 2.8931723031040435, -397.6783011336018, -317.53288225142427]],
                                           upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          downstreamParameters = [[-0.005560462362280864, 0.00730077810678934, 0.9139740737889959, -0.5787743437971242, 0.05648861283780275, 11.13272832953268]],
+                                          downstreamParameters = [[0.002296666086130359, 0.004644766599619741, 1.4031343062273582, -1.8105436592714355, -0.02976924247722723, 12.875501324136625]],
                                           downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel = INFO
                                           )
@@ -409,12 +414,12 @@ out = PodioOutput("out",
 
 #out.outputCommands = ["keep *"]
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
-#out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop %s"%EcalBarrelCellsName, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
+out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop CaloTopoClusterCells", "drop %s"%EcalBarrelCellsName]#, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop *ells*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells"]
-out.outputCommands = ["keep *", "drop HCal*", "drop ECalBarrel*", "drop emptyCaloCells"]
 
 import uuid
 out.filename = "output_fullCalo_SimAndDigi_withTopoCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
+#out.filename = "check_for_Nicolas.root"
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
@@ -433,7 +438,7 @@ out.AuditExecute = True
 
 from Configurables import EventCounter
 event_counter = EventCounter('event_counter')
-event_counter.Frequency = 10
+event_counter.Frequency = 1
 
 from Configurables import ApplicationMgr
 ApplicationMgr(
@@ -450,10 +455,10 @@ ApplicationMgr(
               #createHcalBarrelCells,
               createemptycells,
               createClusters,
-              #createEcalBarrelPositionedCaloClusterCells,
+              createEcalBarrelPositionedCaloClusterCells,
               correctCaloClusters,
               createTopoClusters,
-              #createEcalBarrelPositionedCaloTopoClusterCells,
+              createEcalBarrelPositionedCaloTopoClusterCells,
               correctCaloTopoClusters,
               out
               ],
