@@ -159,7 +159,7 @@ def get_MVAcalib_resolution(in_directory, MVAcalib_file):
             .Define(f"good_clusters", f"{clusters}[clusters_energy>0.1]")
             .Filter(f"good_clusters.size()>0", ">=1 cluster with E>100MeV")
             .Define(f"good_clusters_e", f"getCaloCluster_energy(good_clusters)")
-            .Define(f"good_clusters_EnergyInLayers", f"getCaloCluster_energyInLayers(good_clusters, {cells})")
+            .Define(f"good_clusters_EnergyInLayers", f"getCaloCluster_energyInLayers(good_clusters, {cells}, 12)")
             .Define(f"lc_idx", f"ArgMax(good_clusters_e)")
             .Define(f"Cluster_E", f"good_clusters_e[lc_idx]")
             )

@@ -34,7 +34,7 @@ def run(in_directory, clusters, out_file, json_updo):
         df
         .Define("E_truth_v", "sqrt(genParticles.momentum.y*genParticles.momentum.y+genParticles.momentum.x*genParticles.momentum.x+genParticles.momentum.z*genParticles.momentum.z)")
         .Define("Truth_E", "E_truth_v[0]")
-        .Define(f"{clusters}_EnergyInLayers", f"getCaloCluster_energyInLayers({clusters}, {cells})")
+        .Define(f"{clusters}_EnergyInLayers", f"getCaloCluster_energyInLayers({clusters}, {cells}, 12)")
         .Alias(f"clusters_energy", f"{clusters}.energy")
         .Define(f"lc_idx", f"ArgMax(clusters_energy)")
         .Define(f"Cluster_E", f"clusters_energy[lc_idx]")
