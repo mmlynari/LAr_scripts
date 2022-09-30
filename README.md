@@ -36,7 +36,7 @@ Some setup needed:
 cd FCCAnalyses
 export PYTHONPATH=$PWD:$PYTHONPATH
 export LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH
-export ROOT_INCLUDE_PATH=$PWD/install/include/FCCAnalyses:$ROOT_INCLUDE_PATH
+export ROOT_INCLUDE_PATH=$PWD/install/include:$ROOT_INCLUDE_PATH
 export LD_LIBRARY_PATH=`python -m awkward.config --libdir`:$LD_LIBRARY_PATH
 cd ..
 ```
@@ -196,9 +196,7 @@ File in FCC EDM format with collections for each type of cluster, for simulated 
 for ECal cells.
 
 #### Training the MVA calibration
-The MVA calibration relies on XGBoost. By default it is not part of FCC software.
-For now you can install it using pip:
-`pip3 install xgboost`
+The MVA calibration relies on XGBoost. It has been available in FCC software since October 1, 2022.
 
 Training:
 `python training.py CaloClusters -i production/ --json upstream/corr_params_1d.json -o training.json`
