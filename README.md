@@ -14,8 +14,7 @@ source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
 
 ### Getting LAr_scripts package
 ```
-git clone git@github.com:gartrog/LAr_scripts.git
-git checkout nicolas
+git clone git@github.com:BrieucF/LAr_scripts.git
 ```
 
 ### Getting additional packages
@@ -27,8 +26,7 @@ Package also used for FCC physics analyses. Contains useful routines to create n
 with calo information from FCC EDM files: `CaloNtupleizer` class.
 
 ```
-git clone git@github.com:gartrog/FCCAnalyses.git
-git checkout nicolas
+git clone git@github.com:HEP-FCC/FCCAnalyses.git
 ```
 
 Some setup needed:
@@ -67,8 +65,7 @@ This package contains all the detector descriptions as xml files, and the detail
 geometry is implemented in cpp files.
 
 ```
-git clone git@github.com:gartrog/FCCDetectors.git
-git checkout nicolas
+git clone git@github.com:HEP-FCC/FCCDetectors.git
 ```
 
 Compiling:
@@ -190,6 +187,9 @@ jobOption to run:
 Generate single electrons. Create calorimeter cells. Add noise if needed. Create calo towers.
 Create fixed size clusters. Correct the clusters. Create the topo clusters. Correct the topo
 clusters. (correction means applying upstream and downstream corrections)
+
+WARNING: edit this file and check that the ROOT files related to noise are accessible for you
+(there are several options whether you are at CERN or elsewhere)
 
 Output:
 File in FCC EDM format with collections for each type of cluster, for simulated particles and
