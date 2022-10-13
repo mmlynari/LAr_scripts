@@ -119,6 +119,9 @@ if __name__ == "__main__":
     campaign_name = args.campaignName
     if not os.path.isdir(campaign_name):
         os.mkdir(campaign_name)
+    # copy the gaudi config file in the campaign folder
+    copyfile(gaudi_config_path, os.path.join(campaign_name, os.path.basename(gaudi_config_path)))
+    gaudi_config_path = os.path.join(os.environ.get("PWD", ""), campaign_name, os.path.basename(gaudi_config_path))
     outfile_storage = os.path.join(storage_path, campaign_name)
     if not os.path.isdir(outfile_storage):
         os.mkdir(outfile_storage)
