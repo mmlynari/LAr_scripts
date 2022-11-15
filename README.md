@@ -12,9 +12,15 @@ export FCCBASEDIR=$PWD
 source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
 ```
 
-### Getting LAr_scripts package
+### Getting LAr_scripts package and the required data files
 ```
 git clone git@github.com:BrieucF/LAr_scripts.git
+# if outside CERN
+scp yourlogin@lxplus.cern.ch:/eos/user/b/brfranco/rootfile_storage/neighbours_map_barrel.root LAr_scripts/data/
+scp yourlogin@lxplus.cern.ch:/eos/user/b/brfranco/rootfile_storage/cellNoise_map_electronicsNoiseLevel.root LAr_scripts/data/
+# if at CERN
+cp /eos/user/b/brfranco/rootfile_storage/neighbours_map_barrel.root LAr_scripts/data/
+cp /eos/user/b/brfranco/rootfile_storage/cellNoise_map_electronicsNoiseLevel.root LAr_scripts/data/
 ```
 
 ### Getting additional packages
