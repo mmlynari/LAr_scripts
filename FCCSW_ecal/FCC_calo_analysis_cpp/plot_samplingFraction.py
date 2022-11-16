@@ -1,4 +1,5 @@
 import calo_init
+import json
 
 #python plot_samplingFraction.py /eos/user/b/brfranco/rootfile_storage/202011_condor_calib_5kEvt/calibration_output_pdgID_22_pMin_?_pMax_?_thetaMin_90_thetaMax_90.root 1 10 50 100 -r 1000 10000 50000 100000 --totalNumLayers 12 --preview -outputfolder plots_sampling_fraction_201124 --plotSFvsEnergy
 #python plot_samplingFraction.py /eos/user/b/brfranco/rootfile_storage/202011_condor_calib_5kEvt/calibration_output_pdgID_22_pMin_50000_pMax_50000_thetaMin_?_thetaMax_?.root 50 70 90 -r 50 70 90 --totalNumLayers 12 --preview -outputfolder plots_sampling_fraction_theta_50GeV --plotSFvsEnergy --theta
@@ -19,6 +20,7 @@ calo_init.parser.add_argument("--preview", help="Plot preview of fits", action =
 calo_init.parser.add_argument("--plotSFvsEnergy", help="Plot sf as a function of energy", action = 'store_true')
 calo_init.parser.add_argument("--theta", help="Plot sf as a function of theta instead of energy, plotSFvsEnergy must also be set to true", action = 'store_true')
 calo_init.parser.add_argument("--sed", help="Modify the sampling fraction in the FCCSW python configs", action = 'store_true')
+calo_init.parser.add_argument("--json", help="Store the sampling fractions in a json file", type=str, default = '')
 calo_init.parser.add_argument("--specialLabel", help="Additional label to be plotted", type=str, default = "")
 calo_init.parse_args()
 calo_init.print_config()
@@ -99,6 +101,7 @@ for ifile, filename in enumerate(calo_init.filenamesIn):
     else:
         fitoptions = "SQRN"
     for islice, h in enumerate(hmerged):
+        h.Print()
         fitPre = TF1("fitPre","gaus", h.GetMean() - 1. * h.GetRMS(), h.GetMean() + 1. * h.GetRMS())
         #h.Rebin(10)
         resultPre = h.Fit(fitPre, fitoptions)
@@ -149,6 +152,15 @@ if calo_init.args.sed:
     os.system("sed -i 's/samplingFractions =.*,/samplingFractions = %s,/' fcc_ee_upstream_inclinedEcal.py"%string_for_fccsw) # it has to be launched from FCCSW_ecal folder
     os.system("sed -i 's/SFfcc =.*/SFfcc = %s/' ../geometry/create_noise_file* caloNtupleAnalyzer/energy_vs_depth_wrt_noise.py"%string_for_fccsw) # it has to be launched from FCCSW_ecal folder
     #print(command + " ../../k4RecCalorimeter/RecFCCeeCalorimeter/tests/options/* ../../FCCSW/Examples/options/run_calo_fullsim_fccee.py")
+
+# MN: Add json output
+if calo_init.args.json:
+    with open(calo_init.args.json, 'w') as jsonfile:
+        to_json = []
+        for islice in range(0, Nslicesmerged):
+            to_json.extend( [gSF.GetY()[islice]] * calo_init.args.merge[islice] )
+        json.dump(to_json, jsonfile)
+
 
 canv = prepare_single_canvas('sf_e'+str(energy)+'GeV', 'Sampling fraction for '+str(energy)+'GeV')
 
