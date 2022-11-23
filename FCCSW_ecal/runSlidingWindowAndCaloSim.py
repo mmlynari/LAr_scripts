@@ -2,7 +2,7 @@ import os
 
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
-use_pythia = True
+use_pythia = False
 addNoise = False
 
 # Input for simulations (momentum is expected in GeV!)
