@@ -11,9 +11,12 @@ import os
 #f_sig = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/electronics/signal_csvs/cell7_input_hv_0_shields_allCells_83Ohms_longXrange.csv"
 #f_sig = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/electronics/signal_csvs/cell7_input_hv_0_shields_allCells_83Ohms_longXrange_zeroPaddedUntil200ns.csv"
 #f_sig = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/electronics/signal_csvs/cell7_input_hv_0_shields_allCells_83Ohms_100psStepUniform_2usecrange.csv"
-f_sig = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/electronics/signal_csvs/cell7_input_hv_1_shields_allCells_83Ohm_2usecXrange.csv"
+#f_sig = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/electronics/signal_csvs/cell7_input_hv_1_shields_allCells_83Ohm_2usecXrange.csv"
+#f_sig = "/eos/user/b/brfranco/EMDesignFiles/cross_talk_results/one_tower_up_to_cell6_zero_shields.csv"
+f_sig = "/eos/user/b/brfranco/EMDesignFiles/cross_talk_results/one_tower_up_to_cell6_two_shields_AirGap1do8mm.csv"
 #plotfolder = "xtalk_plots_cell7input_0shields_longXrange_zeroPaddedTill200ns"
-plotfolder = "xtalk_plots_cell7input_1shields_83Ohms_100psStepUniform"
+#plotfolder = "xtalk_plots_cell7input_1shields_83Ohms_100psStepUniform"
+plotfolder = "xtalk_plots_ANSYS_prototype_v0_cell7input_2shields_AirGap1do8mm"
 if not os.path.isdir(plotfolder):
     os.mkdir(plotfolder)
 
@@ -50,7 +53,7 @@ max_time_from_ansys = df_sig[x_axis_string_from_csv].max()
 dict_shapingTime_cell_peakShaper = {}
 sampling_frequency = 1 / df_sig[x_axis_string_from_csv].diff()[1]
 print("Sampling frequency: ", sampling_frequency)
-taus = [0, 20, 50, 70, 100, 150, 200, 300]
+taus = [0, 20, 50, 100, 150, 200, 300]
 for tau in taus:
     print("Shaping time: ", tau)
     # define CR-RC^2 filter
@@ -127,14 +130,9 @@ for tau in taus:
 body_string = body_string[:-1]
 #print(body_string)
 template_string_xtalk_table = template_string_xtalk_table.replace('BODY', body_string)
+
+with open(os.path.join(plotfolder, "table.tex"), 'a') as texfile:
+    texfile.write(template_string_xtalk_table)
 print(template_string_xtalk_table)
-
-
-
-
-
-
-
-
-
-
+print(os.path.join(plotfolder, "table.tex"), " written.")
+    

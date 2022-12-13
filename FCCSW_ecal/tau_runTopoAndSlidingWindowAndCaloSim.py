@@ -1,18 +1,19 @@
 import os
+import copy
 
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
-use_pythia = False
+use_pythia = True
 addNoise = False
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
 # theta from 80 to 100 degrees corresponds to -0.17 < eta < 0.17 
-momentum = 0.1 # in GeV
-thetaMin = 90.25 # degrees
-thetaMax = 90.25 # degrees
-#thetaMin = 50 # degrees
-#thetaMax = 130 # degrees
+momentum = 10 # in GeV
+#thetaMin = 90.25 # degrees
+#thetaMax = 90.25 # degrees
+thetaMin = 50 # degrees
+thetaMax = 130 # degrees
 pdgCode = 22 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 magneticField = False
 
@@ -29,10 +30,15 @@ genAlg = GenAlg()
 if use_pythia:
     from Configurables import PythiaInterface
     pythia8gentool = PythiaInterface()
-    pythia8gentool.pythiacard = os.path.join(os.environ.get('PWD', ''), "MCGeneration/ee_Zgamma_inclusive.cmd")
+    pythia8gentool.pythiacard = os.path.join(os.environ.get('PWD', ''), "MCGeneration/ee_Zgamma_tautau.cmd")
     #pythia8gentool.pythiacard = "MCGeneration/ee_Z_ee.cmd"
     pythia8gentool.printPythiaStatistics = False
     pythia8gentool.pythiaExtraSettings = [""]
+    pythia8gentool.doEvtGenDecays = True
+    pythia8gentool.EvtGenDecayFile = "MCGeneration/DECAY.DEC"
+    pythia8gentool.UserDecayFile = "MCGeneration/tauDecay.dec"
+    pythia8gentool.EvtGenParticleDataFile = "MCGeneration/evt.pdl"
+
     genAlg.SignalProvider = pythia8gentool
     # to smear the primary vertex position:
     #from Configurables import GaussSmearVertex
@@ -93,8 +99,10 @@ geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist=
 
 # Fixed seed to have reproducible results, change it for each job if you split one production into several jobs
 # Mind that if you leave Gaudi handle random seed and some job start within the same second (very likely) you will have duplicates
-geantservice.randomNumbersFromGaudi = False
-geantservice.seedValue = 4242
+#geantservice.randomNumbersFromGaudi = False
+#geantservice.seedValue = 42
+geantservice.randomNumbersFromGaudi = True
+geantservice.seedValue = 3
 
 # Range cut
 geantservice.g4PreInitCommands += ["/run/setCut 0.1 mm"]
@@ -200,7 +208,8 @@ if addNoise:
                                              elecNoiseHistoName = ecalBarrelNoiseHistName,
                                              activeFieldName = "layer",
                                              addPileup = False,
-                                             filterNoiseThreshold = 2,
+                                             filterNoiseThreshold = 0,
+                                             scaleFactor = 1/1000.,
                                              numRadialLayers = 12)
 
     from Configurables import TubeLayerPhiEtaCaloTool
@@ -208,9 +217,9 @@ if addNoise:
                                              readoutName = ecalBarrelReadoutNamePhiEta,
                                              activeVolumeName = "LAr_sensitive",
                                              activeFieldName = "layer",
+                                             activeVolumesNumber = 12,
                                              fieldNames = ["system"],
                                              fieldValues = [4])
-                                             #activeVolumesNumber = 12)
     # cells with noise not filtered
     createEcalBarrelCellsNoise = CreateCaloCells("CreateECalBarrelCellsNoise",
                                    doCellCalibration=False,
@@ -259,6 +268,7 @@ from Configurables import CreateEmptyCaloCellsCollection
 createemptycells = CreateEmptyCaloCellsCollection("CreateEmptyCaloCells")
 createemptycells.cells.Path = "emptyCaloCells"
 
+# Produce sliding window clusters
 from Configurables import CaloTowerTool
 towers = CaloTowerTool("towers",
                                deltaEtaTower = 0.01, deltaPhiTower = 2*_pi/768.,
@@ -289,7 +299,7 @@ dupP = 13
 finE = 9
 finP = 17
 # Minimal energy to create a cluster in GeV (FCC-ee detectors have to reconstruct low energy particles)
-threshold = 0.05
+threshold = 0.040
 
 from Configurables import CreateCaloClustersSlidingWindow
 createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
@@ -299,7 +309,7 @@ createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
                                                  nEtaDuplicates = dupE, nPhiDuplicates = dupP,
                                                  nEtaFinal = finE, nPhiFinal = finP,
                                                  energyThreshold = threshold,
-                                                 energySharingCorrection = True,
+                                                 energySharingCorrection = False,
                                                  attachCells = True,
                                                  OutputLevel = INFO
                                                  )
@@ -319,9 +329,80 @@ correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                           firstLayerIDs = [0],
                                           lastLayerIDs = [11],
                                           readoutNames = [ecalBarrelReadoutNamePhiEta],
-                                          upstreamParameters = [[0.09737335230414161, -10.387181371085651, -146.34314022178035, 1.8135025646800507, -1.3729969471683934, -0.6449866228721779]],
+                                          upstreamParameters = [[0.09959407679400918, -10.509139028589276, -141.62311185316685, 2.8931723031040435, -397.6783011336018, -317.53288225142427]],
                                           upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          downstreamParameters = [[0.0005295508692700276, 0.005906234225977198, 1.0551521001079711, -1.88609690802949, -0.11356707602430005, 17.525300224679565]],
+                                          downstreamParameters = [[0.002296666086130359, 0.004644766599619741, 1.4031343062273582, -1.8105436592714355, -0.02976924247722723, 12.875501324136625]],
+                                          downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
+                                          OutputLevel = INFO
+                                          )
+
+# TOPO CLUSTERS PRODUCTION
+from Configurables import CaloTopoClusterInputTool, CaloTopoClusterFCCee, TopoCaloNeighbours, TopoCaloNoisyCells 
+createTopoInput = CaloTopoClusterInputTool("CreateTopoInput",
+                                          ecalBarrelReadoutName = ecalBarrelReadoutNamePhiEta,
+                                          ecalEndcapReadoutName = "",
+                                          ecalFwdReadoutName = "",
+                                          hcalBarrelReadoutName = "",
+                                          hcalExtBarrelReadoutName = "",
+                                          hcalEndcapReadoutName = "",
+                                          hcalFwdReadoutName = "",
+                                          OutputLevel = INFO)
+#createTopoInput.ecalBarrelCells.Path = EcalBarrelCellsName
+createTopoInput.ecalBarrelCells.Path = "ECalBarrelPositionedCells"
+createTopoInput.ecalEndcapCells.Path = "emptyCaloCells" 
+createTopoInput.ecalFwdCells.Path = "emptyCaloCells" 
+createTopoInput.hcalBarrelCells.Path = "emptyCaloCells" 
+createTopoInput.hcalExtBarrelCells.Path = "emptyCaloCells" 
+createTopoInput.hcalEndcapCells.Path = "emptyCaloCells"
+createTopoInput.hcalFwdCells.Path = "emptyCaloCells"
+
+readNeighboursMap = TopoCaloNeighbours("ReadNeighboursMap",
+                                      #fileName = "http://fccsw.web.cern.ch/fccsw/testsamples/calo/neighbours_map_barrel.root",
+                                      fileName = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/test_recipe_April2022/LAr_scripts/FCCSW_ecal/neighbours_map_barrel.root",
+                                      OutputLevel = INFO)
+
+#Noise levels per cell
+readNoisyCellsMap = TopoCaloNoisyCells("ReadNoisyCellsMap",
+                                       #fileName = "http://fccsw.web.cern.ch/fccsw/testsamples/calo/cellNoise_map_electronicsNoiseLevel.root",
+                                       fileName = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/FCCSW_ecal/cellNoise_map_electronicsNoiseLevel.root",
+                                       OutputLevel = INFO)
+
+createTopoClusters = CaloTopoClusterFCCee("CreateTopoClusters",
+                                     TopoClusterInput = createTopoInput,
+                                     #expects neighbours map from cellid->vec < neighbourIds >
+                                     neigboursTool = readNeighboursMap,
+                                     #tool to get noise level per cellid
+                                     noiseTool = readNoisyCellsMap,
+                                     #cell positions tools for all sub - systems
+                                     positionsECalBarrelTool = cellPositionEcalBarrelTool,
+                                     #positionsHCalBarrelTool = HCalBcells,
+                                     #positionsHCalExtBarrelTool = HCalExtBcells,
+                                     #positionsEMECTool = EMECcells,
+                                     #positionsHECTool = HECcells,
+                                     #positionsEMFwdTool = ECalFwdcells,
+                                     #positionsHFwdTool = HCalFwdcells,
+                                     seedSigma = 4,
+                                     neighbourSigma = 2,
+                                     lastNeighbourSigma = 0,
+                                     OutputLevel = INFO) 
+createTopoClusters.clusters.Path ="CaloTopoClusters" 
+createTopoClusters.clusterCells.Path = "CaloTopoClusterCells"
+
+createEcalBarrelPositionedCaloTopoClusterCells = CreateCaloCellPositionsFCCee("ECalBarrelPositionedCaloTopoClusterCells", OutputLevel = INFO)
+createEcalBarrelPositionedCaloTopoClusterCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCaloTopoClusterCells.hits.Path = "CaloTopoClusterCells"
+createEcalBarrelPositionedCaloTopoClusterCells.positionedHits.Path = "PositionedCaloTopoClusterCells"
+
+correctCaloTopoClusters = CorrectCaloClusters("correctCaloTopoClusters",
+                                          inClusters = createTopoClusters.clusters.Path,
+                                          outClusters = "Corrected"+createTopoClusters.clusters.Path,
+                                          numLayers = [12],
+                                          firstLayerIDs = [0],
+                                          lastLayerIDs = [11],
+                                          readoutNames = [ecalBarrelReadoutNamePhiEta],
+                                          upstreamParameters = [[0.09959407679400918, -10.509139028589276, -141.62311185316685, 2.8931723031040435, -397.6783011336018, -317.53288225142427]],
+                                          upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
+                                          downstreamParameters = [[0.002296666086130359, 0.004644766599619741, 1.4031343062273582, -1.8105436592714355, -0.02976924247722723, 12.875501324136625]],
                                           downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel = INFO
                                           )
@@ -331,11 +412,14 @@ from Configurables import PodioOutput
 out = PodioOutput("out",
                   OutputLevel=INFO)
 
-out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
-#out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop %s"%EcalBarrelCellsName, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
+#out.outputCommands = ["keep *"]
+#out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
+out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop CaloTopoClusterCells", "drop %s"%EcalBarrelCellsName]#, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
+#out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop *ells*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells"]
 
 import uuid
-out.filename = "output_fullCalo_SimAndDigi_withCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
+out.filename = "output_fullCalo_SimAndDigi_withTopoCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
+#out.filename = "check_for_Nicolas.root"
 
 #CPU information
 from Configurables import AuditorSvc, ChronoAuditor
@@ -349,11 +433,12 @@ createEcalBarrelCellsStep1.AuditExecute = True
 resegmentEcalBarrel.AuditExecute = True
 cell_creator_to_use.AuditExecute = True
 #createHcalBarrelCells.AuditExecute = True
+createTopoClusters.AuditExecute = True 
 out.AuditExecute = True
 
 from Configurables import EventCounter
 event_counter = EventCounter('event_counter')
-event_counter.Frequency = 10
+event_counter.Frequency = 1
 
 from Configurables import ApplicationMgr
 ApplicationMgr(
@@ -372,10 +457,13 @@ ApplicationMgr(
               createClusters,
               createEcalBarrelPositionedCaloClusterCells,
               correctCaloClusters,
+              createTopoClusters,
+              createEcalBarrelPositionedCaloTopoClusterCells,
+              correctCaloTopoClusters,
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 100,
+    EvtMax   = 10,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )

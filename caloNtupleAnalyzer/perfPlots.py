@@ -10,6 +10,8 @@ from copy import copy
 
 import gStyle
 
+print("Launch without sourcing k4 environment!!")
+
 #ROOT.gROOT.ProcessLine(".L FCCAnalysesDict.C+")
 ROOT.gROOT.ProcessLine(".L /afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses/install/lib/libFCCAnalyses.C+")
 
@@ -44,6 +46,12 @@ def draw_resol_canvas(th1, prefix, variable):
         name = variable.replace("rel", "")
         th1.GetXaxis().SetTitle("%s_{Reco} - %s_{Gen}/%s_{Reco}"%(name, name, name))
         th1.GetXaxis().SetTitleOffset(1.2)
+        if 'eGenDivided' in variable:
+            th1.GetXaxis().SetTitle("E_{Reco} - E_{Gen}/E_{Gen}")
+    elif 'esponse' in variable:
+        th1.GetXaxis().SetTitle("#frac{E_{Reco}}{E_{Gen}}")
+        th1.GetXaxis().SetTitleOffset(1.2)
+
     else:
         #th1.GetXaxis().SetTitle("#{0}_{Reco} - #{0}_{Gen}".format(variable))
         th1.GetXaxis().SetTitle("#%s_{Reco} - #%s_{Gen}"%(variable, variable))
@@ -59,6 +67,8 @@ cutoff_dPhi = 0.1
 cutoff_dTheta = 0.1
 cutoff_relE = 0.5
 dict_energy_relEresol_error = {}
+dict_energy_relEresol_eGenDivided_error = {}
+dict_energy_energyResponseResol_error = {}
 dict_energy_efficiency_error = {}
 dict_energy_phiResol_error = {}
 dict_energy_thetaResol_error = {}
@@ -73,6 +83,8 @@ for inputFile in inputFiles:
     energy = str(energy_gev_float).replace(".","dot")
     print(energy)
     dict_energy_relEresol_error[energy] = []
+    dict_energy_relEresol_eGenDivided_error[energy] = []
+    dict_energy_energyResponseResol_error[energy] = []
     dict_energy_phiResol_error[energy] = []
     dict_energy_thetaResol_error[energy] = []
     dict_energy_cells_relEresol_error[energy] = []
@@ -91,6 +103,8 @@ for inputFile in inputFiles:
     th1_Eresol = ROOT.TH1F(prefix + "energy_resolution", prefix + "energy_resolution", 500, -25, 20)
     th1_Eresol_cells = ROOT.TH1F(prefix + "energy_resolution_cells", prefix + "energy_resolution_cells", 500, -25, 20)
     th1_relEresol = ROOT.TH1F(prefix + "relative_energy_resolution", prefix + "relative_energy_resolution", 100, -0.6, 0.6)
+    th1_relEresol_eGenDivided = ROOT.TH1F(prefix + "relative_energy_resolution_toEGen", prefix + "relative_energy_resolution_toEgen", 150, -0.6, 0.9)
+    th1_energy_response = ROOT.TH1F(prefix + "energy_response", prefix + "energy_response", 100, 0, 2)
     th1_relEresol_cells = ROOT.TH1F(prefix + "relative_energy_resolution_cells", prefix + "relative_energy_resolution_cells", 100, -0.6, 0.6)
 
     f = ROOT.TFile(rootfile_path)
@@ -126,12 +140,16 @@ for inputFile in inputFiles:
             best_d_phi = 100000
             best_d_E = 100000
             best_d_relE = 10000
+            best_d_relE_eGenDivided = 10000
+            best_energyResponse = 10000
             for caloCluster_idx in range(len(getattr(event, args.clusterCollection + "_energy"))):
                 d_theta = getattr(event, args.clusterCollection + "_theta")[caloCluster_idx] - event.genParticle_theta[genParticle_idx]
                 d_phi = getattr(event, args.clusterCollection + "_phi")[caloCluster_idx] - event.genParticle_phi[genParticle_idx]
                 d_R = sqrt(d_theta * d_theta + d_phi * d_phi)
                 d_E = getattr(event, args.clusterCollection + "_energy")[caloCluster_idx] - event.genParticle_energy[genParticle_idx]
                 d_relE = d_E/getattr(event, args.clusterCollection + "_energy")[caloCluster_idx]
+                d_relE_eGenDivided = d_E/event.genParticle_energy[genParticle_idx]
+                energy_response =  getattr(event, args.clusterCollection + "_energy")[caloCluster_idx] / event.genParticle_energy[genParticle_idx]
                 #d_relE = (event.CorrectedCaloClusters_energy[caloCluster_idx] - event.genParticle_energy[genParticle_idx])/event.genParticle_energy[genParticle_idx]
 
                 if d_R < best_d_R:
@@ -141,6 +159,8 @@ for inputFile in inputFiles:
                     best_d_phi = d_phi
                     best_d_E = d_E
                     best_d_relE = d_relE
+                    best_d_relE_eGenDivided = d_relE_eGenDivided
+                    best_energyResponse = energy_response
                     gen_particle_energy = event.genParticle_energy[genParticle_idx]
 
             # for energy resol, ask for phi and theta closeness and vice versa
@@ -154,6 +174,9 @@ for inputFile in inputFiles:
             if best_d_R < cutoff_dR:
                 th1_Eresol.Fill(best_d_E)
                 th1_relEresol.Fill(best_d_relE)
+                th1_relEresol_eGenDivided.Fill(best_d_relE_eGenDivided)
+                th1_energy_response.Fill(best_energyResponse)
+
                 if args.cells:
                     th1_Eresol_cells.Fill((total_energy - gen_particle_energy))
                     th1_relEresol_cells.Fill((total_energy - gen_particle_energy)/total_energy)
@@ -173,12 +196,20 @@ for inputFile in inputFiles:
     thetaResolFit = draw_resol_canvas(th1_thetaresol, prefix, 'Theta')
     EresolFit = draw_resol_canvas(th1_Eresol, prefix, 'E')
     relEresolFit = draw_resol_canvas(th1_relEresol, prefix, 'relE')
+    relEresolFit_eGenDivided = draw_resol_canvas(th1_relEresol_eGenDivided, prefix, 'relE_eGenDivided')
+    eResponseFit = draw_resol_canvas(th1_energy_response, prefix, 'energyResponse')
 
     dict_energy_efficiency_error[energy].append(evt_with_cluster_matching_genParticle * 100 / float(n_gen_particles))
     dict_energy_efficiency_error[energy].append(sqrt(evt_with_cluster_matching_genParticle) * 100 / float(n_gen_particles))
 
     dict_energy_relEresol_error[energy].append(relEresolFit.Get().Parameter(2))
     dict_energy_relEresol_error[energy].append(relEresolFit.Get().ParError(2))
+
+    dict_energy_relEresol_eGenDivided_error[energy].append(relEresolFit_eGenDivided.Get().Parameter(2))
+    dict_energy_relEresol_eGenDivided_error[energy].append(relEresolFit_eGenDivided.Get().ParError(2))
+
+    dict_energy_energyResponseResol_error[energy].append(relEresolFit.Get().Parameter(2))
+    dict_energy_energyResponseResol_error[energy].append(relEresolFit.Get().ParError(2))
 
     dict_energy_phiResol_error[energy].append(phiResolFit.Get().Parameter(2))
     dict_energy_phiResol_error[energy].append(phiResolFit.Get().ParError(2))
@@ -220,6 +251,11 @@ def plot_resolution_vs_energy_graph(variable_name, postfix, relEresol_vs_energy_
     if 'relEresol' in variable_name:
         plot_title = 'ECAL energy resolution '
         y_axis_label = "#scale[1.9]{#sigma}#left(#frac{E_{Reco} - E_{Gen}}{E_{Reco}}#right)"
+        if 'eGenDivided' in variable_name:
+            y_axis_label = "#scale[1.9]{#sigma}#left(#frac{E_{Reco} - E_{Gen}}{E_{Gen}}#right)"
+    elif 'esponse' in variable_name:
+        plot_title = 'ECAL energy response '
+        y_axis_label = "#scale[1.9]{#sigma}#left(#frac{E_{Reco}}{E_{Gen}}#right)"
     elif variable_name == 'phiResol':
         plot_title = 'ECAL #Phi resolution '
         y_axis_label = "#scale[1.9]{#sigma}#left(#Phi_{Reco} - #Phi_{Gen}#right) [mrad]"
@@ -230,6 +266,7 @@ def plot_resolution_vs_energy_graph(variable_name, postfix, relEresol_vs_energy_
         plot_title = 'ECAL efficiency '
         y_axis_label = "Efficiency [%]"
         setGrid = True
+    print(y_axis_label)
 
     x_axis_label = "E_{Gen} [GeV]"
     #relEresol_vs_energy_graph.SetMarkerSize(1.5)
@@ -275,6 +312,8 @@ def plot_resolution_vs_energy_graph(variable_name, postfix, relEresol_vs_energy_
 energies_gev_float.sort()
 idx = 0
 relEresol_vs_energy_graph = ROOT.TGraphErrors(prefix + postfix + "_relEresol_vs_energy_graph")
+relEresol_eGenDivided_vs_energy_graph = ROOT.TGraphErrors(prefix + postfix + "_relEresol_eGenDivided_vs_energy_graph")
+energyResponseResol_vs_energy_graph = ROOT.TGraphErrors(prefix + postfix + "_energyResponseResol_vs_energy_graph")
 relEresol_vs_energy_cells_graph = ROOT.TGraphErrors(prefix + postfix)
 #relEresol_vs_energy_cells_graph, relEerol_vs_energy_fit = create_resolution_vs_energy_graph('relEresol', "cells")
 
@@ -289,9 +328,13 @@ for energy_float in energies_gev_float:
     # E resol
     relEresol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_relEresol_error[energy_str][0])
     relEresol_vs_energy_graph.SetPointError(idx, 0, dict_energy_relEresol_error[energy_str][1])
+    relEresol_eGenDivided_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_relEresol_eGenDivided_error[energy_str][0])
+    relEresol_eGenDivided_vs_energy_graph.SetPointError(idx, 0, dict_energy_relEresol_eGenDivided_error[energy_str][1])
     if args.cells:
         relEresol_vs_energy_cells_graph.SetPoint(idx, energy_float, dict_energy_cells_relEresol_error[energy_str][0])
         relEresol_vs_energy_cells_graph.SetPointError(idx, 0, dict_energy_cells_relEresol_error[energy_str][1])
+    energyResponseResol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_energyResponseResol_error[energy_str][0])
+    energyResponseResol_vs_energy_graph.SetPointError(idx, 0, dict_energy_energyResponseResol_error[energy_str][1])
 
     # Phi resol
     phiResol_vs_energy_graph.SetPoint(idx, energy_float, dict_energy_phiResol_error[energy_str][0]*1000)
@@ -316,6 +359,8 @@ output_rootfile_graph = ROOT.TFile(output_rootfile_graph_name, "recreate")
 
 
 relEresol_vs_energy_fit = plot_resolution_vs_energy_graph('relEresol', "", relEresol_vs_energy_graph, write_formula = True)
+relEresol_eGenDivided_vs_energy_fit = plot_resolution_vs_energy_graph('relEresol_eGenDivided', "", relEresol_eGenDivided_vs_energy_graph, write_formula = True)
+energyResponseResol_vs_energy_fit = plot_resolution_vs_energy_graph('energyResponseResol', "", energyResponseResol_vs_energy_graph, write_formula = True)
 if args.cells:
     relEresol_cell_vs_energy_fit = plot_resolution_vs_energy_graph('relEresolCell', "", relEresol_vs_energy_cells_graph, write_formula = True)
 phiResol_vs_energy_fit = plot_resolution_vs_energy_graph('phiResol', "", phiResol_vs_energy_graph)

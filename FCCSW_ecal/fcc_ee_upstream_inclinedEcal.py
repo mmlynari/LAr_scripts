@@ -112,6 +112,6 @@ ApplicationMgr( TopAlg = [genalg_pgun, hepmc_converter, geantsim, createcellsBar
                 EvtSel = 'NONE',
                 EvtMax = 10,
                 # order is important, as GeoSvc is needed by G4SimSvc
-                ExtSvc = [podioevent, geoservice, geantservice, audsvc],
+                ExtSvc = [geoservice, podioevent, geantservice, audsvc],
                 OutputLevel = INFO
 )

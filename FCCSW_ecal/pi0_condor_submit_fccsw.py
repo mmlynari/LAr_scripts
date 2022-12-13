@@ -119,9 +119,6 @@ if __name__ == "__main__":
     campaign_name = args.campaignName
     if not os.path.isdir(campaign_name):
         os.mkdir(campaign_name)
-    # copy the gaudi config file in the campaign folder
-    copyfile(gaudi_config_path, os.path.join(campaign_name, os.path.basename(gaudi_config_path)))
-    gaudi_config_path = os.path.join(os.environ.get("PWD", ""), campaign_name, os.path.basename(gaudi_config_path))
     outfile_storage = os.path.join(storage_path, campaign_name)
     if not os.path.isdir(outfile_storage):
         os.mkdir(outfile_storage)
@@ -164,13 +161,14 @@ if __name__ == "__main__":
     hadd_commands = ""
     rm_commands = ""
     #fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses"
-    fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/220106/FCCAnalyses"
+    #fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/220106/FCCAnalyses"
+    fcc_analysis_path = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/220808/FCCAnalyses"
     fcc_analysis_header = "#!/bin/sh\n#to be launched with source ... in a new shell\ncd %s\nsource setup.sh\n"%fcc_analysis_path
     fcc_analysis_commands = []
     for index in range(len(energies)):
         energy = energies[index]
-        energy_min = energy
-        energy_max = energy
+        energy_min = 1000
+        energy_max = 100000
         if index != 0 and energy >= args.energyAtWhichStartingDilution:
             n_jobs = int(math.floor(n_jobs * energy/energies[index-1]))
         else:
@@ -185,8 +183,8 @@ if __name__ == "__main__":
             thetas_for_loop = [thetas[0]]
         for theta in thetas_for_loop:
             print("Treating energy {0}, theta {1}".format(energy, theta))
-            theta_min = theta
-            theta_max = theta
+            theta_min = 50
+            theta_max = 130
             job_idx = 0
             evt_already_launched = 0
             if total_evt_to_generate - evt_per_job < 0:
@@ -205,7 +203,7 @@ if __name__ == "__main__":
                     command = command_template.replace('EVT', str(evt_per_job)).replace('OUTPUTDIR', outfile_storage).replace('JOBID', str(job_idx)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('SEED', str(job_idx))
                 else:
                     command = command_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx)).replace('SEED', str(job_idx))
-                exec_filename = exec_filename_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy)).replace('PMAX', str(energy)).replace('THETAMIN', str(theta)).replace('THETAMAX', str(theta)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
+                exec_filename = exec_filename_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
                 with open(exec_filename, "w") as f:
                     f.write(get_exec_file_header())
                     f.write(command)
@@ -223,7 +221,7 @@ if __name__ == "__main__":
                     command = command_template.replace('EVT', str(evt_per_job)).replace('OUTPUTDIR', outfile_storage).replace('JOBID', str(job_idx)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('SEED', str(job_idx))
                 else:
                     command = command_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx)).replace('SEED', str(job_idx))
-                exec_filename = exec_filename_template.replace('EVT', str(evt_last_job)).replace('PMIN', str(energy)).replace('PMAX', str(energy)).replace('THETAMIN', str(theta)).replace('THETAMAX', str(theta)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
+                exec_filename = exec_filename_template.replace('EVT', str(evt_last_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
                 with open(exec_filename, "w") as f:
                     f.write(get_exec_file_header())
                     f.write(command)
@@ -251,9 +249,8 @@ if __name__ == "__main__":
                     hadd_commands += "hadd  OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root &\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                     rm_commands += "cp OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_1.root OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_forTests.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
                     rm_commands += "rm OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX_jobid_*.root\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max))
-                    fcc_analysis_commands.append("python examples/FCCee/fullSim/caloNtupleizer/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root -outputFolder FCCANAOUTPUT\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace("FCCANAOUTPUT", fcc_ana_output_dir))
+                    fcc_analysis_commands.append("python examples/FCCee/fullSim/caloNtupleizer/analysis.py -inputFiles OUTPUTDIR/fccsw_output_pdgID_PDGID_pMin_PMIN_pMax_PMAX_thetaMin_THETAMIN_thetaMax_THETAMAX.root -outputFolder FCCANAOUTPUT_caloReco\n".replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace("FCCANAOUTPUT", fcc_ana_output_dir))
 
-    print(fcc_ana_output_dir)
     # write the hadd script
     hadd_script_path = os.path.join(campaign_name, "hadd.sh")
     with open(hadd_script_path, "w") as f:
@@ -285,8 +282,8 @@ if __name__ == "__main__":
     # write the perfPlots script
     perfPlots_script_path = os.path.join(campaign_name, "perfPlots.sh")
     with open(perfPlots_script_path, "w") as f:
-        string_for_perfPlots_script = "cd %s/../caloNtupleAnalyzer/\npython perfPlots.py -inputFiles 'FCCANAOUTPUT/*.root' -outputPostfix %s_perfPlots_condor"%(os.environ.get("PWD", ""), campaign_name)
-        f.write(string_for_perfPlots_script.replace("FCCANAOUTPUT", fcc_ana_output_dir))
+        string_for_perfPlots_script = "cd %s/../caloNtupleAnalyzer/\npython perfPlots.py -inputFiles '%s/FCCANAOUTPUT_caloReco/*.root' -outputPostfix %s_perfPlots_condor"%(os.environ.get("PWD", ""), fcc_analysis_path, campaign_name)
+        f.write(string_for_perfPlots_script.replace("FCCANAOUTPUT", os.path.join(fcc_ana_output_dir, campaign_name)))
     st = os.stat(perfPlots_script_path)
     os.chmod(perfPlots_script_path, st.st_mode | stat.S_IEXEC)
 
