@@ -1,12 +1,16 @@
 import os, sys, glob, re
+# usage: python deal_with_failed_job.py condorFolderName
+# Will print information about failed jobs and the location of the rootfile to be removed before to do the hadd (you can of course also resubmit the failed jobs)
 
 condor_dir = sys.argv[1]
+
+# put here the number of line that go into the .err stream for a succesful job (it is unfortunately not  0)
 if '_calib_' in condor_dir:
     n_line_errfile = 1
 elif '_upstream' in condor_dir:
     n_line_errfile = 2
 else:
-    n_line_errfile = 2
+    n_line_errfile = 1
 # 201012_pythia/exec_pdgID_22_pMin_0_pMax_0_thetaMin_0_thetaMax_0_evt_200_jobid_369.sh.err
 # "fccsw_output_pythia_ee_Z_ee_jobid_313.root"
 rootfile_dir = os.path.join("/eos/user/b/brfranco/rootfile_storage/", condor_dir)

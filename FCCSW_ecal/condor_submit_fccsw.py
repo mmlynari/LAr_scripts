@@ -64,7 +64,8 @@ export PYTHONPATH=%s
 LD_LIBRARY_PATH=%s
 CMAKE_PREFIX_PATH=%s
 PATH=%s
-"""%(os.environ.get("K4RECCALORIMETER", ""), os.environ.get("K4SIMGEANT4", ""), os.environ.get("K4FWCORE", ""), os.environ.get("FCCDETECTORS", ""), os.environ.get("PYTHONPATH", ""), os.environ.get("LD_LIBRARY_PATH", ""), os.environ.get("CMAKE_PREFIX_PATH", ""), os.environ.get("PATH", ""))
+export FCCBASEDIR=%s
+"""%(os.environ.get("K4RECCALORIMETER", ""), os.environ.get("K4SIMGEANT4", ""), os.environ.get("K4FWCORE", ""), os.environ.get("FCCDETECTORS", ""), os.environ.get("PYTHONPATH", ""), os.environ.get("LD_LIBRARY_PATH", ""), os.environ.get("CMAKE_PREFIX_PATH", ""), os.environ.get("PATH", ""), os.environ.get("FCCBASEDIR", ""))
 
 
 

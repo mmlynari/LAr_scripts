@@ -4,7 +4,7 @@ import copy
 from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
 use_pythia = False
-addNoise = True
+addNoise = False
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set to True
