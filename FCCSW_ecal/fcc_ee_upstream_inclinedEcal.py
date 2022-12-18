@@ -87,7 +87,7 @@ energy_in_layers = EnergyInCaloLayers("energyInLayers",
                                       numLayers = 12,
                                       # sampling fraction is given as the energy correction will be applied on
                                       # calibrated cells
-                                      samplingFractions = [0.36504678560781667] * 1 + [0.09974087165838573] * 1 + [0.12392336840429007] * 1 + [0.1413266332223572] * 1 + [0.15415123193238958] * 1 + [0.1639900875460671] * 1 + [0.17156597031962592] * 1 + [0.17810674932424356] * 1 + [0.18340048249397345] * 1 + [0.18855877603870688] * 1 + [0.19307873042890955] * 1 + [0.21746137329706489] * 1,
+                                      samplingFractions = [0.3632447480841956] * 1 + [0.13187261040190248] * 1 + [0.14349714292943705] * 1 + [0.150266118277841] * 1 + [0.15502683375826457] * 1 + [0.15954408786354762] * 1 + [0.16375302347299436] * 1 + [0.16840384714588075] * 1 + [0.17219540619311383] * 1 + [0.1755068643940401] * 1 + [0.17816980262822366] * 1 + [0.18131266048670405] * 1,
                                       OutputLevel=INFO)
 energy_in_layers.deposits.Path = "ECalBarrelCells"
 energy_in_layers.particle.Path = "GenParticles"
@@ -98,7 +98,7 @@ chra = ChronoAuditor()
 audsvc = AuditorSvc()
 audsvc.Auditors = [chra]
 geantsim.AuditExecute = True
-energy_in_layers.AuditExecute = True
+#energy_in_layers.AuditExecute = True
 
 from Configurables import PodioOutput
 ### PODIO algorithm

@@ -22,7 +22,7 @@ for nodeList in input_xml.getElementsByTagName('lccdd'):
         #get the cryostat back size
         if node.localName == 'define':
             for subnode in node.childNodes:
-                if subnode.localName == 'constant' and subnode.getAttribute('name') == 'CryoThicknessBack':
+                if subnode.localName == 'constant' and subnode.getAttribute('name') == 'CryoBarrelBackCold':
                     original_cryo_back_size_str = subnode.getAttribute('value')
                     if not original_cryo_back_size_str.split("*")[1] == 'mm':
                         print("Error in orignal xml file, cryo thickness expected in mm, exiting...")
@@ -125,7 +125,7 @@ for nodeList in input_xml.getElementsByTagName('lccdd'):
                     rMaxNode.setAttribute('value', '%d*mm'%new_BarECal_rmax_int)
                     node.insertBefore(rMaxNode, subnode)
                     added_rmax = True
-                if subnode.localName == 'constant' and subnode.getAttribute('name') == "CryoThicknessBack":
+                if subnode.localName == 'constant' and subnode.getAttribute('name') == "CryoBarrelBackCold":
                     subnode.setAttribute('value', "%d*mm"%new_cryo_back_size)
         if node.localName == 'detectors':
             for subnode in node.childNodes:
