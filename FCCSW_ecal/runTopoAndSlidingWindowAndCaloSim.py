@@ -115,9 +115,10 @@ else:
 # ECAL
 ecalBarrelReadoutName = "ECalBarrelEta"
 ecalBarrelReadoutNamePhiEta = "ECalBarrelPhiEta"
+ecalEndcapReadoutName = "ECalEndcapPhiEta"
 # HCAL
-hcalReadoutName = "HCalBarrelReadout"
-extHcalReadoutName = "HCalExtBarrelReadout"
+hcalBarrelReadoutName = "HCalBarrelReadout"
+hcalEndcapReadoutName = "HCalEndcapReadout"
 
 # Configure saving of calorimeter hits
 ecalBarrelHitsName = "ECalBarrelPositionedHits"
@@ -125,8 +126,14 @@ from Configurables import SimG4SaveCalHits
 saveECalBarrelTool = SimG4SaveCalHits("saveECalBarrelHits", readoutNames = [ecalBarrelReadoutName])
 saveECalBarrelTool.CaloHits.Path = ecalBarrelHitsName
 
-saveHCalTool = SimG4SaveCalHits("saveHCalBarrelHits", readoutNames = [hcalReadoutName])
+saveECalEndcapTool = SimG4SaveCalHits("saveECalEndcapHits", readoutNames = [ecalEndcapReadoutName])
+saveECalEndcapTool.CaloHits.Path = "ECalEndcapHits"
+
+saveHCalTool = SimG4SaveCalHits("saveHCalBarrelHits", readoutNames = [hcalBarrelReadoutName])
 saveHCalTool.CaloHits.Path = "HCalBarrelPositionedHits"
+
+#saveHCalEndcapTool = SimG4SaveCalHits("saveHCalEndcapHits", readoutNames = [hcalEndcapReadoutName])
+#saveHCalEndcapTool.CaloHits.Path = "HCalEndcapHits"
 
 # next, create the G4 algorithm, giving the list of names of tools ("XX/YY")
 from Configurables import SimG4PrimariesFromEdmTool
@@ -137,6 +144,8 @@ from Configurables import SimG4Alg
 geantsim = SimG4Alg("SimG4Alg",
                        outputs= [saveECalBarrelTool,
                                  saveHCalTool,
+                                 saveECalEndcapTool,
+                                 #saveHCalEndcapTool
                                  #saveHistTool
                        ],
                        eventProvider=particle_converter,
@@ -146,12 +155,14 @@ geantsim = SimG4Alg("SimG4Alg",
 # EM scale calibration (sampling fraction)
 from Configurables import CalibrateInLayersTool
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
-                                   samplingFraction = [0.36504678560781667] * 1 + [0.09974087165838573] * 1 + [0.12392336840429007] * 1 + [0.1413266332223572] * 1 + [0.15415123193238958] * 1 + [0.1639900875460671] * 1 + [0.17156597031962592] * 1 + [0.17810674932424356] * 1 + [0.18340048249397345] * 1 + [0.18855877603870688] * 1 + [0.19307873042890955] * 1 + [0.21746137329706489] * 1,
+                                   samplingFraction = [0.3632447480841956] * 1 + [0.13187261040190248] * 1 + [0.14349714292943705] * 1 + [0.150266118277841] * 1 + [0.15502683375826457] * 1 + [0.15954408786354762] * 1 + [0.16375302347299436] * 1 + [0.16840384714588075] * 1 + [0.17219540619311383] * 1 + [0.1755068643940401] * 1 + [0.17816980262822366] * 1 + [0.18131266048670405] * 1,
                                    readoutName = ecalBarrelReadoutName,
                                    layerFieldName = "layer")
 
 from Configurables import CalibrateCaloHitsTool
-calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction="41.66")
+calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction="31.4")
+calibEcalEndcap = CalibrateCaloHitsTool("CalibrateECalEndcap", invSamplingFraction="4.27")
+calibHcalEndcap = CalibrateCaloHitsTool("CalibrateHCalEndcap", invSamplingFraction="31.7")
 
 # Create cells in ECal barrel
 # 1. step - merge hits into cells with Eta and module segmentation (phi module is a 'physical' cell i.e. lead + LAr + PCB + LAr +lead)
@@ -255,6 +266,23 @@ createHcalBarrelCells = CreateCaloCells("CreateHCaloCells",
                                hits="HCalBarrelHits",
                                cells="HCalBarrelCells")
 
+createEcalEndcapCells = CreateCaloCells("CreateEcalEndcapCaloCells",
+                                    doCellCalibration=True,
+                                    calibTool=calibEcalEndcap,
+                                    addCellNoise=False, filterCellNoise=False,
+                                    OutputLevel=INFO)
+createEcalEndcapCells.hits.Path="ECalEndcapHits"
+createEcalEndcapCells.cells.Path="ECalEndcapCells"
+
+#createHcalEndcapCells = CreateCaloCells("CreateHcalEndcapCaloCells",
+#                                    doCellCalibration=True,
+#                                    calibTool=calibHcalEndcap,
+#                                    addCellNoise=False, filterCellNoise=False,
+#                                    OutputLevel=INFO)
+#createHcalEndcapCells.hits.Path="HCalEndcapHits"
+#createHcalEndcapCells.cells.Path="HCalEndcapCells"
+
+
 #Empty cells for parts of calorimeter not implemented yet
 from Configurables import CreateEmptyCaloCellsCollection
 createemptycells = CreateEmptyCaloCellsCollection("CreateEmptyCaloCells")
@@ -266,15 +294,15 @@ towers = CaloTowerTool("towers",
                                deltaEtaTower = 0.01, deltaPhiTower = 2*_pi/768.,
                                radiusForPosition = 2160 + 40 / 2.0,
                                ecalBarrelReadoutName = ecalBarrelReadoutNamePhiEta,
-                               ecalEndcapReadoutName = "",
+                               ecalEndcapReadoutName = ecalEndcapReadoutName,
                                ecalFwdReadoutName = "",
-                               hcalBarrelReadoutName = "",
+                               hcalBarrelReadoutName = hcalBarrelReadoutName,
                                hcalExtBarrelReadoutName = "",
                                hcalEndcapReadoutName = "",
                                hcalFwdReadoutName = "",
                                OutputLevel = INFO)
 towers.ecalBarrelCells.Path = EcalBarrelCellsName
-towers.ecalEndcapCells.Path = "emptyCaloCells"
+towers.ecalEndcapCells.Path = "ECalEndcapCells"
 towers.ecalFwdCells.Path = "emptyCaloCells"
 towers.hcalBarrelCells.Path = "emptyCaloCells"
 towers.hcalExtBarrelCells.Path = "emptyCaloCells"
@@ -321,9 +349,9 @@ correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                           firstLayerIDs = [0],
                                           lastLayerIDs = [11],
                                           readoutNames = [ecalBarrelReadoutNamePhiEta],
-                                          upstreamParameters = [[0.09737335230414161, -10.387181371085651, -146.34314022178035, 1.8135025646800507, -1.3729969471683934, -0.6449866228721779]],
+                                          upstreamParameters = [[0.033955208567442975, -3.818122686176795, -146.59497297249345, 0.563447903447204, -3.7906629536351906, -8.569962044554627]],
                                           upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          downstreamParameters = [[0.0005295508692700276, 0.005906234225977198, 1.0551521001079711, -1.88609690802949, -0.11356707602430005, 17.525300224679565]],
+                                          downstreamParameters = [[-0.00357017357914002, 0.006624434345822984, 1.0065650241358008, -1.285181650875406, -0.0707783194915608, 12.907319280196257]],
                                           downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel = INFO
                                           )
@@ -390,9 +418,9 @@ correctCaloTopoClusters = CorrectCaloClusters("correctCaloTopoClusters",
                                           firstLayerIDs = [0],
                                           lastLayerIDs = [11],
                                           readoutNames = [ecalBarrelReadoutNamePhiEta],
-                                          upstreamParameters = [[0.09737335230414161, -10.387181371085651, -146.34314022178035, 1.8135025646800507, -1.3729969471683934, -0.6449866228721779]],
+                                          upstreamParameters = [[0.033955208567442975, -3.818122686176795, -146.59497297249345, 0.563447903447204, -3.7906629536351906, -8.569962044554627]],
                                           upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          downstreamParameters = [[0.0005295508692700276, 0.005906234225977198, 1.0551521001079711, -1.88609690802949, -0.11356707602430005, 17.525300224679565]],
+                                          downstreamParameters = [[-0.00357017357914002, 0.006624434345822984, 1.0065650241358008, -1.285181650875406, -0.0707783194915608, 12.907319280196257]],
                                           downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel = INFO
                                           )
@@ -442,7 +470,9 @@ ApplicationMgr(
               #createEcalBarrelCells,
               cell_creator_to_use,
               createEcalBarrelPositionedCells,
+              createEcalEndcapCells,
               #createHcalBarrelCells,
+              #createHcalEndcapCells,
               createemptycells,
               createClusters,
               #createEcalBarrelPositionedCaloClusterCells,
