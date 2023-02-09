@@ -11,9 +11,9 @@ addNoise = False
 momentum = 5 # in GeV
 #thetaMin = 90.25 # degrees
 #thetaMax = 90.25 # degrees
-thetaMin = 50 # degrees
+thetaMin = 20 # degrees
 thetaMax = 130 # degrees
-pdgCode = 11 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
+pdgCode = 211 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 magneticField = False
 
 from Gaudi.Configuration import *
@@ -114,9 +114,11 @@ else:
 # ECAL
 ecalBarrelReadoutName = "ECalBarrelEta"
 ecalBarrelReadoutNamePhiEta = "ECalBarrelPhiEta"
+ecalEndcapReadoutName = "ECalEndcapPhiEta"
+
 # HCAL
 hcalBarrelReadoutName = "HCalBarrelReadout"
-extHcalReadoutName = "HCalExtBarrelReadout"
+hcalEndcapReadoutName = "HCalEndcapReadout"
 
 # Configure saving of calorimeter hits
 ecalBarrelHitsName = "ECalBarrelPositionedHits"
@@ -128,6 +130,14 @@ hcalBarrelHitsName = "HCalBarrelPositionedHits"
 saveHCalTool = SimG4SaveCalHits("saveHCalBarrelHits", readoutNames = [hcalBarrelReadoutName])
 saveHCalTool.CaloHits.Path = hcalBarrelHitsName
 
+ecalEndcapHitsName = "ECalEndcapPositionedHits"
+saveECalEndcapTool = SimG4SaveCalHits("saveECalEndcapHits", readoutNames = [ecalEndcapReadoutName])
+saveECalEndcapTool.CaloHits.Path = ecalEndcapHitsName
+
+hcalEndcapHitsName = "HCalEndcapPositionedHits"
+saveHCalEndcapTool = SimG4SaveCalHits("saveHCalEndcapHits", readoutNames = [hcalEndcapReadoutName])
+saveHCalEndcapTool.CaloHits.Path = hcalEndcapHitsName
+
 # next, create the G4 algorithm, giving the list of names of tools ("XX/YY")
 from Configurables import SimG4PrimariesFromEdmTool
 particle_converter = SimG4PrimariesFromEdmTool("EdmConverter")
@@ -137,6 +147,8 @@ from Configurables import SimG4Alg
 geantsim = SimG4Alg("SimG4Alg",
                        outputs= [saveECalBarrelTool,
                                  saveHCalTool,
+                                 saveECalEndcapTool,
+                                 saveHCalEndcapTool,
                                  #saveHistTool
                        ],
                        eventProvider=particle_converter,
@@ -152,6 +164,8 @@ calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
 
 from Configurables import CalibrateCaloHitsTool
 calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction="41.66")
+calibEcalEndcap = CalibrateCaloHitsTool("CalibrateECalEndcap", invSamplingFraction="4.27")
+calibHcalEndcap = CalibrateCaloHitsTool("CalibrateHCalEndcap", invSamplingFraction="31.7")
 
 # Create cells in ECal barrel
 # 1. step - merge hits into cells with Eta and module segmentation (phi module is a 'physical' cell i.e. lead + LAr + PCB + LAr +lead)
@@ -245,6 +259,7 @@ createEcalBarrelPositionedCells.positionsECalBarrelTool = cellPositionEcalBarrel
 createEcalBarrelPositionedCells.hits.Path = EcalBarrelCellsName
 createEcalBarrelPositionedCells.positionedHits.Path = "ECalBarrelPositionedCells"
 
+
 # Create cells in HCal
 # 1. step - merge hits into cells with the default readout
 HcalBarrelCellsName = "HCalBarrelCells"
@@ -258,6 +273,17 @@ createHcalBarrelCells = CreateCaloCells("CreateHCaloCells",
                                hits=hcalBarrelHitsName,
                                cells=HcalBarrelCellsName)
 
+HcalEndcapCellsName = "HCalEndcapCells"
+createHcalEndcapCells = CreateCaloCells("CreateHcalEndcapCaloCells",
+                                    doCellCalibration=True,
+                                    calibTool=calibHcalEndcap,
+                                    addCellNoise=False, 
+                                    filterCellNoise=False,
+                                    OutputLevel=INFO,
+                                    hits=hcalEndcapHitsName,
+                                    cells=HcalEndcapCellsName)
+
+"""
 from Configurables import CellPositionsHCalBarrelTool
 cellPositionHcalBarrelTool = CellPositionsHCalBarrelTool("CellPositionsHCalBarrel", readoutName = hcalBarrelReadoutName, OutputLevel = INFO)
 createHcalBarrelPositionedCells = CreateCaloCellPositionsFCCee("HCalBarrelPositionedCells", OutputLevel = INFO)
@@ -265,6 +291,17 @@ createHcalBarrelPositionedCells.positionsHCalBarrelTool = cellPositionHcalBarrel
 createHcalBarrelPositionedCells.hits.Path = HcalBarrelCellsName
 HCalBarrelPositionedCellsName = "HCalBarrelPositionedCellsName"
 createHcalBarrelPositionedCells.positionedHits.Path = "HCalBarrelPositionedCells"
+"""
+EcalEndcapCellsName = "ECalEndcapCells"
+createEcalEndcapCells = CreateCaloCells("CreateEcalEndcapCaloCells",
+                                    doCellCalibration=True,
+                                    calibTool=calibEcalEndcap,
+                                    addCellNoise=False, 
+                                    filterCellNoise=False,
+                                    addPosition=True,
+                                    OutputLevel = INFO,
+                                    hits=ecalEndcapHitsName,
+                                    cells=EcalEndcapCellsName)
 
 #Empty cells for parts of calorimeter not implemented yet
 from Configurables import CreateEmptyCaloCellsCollection
@@ -276,7 +313,7 @@ towers = CaloTowerTool("towers",
                                deltaEtaTower = 0.01, deltaPhiTower = 2*_pi/768.,
                                radiusForPosition = 2160 + 40 / 2.0,
                                ecalBarrelReadoutName = ecalBarrelReadoutNamePhiEta,
-                               ecalEndcapReadoutName = "",
+                               ecalEndcapReadoutName = ecalEndcapReadoutName,
                                ecalFwdReadoutName = "",
                                hcalBarrelReadoutName = hcalBarrelReadoutName,
                                hcalExtBarrelReadoutName = "",
@@ -284,7 +321,7 @@ towers = CaloTowerTool("towers",
                                hcalFwdReadoutName = "",
                                OutputLevel = INFO)
 towers.ecalBarrelCells.Path = EcalBarrelCellsName
-towers.ecalEndcapCells.Path = "emptyCaloCells"
+towers.ecalEndcapCells.Path = EcalEndcapCellsName
 towers.ecalFwdCells.Path = "emptyCaloCells"
 towers.hcalBarrelCells.Path = HcalBarrelCellsName
 towers.hcalExtBarrelCells.Path = "emptyCaloCells"
@@ -342,9 +379,9 @@ correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
 from Configurables import PodioOutput
 out = PodioOutput("out",
                   OutputLevel=INFO)
-out.outputCommands = ["drop *", "keep ECalBarrelPositionedCells", "keep gen*"]
+#out.outputCommands = ["drop *", "keep ECalBarrelPositionedCells", "keep gen*"]
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
-#out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells"]
+out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop ECalBarrelCellsStep*", "drop emptyCaloCells"]
 #out.outputCommands = ["keep *", "drop ECalBarrelHits", "drop HCal*", "drop ECalBarrelCellsStep*", "drop ECalBarrelPositionedHits", "drop emptyCaloCells", "drop CaloClusterCells", "drop %s"%EcalBarrelCellsName, "drop %s"%createEcalBarrelPositionedCells.positionedHits.Path]
 
 import uuid
@@ -380,8 +417,10 @@ ApplicationMgr(
               #createEcalBarrelCells,
               cell_creator_to_use,
               createEcalBarrelPositionedCells,
-              #createHcalBarrelCells,
+              createHcalBarrelCells,
               #createHcalBarrelPositionedCells,
+              createEcalEndcapCells,
+              createHcalEndcapCells,
               #createemptycells,
               #createClusters,
               #createEcalBarrelPositionedCaloClusterCells,
@@ -389,7 +428,7 @@ ApplicationMgr(
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 1000,
+    EvtMax   = 10,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )
