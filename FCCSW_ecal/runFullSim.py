@@ -13,7 +13,7 @@ momentum = 5 # in GeV
 #thetaMax = 90.25 # degrees
 thetaMin = 20 # degrees
 thetaMax = 130 # degrees
-pdgCode = 11 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
+pdgCode = 211 # 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
 magneticField = False
 
 from Gaudi.Configuration import *
@@ -428,7 +428,7 @@ ApplicationMgr(
               out
               ],
     EvtSel = 'NONE',
-    EvtMax   = 1000,
+    EvtMax   = 10,
     ExtSvc = [geoservice, podioevent, geantservice, audsvc],
     StopOnSignal = True,
  )
