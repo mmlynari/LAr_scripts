@@ -144,8 +144,8 @@ def get_resolutions(in_directory, clusters_colls):
 def get_MVAcalib_resolution(in_directory, MVAcalib_file_Calo, MVAcalib_file_Topo):
     import xgboost as xgb
     reg = xgb.XGBRegressor(tree_method="hist")
-    reg.load_model(MVAcalib_file_Calo)
-    reg.load_model(MVAcalib_file_Topo)
+    #reg.load_model(MVAcalib_file_Calo)
+    #reg.load_model(MVAcalib_file_Topo)
 
     in_files = glob.glob(in_directory+"/*.root")
     results = []
@@ -158,8 +158,10 @@ def get_MVAcalib_resolution(in_directory, MVAcalib_file_Calo, MVAcalib_file_Topo
         for clusters in cluster_type_coll:
             if clusters == "CaloClusters":
                 cells = "CaloClusterCells"
+                reg.load_model(MVAcalib_file_Calo)
             if clusters == "CaloTopoClusters":
                 cells = "CaloTopoClusterCells"
+                reg.load_model(MVAcalib_file_Topo)
             df2 = (
                 df
                 .Alias(f"clusters_energy", f"{clusters}.energy")
@@ -220,10 +222,11 @@ def get_MVAcalib_resolution(in_directory, MVAcalib_file_Calo, MVAcalib_file_Topo
             resp_e_v, resol_e_v = get_response_and_resol(h_e, h_e.GetMean(), h_e.GetStdDev())
             c.Print(in_directory+'/'+h_e.GetName()+'.png')
 
-            if clusters == "CaloClusters":
-                row = [truth_e, "CalibratedCaloClusters", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
-            if clusters == "CaloTopoClusters":
-                row = [truth_e, "CalibratedCaloTopoClusters", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
+            #if clusters == "CaloClusters":
+            #    row = [truth_e, "CalibratedCaloClusters", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
+            #if clusters == "CaloTopoClusters":
+            #    row = [truth_e, "CalibratedCaloTopoClusters", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
+            row = [truth_e, f"Calibrated{clusters}", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
 
             results.append(row)
 
