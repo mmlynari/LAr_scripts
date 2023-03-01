@@ -18,18 +18,22 @@ def main():
             help = "Output CSV file", type=str)
     parser.add_argument("--clusters", nargs='+', action="extend", default=[],
             help = "Cluster collections to use", type=str)
-    parser.add_argument("--MVAcalib", help = "Path to XGBoost json file used to calibrate CaloClusters",
+    parser.add_argument("--MVAcalibCalo", help = "Path to XGBoost json file used to calibrate CaloClusters",
+    type=str)
+    parser.add_argument("--MVAcalibTopo", help = "Path to XGBoost json file used to calibrate CaloTopoClusters",
     type=str)
     args = parser.parse_args()
-    run(args.inputDir, args.clusters, args.outFile, args.MVAcalib)
+    run(args.inputDir, args.clusters, args.outFile, args.MVAcalibCalo, args.MVAcalibTopo)
 
 
-def run(in_directory, clusters_colls, out_file, MVAcalib):
+def run(in_directory, clusters_colls, out_file, MVAcalibCalo, MVAcalibTopo):
     """Actual processing"""
     init_stuff()
     res = []
-    if(MVAcalib):
-        res += get_MVAcalib_resolution(in_directory, MVAcalib)
+    if MVAcalibCalo:
+        res += get_MVAcalib_resolution(in_directory, "CaloClusters", MVAcalibCalo)
+    if MVAcalibTopo:
+        res += get_MVAcalib_resolution(in_directory, "CaloTopoClusters", MVAcalibTopo)
     res += get_resolutions(in_directory, clusters_colls)
     res.sort(key=lambda it: it[0])
     print("All raw results")
@@ -139,7 +143,7 @@ def get_resolutions(in_directory, clusters_colls):
     return results
 
 
-def get_MVAcalib_resolution(in_directory, MVAcalib_file):
+def get_MVAcalib_resolution(in_directory, clusters, MVAcalib_file):
     import xgboost as xgb
     reg = xgb.XGBRegressor(tree_method="hist")
     reg.load_model(MVAcalib_file)
@@ -151,8 +155,10 @@ def get_MVAcalib_resolution(in_directory, MVAcalib_file):
         print(f"Now running on {f} for truth energy {truth_e} GeV")
         df = ROOT.ROOT.RDataFrame("events", f)
         num_init = df.Count()
-        clusters = "CaloClusters"
-        cells = "CaloClusterCells"
+        if clusters == "CaloClusters":
+            cells = "CaloClusterCells"
+        if clusters == "CaloTopoClusters":
+            cells = "CaloTopoClusterCells"
         df = (
             df
             .Alias(f"clusters_energy", f"{clusters}.energy")
@@ -206,18 +212,19 @@ def get_MVAcalib_resolution(in_directory, MVAcalib_file):
             h_e.Fill((e - truth_e)/truth_e)
 
         c = ROOT.TCanvas()
-        h_e.SetName(f"E_CalibratedCaloClusters_{truth_e}")
+        h_e.SetName(f"E_Calibrated{clusters}_{truth_e}")
         h_e.Draw()
         c.SetLogy()
         resp_e_v, resol_e_v = get_response_and_resol(h_e, h_e.GetMean(), h_e.GetStdDev())
         c.Print(in_directory+'/'+h_e.GetName()+'.png')
 
-        row = [truth_e, "CalibratedCaloClusters", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
+        row = [truth_e, f"Calibrated{clusters}", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
         results.append(row)
 
 
     results.sort(key=lambda it: it[0])
     return results
+
 
 
 def get_response_and_resol(h, mean_guess=0, resol_guess=1):

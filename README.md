@@ -79,7 +79,7 @@ Compiling:
 cd FCCDetectors
 mkdir build
 cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=../install -DCMAKE_BUILD_TYPE=RELWITHDEBINFO -DCMAKE_CXX_STANDARD=17
+cmake ../ -DCMAKE_INSTALL_PREFIX=../install -DWITH_DD4HEP=ON
 make -j32 install
 cd ../../
 ```
@@ -97,7 +97,7 @@ Compiling:
 cd k4RecCalorimeter
 mkdir build
 cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=../install -DCMAKE_BUILD_TYPE=RELWITHDEBINFO -DCMAKE_CXX_STANDARD=17
+cmake ../ -DCMAKE_INSTALL_PREFIX=../install -DWITH_DD4HEP=ON
 make -j32 install
 cd ../../
 ```
@@ -117,7 +117,7 @@ Compiling:
 cd k4SimGeant4
 mkdir build
 cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=../install -DCMAKE_BUILD_TYPE=RELWITHDEBINFO -DCMAKE_CXX_STANDARD=17
+cmake ../ -DCMAKE_INSTALL_PREFIX=../install -DWITH_DD4HEP=ON
 make -j32 install
 cd ../../
 ```
@@ -204,14 +204,16 @@ for ECal cells.
 #### Training the MVA calibration
 The MVA calibration relies on XGBoost. It has been available in FCC software since October 1, 2022.
 
-Training:
-`python training.py CaloClusters -i production/ --json upstream/corr_params_1d.json -o training.json`
+Training on CaloClusters:
+`python training.py CaloClusters -i production/ --json upstream/corr_params_1d.json -o training_calo.json`
+Training on CaloTopoClusters:
+`python training.py CaloTopoClusters -i production/ --json upstream/corr_params_1d.json -o training_topo.json`
 
 #### Computing and plotting energy resolutions and other quantities
 First step: apply MVA calibration if needed, then compute energy resolutions for a given geometry
 `python compute_resolutions.py --inputDir $runname/clusters --outFile $runname/results.csv --clusters
-CaloClusters CorrectedCaloClusters CaloTopoClusters CorrectedCaloTopoClusters --MVAcalib
-$runname/training.json`
+CaloClusters CorrectedCaloClusters CaloTopoClusters CorrectedCaloTopoClusters --MVAcalibCalo
+$runname/training_calo.json --MVAcalibTopo $runname/training_topo.json`
 
 Second step: produce nice plots
 * Produce plots for each type of cluster:
@@ -219,7 +221,7 @@ Second step: produce nice plots
 
 * Compare several types of clusters for a given geometry:
 `python plot_resolutions.py --outDir $runname --doFits compare clusters CaloClusters CorrectedCaloClusters
-CalibratedCaloClusters $runname/results.csv --distributions E_resol E_response`
+CalibratedCaloClusters CalibratedCaloTopoClusters $runname/results.csv --distributions E_resol E_response`
 
 * Compare several geometries for a given cluster type:
 `python plot_resolutions.py --outDir comp --doFits compare files baseline_LAr_noNoise_1/results.csv
@@ -256,5 +258,5 @@ Basically runs all the steps in one go. Comment/uncomment lines as needed.
 
 * Propagate the geometry changes, and computes the X0. Archives the files.
 * Calls the `runParallel` scripts for the various steps.
-* Train the MVA calib (on CaloClusters)
+* Train the MVA calib (on CaloClusters and CaloTopoClusters)
 * Then compute the resolutions and responses, and make plots.
