@@ -14,7 +14,8 @@ geoservice.detectors = [os.path.join(path_to_detector, _det) for _det in detecto
 geoservice.OutputLevel = INFO
 
 ecalBarrelReadoutName = "ECalBarrelPhiEta"
-BarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/geometry/noise_capa_220216/elecNoise_ecalBarrelFCCee.root"
+#BarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/LAr_setups/230208/LAr_scripts/geometry/noise_capa_230301/elecNoise_ecalBarrelFCCee.root"
+BarrelNoisePath = os.environ['FCCBASEDIR']+"/LAr_scripts/data/elecNoise_ecalBarrelFCCee.root"
 ecalBarrelNoiseHistName = "h_elecNoise_fcc_"
 
 from Configurables import CellPositionsECalBarrelTool
