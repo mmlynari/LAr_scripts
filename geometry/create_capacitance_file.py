@@ -43,7 +43,7 @@ angle = inclination_degree / 180. * pi #inclination angle inn radian
 passiveThickness = 2.0 #mm
 #Segmentation
 deltaEta = 0.01
-maxEta = 0.881 # 45 degrees
+maxEta = 1.2 # 3.1 m z extent
 numEta = int(ceil(maxEta/deltaEta))
 print(numEta)
 #PCB dimensions [mm]
