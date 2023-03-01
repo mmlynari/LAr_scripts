@@ -30,8 +30,10 @@ def run(in_directory, clusters_colls, out_file, MVAcalibCalo, MVAcalibTopo):
     """Actual processing"""
     init_stuff()
     res = []
-    if(MVAcalibCalo or MVAcalibTopo):
-        res += get_MVAcalib_resolution(in_directory, MVAcalibCalo, MVAcalibTopo)
+    if MVAcalibCalo:
+        res += get_MVAcalib_resolution(in_directory, "CaloClusters", MVAcalibCalo)
+    if MVAcalibTopo:
+        res += get_MVAcalib_resolution(in_directory, "CaloTopoClusters", MVAcalibTopo)
     res += get_resolutions(in_directory, clusters_colls)
     res.sort(key=lambda it: it[0])
     print("All raw results")
@@ -141,11 +143,10 @@ def get_resolutions(in_directory, clusters_colls):
     return results
 
 
-def get_MVAcalib_resolution(in_directory, MVAcalib_file_Calo, MVAcalib_file_Topo):
+def get_MVAcalib_resolution(in_directory, clusters, MVAcalib_file):
     import xgboost as xgb
     reg = xgb.XGBRegressor(tree_method="hist")
-    #reg.load_model(MVAcalib_file_Calo)
-    #reg.load_model(MVAcalib_file_Topo)
+    reg.load_model(MVAcalib_file)
 
     in_files = glob.glob(in_directory+"/*.root")
     results = []
@@ -154,81 +155,71 @@ def get_MVAcalib_resolution(in_directory, MVAcalib_file_Calo, MVAcalib_file_Topo
         print(f"Now running on {f} for truth energy {truth_e} GeV")
         df = ROOT.ROOT.RDataFrame("events", f)
         num_init = df.Count()
-        cluster_type_coll = ["CaloClusters", "CaloTopoClusters"]
-        for clusters in cluster_type_coll:
-            if clusters == "CaloClusters":
-                cells = "CaloClusterCells"
-                reg.load_model(MVAcalib_file_Calo)
-            if clusters == "CaloTopoClusters":
-                cells = "CaloTopoClusterCells"
-                reg.load_model(MVAcalib_file_Topo)
-            df2 = (
-                df
-                .Alias(f"clusters_energy", f"{clusters}.energy")
-                .Define(f"good_clusters", f"{clusters}[clusters_energy>0.1]")
-                .Filter(f"good_clusters.size()>0", ">=1 cluster with E>100MeV")
-                .Define(f"good_clusters_e", f"getCaloCluster_energy(good_clusters)")
-                .Define(f"good_clusters_EnergyInLayers", f"getCaloCluster_energyInLayers(good_clusters, {cells}, 12)")
-                .Define(f"lc_idx", f"ArgMax(good_clusters_e)")
-                .Define(f"Cluster_E", f"good_clusters_e[lc_idx]")
-                )
-            for i in range(12):
-                df2 = df2.Define(f"good_clusters_E{i}", f"getFloatAt({i})(good_clusters_EnergyInLayers)")
-                df2 = df2.Define(f"Cluster_E{i}", f"good_clusters_E{i}[lc_idx]")
-
-            cols_to_use = [f"Cluster_E{i}" for i in range(12)]
-            cols_to_use += ["Cluster_E"]
-            v_cols_to_use = ROOT.std.vector('string')(cols_to_use)
-            # Filter to remove weird events and get a proper tree
-            #filter_str = "&&".join([f" Cluster_E{i}!=0 " for i in range(12)])
-            #df2 = df.Filter(filter_str + " && Cluster_E!=0", "Remove bad clusters with missing cell links")
-            df3 = df2.Filter("Cluster_E5!=0 && Cluster_E!=0", "Remove bad clusters with missing cell links")
-            cols = df3.AsNumpy(v_cols_to_use)
-            num_pass = df3.Count()
-            #df2.Report().Print()
-
-            layers = np.array(
-            [
-                cols["Cluster_E0"],
-                cols["Cluster_E1"],
-                cols["Cluster_E2"],
-                cols["Cluster_E3"],
-                cols["Cluster_E4"],
-                cols["Cluster_E5"],
-                cols["Cluster_E6"],
-                cols["Cluster_E7"],
-                cols["Cluster_E8"],
-                cols["Cluster_E9"],
-                cols["Cluster_E10"],
-                cols["Cluster_E11"],
-            ]
+        if clusters == "CaloClusters":
+            cells = "CaloClusterCells"
+        if clusters == "CaloTopoClusters":
+            cells = "CaloTopoClusterCells"
+        df = (
+            df
+            .Alias(f"clusters_energy", f"{clusters}.energy")
+            .Define(f"good_clusters", f"{clusters}[clusters_energy>0.1]")
+            .Filter(f"good_clusters.size()>0", ">=1 cluster with E>100MeV")
+            .Define(f"good_clusters_e", f"getCaloCluster_energy(good_clusters)")
+            .Define(f"good_clusters_EnergyInLayers", f"getCaloCluster_energyInLayers(good_clusters, {cells}, 12)")
+            .Define(f"lc_idx", f"ArgMax(good_clusters_e)")
+            .Define(f"Cluster_E", f"good_clusters_e[lc_idx]")
             )
+        for i in range(12):
+            df = df.Define(f"good_clusters_E{i}", f"getFloatAt({i})(good_clusters_EnergyInLayers)")
+            df = df.Define(f"Cluster_E{i}", f"good_clusters_E{i}[lc_idx]")
 
-            cluster_E = layers.sum(axis=0)
-            normalized_layers = np.divide(layers, cluster_E)
-            data = np.vstack([normalized_layers, cluster_E])
+        cols_to_use = [f"Cluster_E{i}" for i in range(12)]
+        cols_to_use += ["Cluster_E"]
+        v_cols_to_use = ROOT.std.vector('string')(cols_to_use)
+        # Filter to remove weird events and get a proper tree
+        #filter_str = "&&".join([f" Cluster_E{i}!=0 " for i in range(12)])
+        #df2 = df.Filter(filter_str + " && Cluster_E!=0", "Remove bad clusters with missing cell links")
+        df2 = df.Filter("Cluster_E5!=0 && Cluster_E!=0", "Remove bad clusters with missing cell links")
+        cols = df2.AsNumpy(v_cols_to_use)
+        num_pass = df2.Count()
+        #df2.Report().Print()
 
-            calib_e = reg.predict(data.T) * cluster_E
-            #print(np.array([calib_e, data.sum(axis=0)]))
-            h_e = ROOT.TH1D("hMVA", "hMVA", 500, -0.5, 0.5)
-            for e in calib_e:
-                h_e.Fill((e - truth_e)/truth_e)
+        layers = np.array(
+        [
+            cols["Cluster_E0"],
+            cols["Cluster_E1"],
+            cols["Cluster_E2"],
+            cols["Cluster_E3"],
+            cols["Cluster_E4"],
+            cols["Cluster_E5"],
+            cols["Cluster_E6"],
+            cols["Cluster_E7"],
+            cols["Cluster_E8"],
+            cols["Cluster_E9"],
+            cols["Cluster_E10"],
+            cols["Cluster_E11"],
+        ]
+        )
 
-            c = ROOT.TCanvas()
-            h_e.SetName(f"E_Calibrated{clusters}_{truth_e}")
-            #h_e.SetName(f"E_CalibratedCaloClusters_{truth_e}")
-            h_e.Draw()
-            c.SetLogy()
-            resp_e_v, resol_e_v = get_response_and_resol(h_e, h_e.GetMean(), h_e.GetStdDev())
-            c.Print(in_directory+'/'+h_e.GetName()+'.png')
+        cluster_E = layers.sum(axis=0)
+        normalized_layers = np.divide(layers, cluster_E)
+        data = np.vstack([normalized_layers, cluster_E])
 
-            #if clusters == "CaloClusters":
-            #    row = [truth_e, "CalibratedCaloClusters", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
-            #if clusters == "CaloTopoClusters":
-            #    row = [truth_e, "CalibratedCaloTopoClusters", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
-            row = [truth_e, f"Calibrated{clusters}", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
+        calib_e = reg.predict(data.T) * cluster_E
+        #print(np.array([calib_e, data.sum(axis=0)]))
+        h_e = ROOT.TH1D("hMVA", "hMVA", 500, -0.5, 0.5)
+        for e in calib_e:
+            h_e.Fill((e - truth_e)/truth_e)
 
-            results.append(row)
+        c = ROOT.TCanvas()
+        h_e.SetName(f"E_Calibrated{clusters}_{truth_e}")
+        h_e.Draw()
+        c.SetLogy()
+        resp_e_v, resol_e_v = get_response_and_resol(h_e, h_e.GetMean(), h_e.GetStdDev())
+        c.Print(in_directory+'/'+h_e.GetName()+'.png')
+
+        row = [truth_e, f"Calibrated{clusters}", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
+        results.append(row)
 
 
     results.sort(key=lambda it: it[0])

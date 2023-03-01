@@ -258,5 +258,5 @@ Basically runs all the steps in one go. Comment/uncomment lines as needed.
 
 * Propagate the geometry changes, and computes the X0. Archives the files.
 * Calls the `runParallel` scripts for the various steps.
-* Train the MVA calib (on CaloClusters)
+* Train the MVA calib (on CaloClusters and CaloTopoClusters)
 * Then compute the resolutions and responses, and make plots.
