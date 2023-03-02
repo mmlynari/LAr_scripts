@@ -60,7 +60,7 @@ for tau in taus:
     # define CR-RC^2 filter
     # order of the filter, critical (cut-off) frequency of the filter, filter type, analog or digital, type of output (pole zero, num/dem or second order section), sampling frequency
     if tau == 0:# means no shaper
-        ylabel = "Current at PCB output port [nA]"
+        ylabel = "Current at PCB output port [V]"
         extra_title = ", no shaper"
         CR = signal.butter(0, 1, btype='highpass', analog=False, output='sos', fs=sampling_frequency)
         RC = signal.butter(0, 1, btype='lowpass', analog=False, output='sos', fs=sampling_frequency)
@@ -72,7 +72,6 @@ for tau in taus:
         RC = signal.butter(2, 1/(2*np.pi*tau), btype='lowpass', analog=False, output='sos', fs=sampling_frequency)
         maxXrange = min(25 * tau, max_time_from_ansys)
     dict_shapingTime_cell_peakShaper[str(tau)] = {}
-    cell_header = ""
     column_string = ""
     cells = []
     for label, currents in df_sig.items():
@@ -81,7 +80,6 @@ for tau in taus:
         if label == string_aggressor_cell:
             plot_label = "Cell 7 (aggressor)" + extra_title
         else:
-            cell_header += " " + label + " &"
             plot_label = label + " (victim)" + extra_title
         # shape signal 
         sig_shaped = signal.sosfilt(np.asarray([CR[0], RC[0]]), currents)
@@ -101,8 +99,8 @@ for tau in taus:
         column_string += "c"
         cells.append(label)
 print("Plot written in %s/"%plotfolder)
-cell_header = cell_header[:-1]
 
+cell_header = ""
 template_string_xtalk_table = """
 \\begin{table}[h!]
 \centering
@@ -114,23 +112,29 @@ BODY
 \caption{Peak-to-peak ratio between victim and aggressor cells (cell 7) output.}
 \label{xtalk}
 \end{table}
-""".replace("COLUMN", column_string).replace('CELLS', cell_header)
+""".replace("COLUMN", column_string)
+#""".replace("COLUMN", column_string).replace('CELLS', cell_header)
 
 body_string = ""
+passed_already = False
 for tau in taus:
     if tau == 0:
         body_string += "No shaper &"
     else:
         body_string += str(tau) + " &"
-    for cell in cells:
+    for cell in sorted(cells):
         if cell == string_aggressor_cell:
             continue
+        if tau == 0: # careful, using this condition to only pass there once
+            cell_header += " " + cell + " &"
         x_talk = round(dict_shapingTime_cell_peakShaper[str(tau)][cell] * 100 / dict_shapingTime_cell_peakShaper[str(tau)][string_aggressor_cell], 2)
         body_string += " " + str(x_talk) + " &"
     body_string = body_string[:-1] + " \\\\\n"
 body_string = body_string[:-1]
+cell_header = cell_header[:-1]
 #print(body_string)
 template_string_xtalk_table = template_string_xtalk_table.replace('BODY', body_string)
+template_string_xtalk_table = template_string_xtalk_table.replace('CELLS', cell_header)
 
 with open(os.path.join(plotfolder, "table.tex"), 'a') as texfile:
     texfile.write(template_string_xtalk_table)
