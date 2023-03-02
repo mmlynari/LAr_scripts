@@ -1,0 +1,1 @@
+weaver -c weaverConfigs/fccee_pi_vs_gamma.d4afeda5c81668c90960a4c2f9de3401.auto.yaml -n weaverConfigs/particle_net_fccee.py -m weaver_models/fccee_pi_vs_gamma_best_epoch_state.pt --export-onnx weaver_models/fccee_pi_vs_gamma_best_epoch_state.onnx
