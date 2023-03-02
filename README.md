@@ -79,7 +79,7 @@ Compiling:
 cd FCCDetectors
 mkdir build
 cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=../install -DWITH_DD4HEP=ON
+cmake ../ -DCMAKE_INSTALL_PREFIX=../install 
 make -j32 install
 cd ../../
 ```
@@ -97,7 +97,7 @@ Compiling:
 cd k4RecCalorimeter
 mkdir build
 cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=../install -DWITH_DD4HEP=ON
+cmake ../ -DCMAKE_INSTALL_PREFIX=../install 
 make -j32 install
 cd ../../
 ```
@@ -117,7 +117,7 @@ Compiling:
 cd k4SimGeant4
 mkdir build
 cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=../install -DWITH_DD4HEP=ON
+cmake ../ -DCMAKE_INSTALL_PREFIX=../install 
 make -j32 install
 cd ../../
 ```
