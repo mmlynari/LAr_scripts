@@ -20,7 +20,7 @@ new_variables:
    recocells_mask: ak.ones_like(highestEnergyCluster_cells_energy) # diff event have diff number or inpu --> need zero padding, the mask keeps track of how many non zero point the event had
    highestEnergyCluster_cells_relative_theta: highestEnergyCluster_cells_theta - highestEnergyCluster_theta
    highestEnergyCluster_cells_relative_phi: highestEnergyCluster_cells_phi - highestEnergyCluster_phi
-   relative_dr: highestEnergyCluster_cells_relative_phi*highestEnergyCluster_cells_relative_phi + highestEnergyCluster_cells_relative_theta * highestEnergyCluster_cells_relative_theta
+   #relative_dr: highestEnergyCluster_cells_relative_phi*highestEnergyCluster_cells_relative_phi + highestEnergyCluster_cells_relative_theta * highestEnergyCluster_cells_relative_theta
    
 preprocess:
   ### method: [manual, auto] - whether to use manually specified parameters for variable standardization
@@ -34,11 +34,9 @@ inputs:
       pad_mode: wrap
       length: 700
       vars: 
-         #- highestEnergyCluster_cells_relative_theta
-         #- highestEnergyCluster_cells_relative_phi
-         - relative_dr
-         - highestEnergyCluster_cells_layer
-           #- highestEnergyCluster_cells_layer
+         - highestEnergyCluster_cells_relative_phi
+         - highestEnergyCluster_cells_relative_theta
+         #- highestEnergyCluster_cells_layer
    pf_features:
       pad_mode: wrap
       length: 700
@@ -103,4 +101,3 @@ weights:
    class_weights: [
       1, 1]
    reweight_hists:
-
