@@ -190,8 +190,7 @@ cell_creator_to_use = createEcalBarrelCells
 
 # generate noise for each cell
 if addNoise:
-    #ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCSW_201207_geometry/LAr_scripts/geometry/noise_capa/elecNoise_ecalBarrelFCCee.root"
-    ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/geometry/noise_capa_220216/elecNoise_ecalBarrelFCCee.root"
+    ecalBarrelNoisePath = os.environ['FCCBASEDIR']+"/LAr_scripts/data/elecNoise_ecalBarrelFCCee.root"
     ecalBarrelNoiseHistName = "h_elecNoise_fcc_"
     from Configurables import NoiseCaloCellsFromFileTool
     noiseBarrel = NoiseCaloCellsFromFileTool("NoiseBarrel",
