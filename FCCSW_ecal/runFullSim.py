@@ -274,13 +274,14 @@ createHcalBarrelCells = CreateCaloCells("CreateHCalCells",
                                hits=hcalBarrelHitsName,
                                cells=HcalBarrelCellsName)
 
+'''
 from Configurables import CellPositionsHCalBarrelTool
 cellPositionHcalBarrelTool = CellPositionsHCalBarrelTool("CellPositionsHCalBarrel", readoutName = hcalBarrelReadoutName, OutputLevel = INFO)
-
-#createHcalBarrelPositionedCells = CreateCaloCellPositionsFCCee("HCalBarrelPositionedCells", OutputLevel = INFO)
-#createHcalBarrelPositionedCells.positionsHCalBarrelTool = cellPositionHcalBarrelTool
-#createHcalBarrelPositionedCells.hits.Path = HcalBarrelCellsName
-#createHcalBarrelPositionedCells.positionedHits.Path = "HCalBarrelPositionedCells"
+createHcalBarrelPositionedCells = CreateCaloCellPositionsFCCee("HCalBarrelPositionedCells", OutputLevel = INFO)
+createHcalBarrelPositionedCells.positionsHCalBarrelTool = cellPositionHcalBarrelTool
+createHcalBarrelPositionedCells.hits.Path = HcalBarrelCellsName
+createHcalBarrelPositionedCells.positionedHits.Path = "HCalBarrelPositionedCells"
+''' 
 
 #Create cells in HCal Endcap
 HcalEndcapCellsName = "HCalEndcapCells"
