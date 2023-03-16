@@ -215,6 +215,7 @@ if addNoise:
                                              activeFieldName = "layer",
                                              addPileup = False,
                                              filterNoiseThreshold = 2,
+                                             scaleFactor = 1/1000.,
                                              numRadialLayers = 12)
 
     from Configurables import TubeLayerPhiEtaCaloTool
