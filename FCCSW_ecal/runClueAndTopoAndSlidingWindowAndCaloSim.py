@@ -191,8 +191,7 @@ cell_creator_to_use = createEcalBarrelCells
 
 # generate noise for each cell
 if addNoise:
-    #ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCSW_201207_geometry/LAr_scripts/geometry/noise_capa/elecNoise_ecalBarrelFCCee.root"
-    ecalBarrelNoisePath = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/geometry/noise_capa_220216/elecNoise_ecalBarrelFCCee.root"
+    ecalBarrelNoisePath = os.environ['FCCBASEDIR']+"/LAr_scripts/data/elecNoise_ecalBarrelFCCee.root"
     ecalBarrelNoiseHistName = "h_elecNoise_fcc_"
     from Configurables import NoiseCaloCellsFromFileTool
     noiseBarrel = NoiseCaloCellsFromFileTool("NoiseBarrel",
@@ -351,13 +350,13 @@ createTopoInput.hcalFwdCells.Path = "emptyCaloCells"
 
 readNeighboursMap = TopoCaloNeighbours("ReadNeighboursMap",
                                       #fileName = "http://fccsw.web.cern.ch/fccsw/testsamples/calo/neighbours_map_barrel.root",
-                                      fileName = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/FCCSW_ecal/neighbours_map_barrel.root",
+                                      fileName = os.environ['FCCBASEDIR']+"/LAr_scripts/data/neighbours_map_barrel.root",
                                       OutputLevel = INFO)
 
 #Noise levels per cell
 readNoisyCellsMap = TopoCaloNoisyCells("ReadNoisyCellsMap",
                                        #fileName = "http://fccsw.web.cern.ch/fccsw/testsamples/calo/cellNoise_map_electronicsNoiseLevel.root",
-                                       fileName = "/afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/210927/LAr_scripts/FCCSW_ecal/cellNoise_map_electronicsNoiseLevel.root",
+                                       fileName = os.environ['FCCBASEDIR']+"/LAr_scripts/data/cellNoise_map_electronicsNoiseLevel.root",
                                        OutputLevel = INFO)
 
 createTopoClusters = CaloTopoClusterFCCee("CreateTopoClusters",
