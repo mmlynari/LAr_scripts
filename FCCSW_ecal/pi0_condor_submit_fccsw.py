@@ -54,8 +54,8 @@ queue filename matching files {1}
 
 def get_exec_file_header():# assumes you installed FCCSW locally with the 'install' folder at the root of your FCCSW repository
     return """#!/bin/bash
-#source /cvmfs/sw.hsf.org/key4hep/setup.sh
-source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
+source /cvmfs/sw.hsf.org/key4hep/setup.sh
+#source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
 export K4RECCALORIMETER=%s
 export K4SIMGEANT4=%s
 export K4FWCORE=%s
@@ -64,7 +64,8 @@ export PYTHONPATH=%s
 LD_LIBRARY_PATH=%s
 CMAKE_PREFIX_PATH=%s
 PATH=%s
-"""%(os.environ.get("K4RECCALORIMETER", ""), os.environ.get("K4SIMGEANT4", ""), os.environ.get("K4FWCORE", ""), os.environ.get("FCCDETECTORS", ""), os.environ.get("PYTHONPATH", ""), os.environ.get("LD_LIBRARY_PATH", ""), os.environ.get("CMAKE_PREFIX_PATH", ""), os.environ.get("PATH", ""))
+export FCCBASEDIR=%s
+"""%(os.environ.get("K4RECCALORIMETER", ""), os.environ.get("K4SIMGEANT4", ""), os.environ.get("K4FWCORE", ""), os.environ.get("FCCDETECTORS", ""), os.environ.get("PYTHONPATH", ""), os.environ.get("LD_LIBRARY_PATH", ""), os.environ.get("CMAKE_PREFIX_PATH", ""), os.environ.get("PATH", ""), os.environ.get("FCCBASEDIR", ""))
 
 
 

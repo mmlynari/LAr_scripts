@@ -54,8 +54,8 @@ queue filename matching files {1}
 
 def get_exec_file_header():# assumes you installed FCCSW locally with the 'install' folder at the root of your FCCSW repository
     return """#!/bin/bash
-#source /cvmfs/sw.hsf.org/key4hep/setup.sh
-source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
+source /cvmfs/sw.hsf.org/key4hep/setup.sh
+#source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
 export K4RECCALORIMETER=%s
 export K4SIMGEANT4=%s
 export K4FWCORE=%s
