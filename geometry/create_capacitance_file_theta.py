@@ -43,7 +43,7 @@ ncells_strip_layer = 4.0
 readoutLayerRadialLengths = [1.500000] * 1 + [3.500000] * 11
 #Detector
 rmin = 2160
-Nplanes = 1536
+Nplanes = 1545
 inclination_degree = 50
 angle = inclination_degree / 180. * pi #inclination angle inn radian
 passiveThickness = 2.0 #mm
