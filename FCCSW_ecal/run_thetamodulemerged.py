@@ -168,24 +168,24 @@ ecalBarrelHitsName = "ECalBarrelPositionedHits"
 from Configurables import SimG4SaveCalHits
 saveECalBarrelTool = SimG4SaveCalHits(
     "saveECalBarrelHits",
-    readoutNames = [ecalBarrelReadoutName],
+    readoutName = ecalBarrelReadoutName,
     OutputLevel = INFO
 )
 saveECalBarrelTool.CaloHits.Path = ecalBarrelHitsName
 
 saveECalEndcapTool = SimG4SaveCalHits(
     "saveECalEndcapHits",
-    readoutNames = [ecalEndcapReadoutName]
+    readoutName = ecalEndcapReadoutName
 )
 saveECalEndcapTool.CaloHits.Path = "ECalEndcapHits"
 
 saveHCalTool = SimG4SaveCalHits(
     "saveHCalBarrelHits",
-    readoutNames = [hcalBarrelReadoutName]
+    readoutName = hcalBarrelReadoutName
 )
 saveHCalTool.CaloHits.Path = "HCalBarrelPositionedHits"
 
-#saveHCalEndcapTool = SimG4SaveCalHits("saveHCalEndcapHits", readoutNames = [hcalEndcapReadoutName])
+#saveHCalEndcapTool = SimG4SaveCalHits("saveHCalEndcapHits", readoutName = hcalEndcapReadoutName)
 #saveHCalEndcapTool.CaloHits.Path = "HCalEndcapHits"
 
 # next, create the G4 algorithm, giving the list of names of tools ("XX/YY")
@@ -498,8 +498,8 @@ out = PodioOutput("out",
 #out.outputCommands = ["keep *", "drop HCal*", "drop ECalBarrel*", "drop emptyCaloCells"]
 out.outputCommands = ["keep *", "drop HCal*", "drop emptyCaloCells"]
 
-#Nevts = 1
-Nevts = 50
+Nevts = 1
+#Nevts = 50
 import uuid
 # out.filename = "root/output_fullCalo_SimAndDigi_withTopoCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
 out.filename = "./root_merge/output_evts_"+str(Nevts)+"_pdg_"+str(pdgCode)+"_"+str(momentum)+"_GeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_PhiMinMax_"+str(phiMin)+"_"+str(phiMax)+"_MagneticField_"+str(magneticField)+"_Noise"+str(addNoise)+".root"
