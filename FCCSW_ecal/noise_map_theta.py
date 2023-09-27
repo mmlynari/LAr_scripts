@@ -19,11 +19,10 @@ hcalBarrelReadoutName = "HCalBarrelReadout"
 BarrelNoisePath = os.environ['FCCBASEDIR']+"/LAr_scripts/data/elecNoise_ecalBarrelFCCee_theta.root"
 ecalBarrelNoiseHistName = "h_elecNoise_fcc_"
 
-from Configurables import CellPositionsECalBarrelTool
-ECalBcells = CellPositionsECalBarrelTool("CellPositionsECalBarrel", 
-                                         readoutName = ecalBarrelReadoutName
-)                                         
-#                                         OutputLevel = DEBUG)
+from Configurables import CellPositionsECalBarrelModuleThetaSegTool
+ECalBcells = CellPositionsECalBarrelModuleThetaSegTool("CellPositionsECalBarrel",
+                                                       readoutName = ecalBarrelReadoutName)
+#                                                       OutputLevel = DEBUG)
 #print(ECalBcells)
 
 from Configurables import CreateFCCeeCaloNoiseLevelMap, ReadNoiseFromFileTool
@@ -38,7 +37,7 @@ ECalNoiseTool = ReadNoiseFromFileTool("ReadNoiseFromFileToolECal",
                                       addPileup = False,
                                       numRadialLayers = 12,
                                       scaleFactor = 1/1000., #MeV to GeV
-                                      OutputLevel=DEBUG)
+                                      OutputLevel = INFO)
 
 HCalNoiseTool = ReadNoiseFromFileTool("ReadNoiseFromFileToolHCal",
                                       useSegmentation = True,
@@ -50,7 +49,7 @@ HCalNoiseTool = ReadNoiseFromFileTool("ReadNoiseFromFileToolHCal",
                                       addPileup = False,
                                       numRadialLayers = 12,
                                       scaleFactor = 1/1000., #MeV to GeV
-                                      OutputLevel=DEBUG)
+                                      OutputLevel = INFO)
 
 noisePerCell = CreateFCCeeCaloNoiseLevelMap("noisePerCell", 
                                             ECalBarrelNoiseTool = ECalNoiseTool, 
@@ -62,9 +61,9 @@ noisePerCell = CreateFCCeeCaloNoiseLevelMap("noisePerCell",
                                             activeFieldNamesModuleTheta=["layer"],
                                             activeVolumesNumbers = [12],
                                             #activeVolumesEta = [1.2524, 1.2234, 1.1956, 1.1561, 1.1189, 1.0839, 1.0509, 0.9999, 0.9534, 0.91072],
-                                            readoutNamesVolumes=[],
-                                            outputFileName="cellNoise_map_electronicsNoiseLevel_thetamodulemerged.root",
-                                            OutputLevel=DEBUG)
+                                            readoutNamesVolumes = [],
+                                            outputFileName = "cellNoise_map_electronicsNoiseLevel_thetamodulemerged.root",
+                                            OutputLevel = DEBUG)
 
 # ApplicationMgr
 from Configurables import ApplicationMgr
@@ -74,4 +73,4 @@ ApplicationMgr( TopAlg = [],
                 # order is important, as GeoSvc is needed by G4SimSvc
                 ExtSvc = [geoservice, noisePerCell],
                 OutputLevel=INFO
-)
+               )
