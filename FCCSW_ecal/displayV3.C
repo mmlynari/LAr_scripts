@@ -1,9 +1,12 @@
 /******************************************************************************/
 // Simple event display for the LAr calorimeter with inclined modules
+// author: Giovanni Marchiori (giovanni.marchiori@cern.ch)
+//
 // Run with
 // root
 // .L displayV3.C+
 // display()
+//
 /******************************************************************************/
 
 
