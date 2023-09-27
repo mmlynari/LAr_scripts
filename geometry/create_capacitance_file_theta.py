@@ -1,5 +1,9 @@
+# calculate and save histograms of capacitance per source vs theta
+# output is saved in ROOT file with given filename
+#
 # execute script with
 # python create_capacitance_file_theta.py
+#
 
 from ROOT import TH1F, TF1, TF2, TCanvas, TLegend, TFile, gStyle
 import ROOT
@@ -53,7 +57,7 @@ verbose = True
 # Info: thickness of calorimeter (cm) = 40.05
 # length of passive or readout planes (cm) =  56.586
 
-filename = "capacitances_perSource_ecalBarrelFCCee.root"
+filename = "capacitances_perSource_ecalBarrelFCCee_theta.root"
 #filename = "capacitances_ecalBarrelFCCee_nLayer_%d_fromAnalytical.root"%numLayers
 
 # layer 2 require special care as it is separated in several cells and that the shield run beneath the etch: cell 2 signal pad top capa: 0.68 + 0.20 = 0.88, cell 2 signal pad bot: 0.56 + 0.21 = 0.77, cell 3: 0.34 + 2.4 = 2.74, cell 4: 1 + 0.25 = 1.25, cell 5: 1.85 + 0.28 = 2.13 

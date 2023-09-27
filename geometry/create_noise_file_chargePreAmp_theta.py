@@ -1,3 +1,16 @@
+# uses the output of create_capacitance_file_theta.py to create
+# a TFile with noise vs theta for the different layers.
+# The noise is derived based on https://indico.cern.ch/event/1066234/contributions/4708987/attachments/2387716/4080914/20220209_Brieuc_Francois_Noble_Liquid_Calorimetry_forFCCee_FCCworkshop2022.pdf#page=7
+
+# execute script with
+# python create_noise_file_chargePreAmp_theta.py
+
+# the input file name is configured with capa_filename
+# noise and capacitances per layer are saved in root files
+# capacitances_ecalBarrelFCCee_theta.root
+# elecNoise_ecalBarrelFCCee_theta.root
+# in folder noise_capa_<date>
+
 from ROOT import TH1F, TCanvas, TLegend, TFile, gStyle, gPad
 import ROOT
 import itertools
@@ -55,7 +68,7 @@ print('SF:', SF_rounded_forPrint)
 output_folder = "noise_vs_capa_chargePreAmp"
 
 #filename = "ecalBarrelFCCee_"+flagImpedance+"Ohm_"+flagTraces+"_"+str(flagsShieldsWidth)+"shieldWidth"
-capa_filename = "capacitances_perSource_ecalBarrelFCCee.root"
+capa_filename = "capacitances_perSource_ecalBarrelFCCee_theta.root"
 if not os.path.exists(capa_filename):
     print("Error: capacitance file does not exist, please run first python create_capacitance_file.py")
     sys.exit(1)
@@ -64,8 +77,8 @@ fIn = TFile(capa_filename, "r")
 output_folder = "noise_capa_" + date.today().strftime("%y%m%d") 
 if not os.path.isdir(output_folder):
     os.mkdir(output_folder)
-fSaveAll = TFile(os.path.join(output_folder, "capacitances_ecalBarrelFCCee.root"),"RECREATE")
-fSave = TFile(os.path.join(output_folder, "elecNoise_ecalBarrelFCCee.root"),"RECREATE")
+fSaveAll = TFile(os.path.join(output_folder, "capacitances_ecalBarrelFCCee_theta.root"),"RECREATE")
+fSave = TFile(os.path.join(output_folder, "elecNoise_ecalBarrelFCCee_theta.root"),"RECREATE")
 
 gStyle.SetOptStat(0)
 
