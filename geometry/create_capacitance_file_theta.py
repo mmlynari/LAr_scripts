@@ -29,20 +29,58 @@ verbose = True
 #ECalConstruction     INFO active material = LAr active layers thickness at inner radius (cm) = 0.247949 thickness at outer radious (cm) = 0.479746 making 93.4857 % increase.
 #ECalConstruction     INFO active passive initial overlap (before subtraction) (cm) = 0.1 = 50 %
 
+# latest version
+# Info: ECAL cryostat: front: rmin (cm) = 215.4 rmax (cm) = 216.78 dz (cm) = 310
+# Info: ECAL cryostat: back: rmin (cm) = 261.33 rmax (cm) = 271.6 dz (cm) = 310
+# Info: ECAL cryostat: side: rmin (cm) = 216.78 rmax (cm) = 261.33 dz (cm) = 3.38
+# Info: ECAL services: front: rmin (cm) = 216.78 rmax (cm) = 217.28 dz (cm) = 306.62
+# Info: ECAL services: back: rmin (cm) = 257.33 rmax (cm) = 261.33 dz (cm) = 306.62
+# Info: ECAL bath: material = LAr rmin (cm) =  217.28 rmax (cm) = 257.33 thickness in front of ECal (cm) = 0.5 thickness behind ECal (cm) = 4
+# Info: ECAL calorimeter volume rmin (cm) =  217.28 rmax (cm) = 257.33
+# Info: passive inner material = Lead
+# and outer material = lArCaloSteel
+# thickness of inner part at inner radius (cm) =  0.18
+# thickness of inner part at outer radius (cm) =  0.18
+# thickness of outer part (cm) =  0.01
+# thickness of total (cm) =  0.2
+# rotation angle = 0.872665
+# Info: number of passive plates = 1545 azim. angle difference =  0.00406679
+# Info:  distance at inner radius (cm) = 0.883631
+# distance at outer radius (cm) = 1.04651
+# Info: readout material = PCB
+# thickness of readout planes (cm) =  0.12
+# number of readout layers = 12
+# Info: thickness of calorimeter (cm) = 40.05
+# length of passive or readout planes (cm) =  56.586
 
 filename = "capacitances_perSource_ecalBarrelFCCee.root"
 #filename = "capacitances_ecalBarrelFCCee_nLayer_%d_fromAnalytical.root"%numLayers
 
 # layer 2 require special care as it is separated in several cells and that the shield run beneath the etch: cell 2 signal pad top capa: 0.68 + 0.20 = 0.88, cell 2 signal pad bot: 0.56 + 0.21 = 0.77, cell 3: 0.34 + 2.4 = 2.74, cell 4: 1 + 0.25 = 1.25, cell 5: 1.85 + 0.28 = 2.13 
 
-activeTotal = 400.0
-inclinedTotal = 564.964
+# 1*15mm + 11*35mm = 400
+# activeTotal = 400.0
+# inclinedTotal = 564.964
+# tracesPerLayer = [6, 1, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7] # only one trace for strip layer because 4 cells instead of one
+# ncells_strip_layer = 4.0
+# careful, this is not really the radial spacing, it is, after dilution, the spacing in the parallel direction --> radial depth spacing will not be constant
+# readoutLayerRadialLengths = [1.500000] * 1 + [3.500000] * 11
+# Detector
+# rmin = 2160
+# Nplanes = 1536
+# inclination_degree = 50
+# angle = inclination_degree / 180. * pi #inclination angle inn radian
+# passiveThickness = 2.0 #mm
+
+# latest
+activeTotal = 400.5
+inclinedTotal = 565.86
 tracesPerLayer = [6, 1, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7] # only one trace for strip layer because 4 cells instead of one
 ncells_strip_layer = 4.0
 # careful, this is not really the radial spacing, it is, after dilution, the spacing in the parallel direction --> radial depth spacing will not be constant
 readoutLayerRadialLengths = [1.500000] * 1 + [3.500000] * 11
-#Detector
-rmin = 2160
+# Detector
+rmin = 2172.8
 Nplanes = 1545
 inclination_degree = 50
 angle = inclination_degree / 180. * pi #inclination angle inn radian
@@ -88,9 +126,10 @@ inch2mm = 25.4
 capa_per_mm = 0.123 # pF/mm
 capa_per_mm_stripLayer = 0.062 # pF/mm
 # multiplicative factor
-# factor two because we merge two phi cells together, another factor 2 becasue we have two 1) signal pad / shield capa  2) HV plate / absorber capa per cell
+# factor two because we merge two phi cells together, another factor 2 because we have two 1) signal pad / shield capa  2) HV plate / absorber capa per cell
 nmult = 2
 nmult_trace = 1 # for the trace only the number of phi cell merged playes a role
+# GM: should the above two be 4 and 2 since we merge 2 phi cells together?
 epsilonRLAr = 1.5 # LAr at 88 K
 epsilon0 = 8.854/1000. #pF/mm
 
