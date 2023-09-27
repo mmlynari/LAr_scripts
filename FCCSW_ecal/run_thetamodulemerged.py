@@ -267,10 +267,10 @@ createEcalBarrelCells2 = CreateCaloCells("CreateECalBarrelCells2",
 
 # Add to Ecal barrel cells the position information
 # (good for physics, all coordinates set properly)
-from Configurables import CellPositionsECalBarrelTool
+from Configurables import CellPositionsECalBarrelModuleThetaSegTool
 from Configurables import CreateCaloCellPositionsFCCee
 
-cellPositionEcalBarrelTool = CellPositionsECalBarrelTool(
+cellPositionEcalBarrelTool = CellPositionsECalBarrelModuleThetaSegTool(
     "CellPositionsECalBarrel",
     readoutName = ecalBarrelReadoutName,
     OutputLevel = INFO
@@ -283,7 +283,7 @@ createEcalBarrelPositionedCells.positionsECalBarrelTool = cellPositionEcalBarrel
 createEcalBarrelPositionedCells.hits.Path = EcalBarrelCellsName
 createEcalBarrelPositionedCells.positionedHits.Path = "ECalBarrelPositionedCells"
 
-cellPositionEcalBarrelTool2= CellPositionsECalBarrelTool(
+cellPositionEcalBarrelTool2= CellPositionsECalBarrelModuleThetaSegTool(
     "CellPositionsECalBarrel2",
     readoutName = ecalBarrelReadoutName2,
     OutputLevel = INFO
