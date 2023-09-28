@@ -90,8 +90,8 @@ inclination_degree = 50
 angle = inclination_degree / 180. * pi #inclination angle inn radian
 passiveThickness = 2.0 #mm
 #Segmentation
-deltaTheta = 0.00981748
-minTheta = 0.589
+deltaTheta = 0.009817477
+minTheta = 0.58905
 maxTheta = pi-minTheta
 numTheta = int(ceil((maxTheta-minTheta)/deltaTheta))
 if verbose:
