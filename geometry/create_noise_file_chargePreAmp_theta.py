@@ -41,7 +41,7 @@ def rescaleaxis(g, scale = 50e-12/1e-9):
 points_capa_noise = [(100, 4375), (500, 6750)]
 x_coords, y_coords = zip(*points_capa_noise)
 A = vstack([x_coords, ones(len(x_coords))]).T
-m, c = lstsq(A, y_coords)[0]
+m, c = lstsq(A, y_coords,rcond=-1)[0]
 #print("Line Solution is y = {m}x + {c}".format(m=m, c=c))
 def get_noise_charge_rms(capacitance):
     return m * capacitance + c # number of electrons
