@@ -25,19 +25,19 @@ ECalBcells = CellPositionsECalBarrelModuleThetaSegTool("CellPositionsECalBarrel"
 #                                                       OutputLevel = DEBUG)
 #print(ECalBcells)
 
-from Configurables import CreateFCCeeCaloNoiseLevelMap, ReadNoiseFromFileTool
-ECalNoiseTool = ReadNoiseFromFileTool("ReadNoiseFromFileToolECal",
-                                      useSegmentation = False,
-                                      cellPositionsTool = ECalBcells,
-                                      readoutName = ecalBarrelReadoutName,
-                                      noiseFileName = BarrelNoisePath,
-                                      elecNoiseHistoName = ecalBarrelNoiseHistName,
-                                      setNoiseOffset = False,
-                                      activeFieldName = "layer",
-                                      addPileup = False,
-                                      numRadialLayers = 12,
-                                      scaleFactor = 1/1000., #MeV to GeV
-                                      OutputLevel = INFO)
+from Configurables import CreateFCCeeCaloNoiseLevelMap, ReadNoiseFromFileTool, ReadNoiseVsThetaFromFileTool
+ECalNoiseTool = ReadNoiseVsThetaFromFileTool("ReadNoiseFromFileToolECal",
+                                             useSegmentation = False,
+                                             cellPositionsTool = ECalBcells,
+                                             readoutName = ecalBarrelReadoutName,
+                                             noiseFileName = BarrelNoisePath,
+                                             elecNoiseHistoName = ecalBarrelNoiseHistName,
+                                             setNoiseOffset = False,
+                                             activeFieldName = "layer",
+                                             addPileup = False,
+                                             numRadialLayers = 12,
+                                             scaleFactor = 1/1000., #MeV to GeV
+                                             OutputLevel = INFO)
 
 HCalNoiseTool = ReadNoiseFromFileTool("ReadNoiseFromFileToolHCal",
                                       useSegmentation = True,
