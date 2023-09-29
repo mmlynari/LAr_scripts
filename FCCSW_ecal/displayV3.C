@@ -57,6 +57,7 @@
 #include <TEveBrowser.h>
 #include <TEveRGBAPaletteOverlay.h>
 #include <TGLViewer.h>
+#include <TGTextEntry.h>
 #include <TGTab.h>
 #include <TGButton.h>
 #include <TGLAnnotation.h>
@@ -91,13 +92,13 @@ std::string geomFile = "ECalBarrel.root";
 //bool drawMergedCells = true;
 
 // 50 electrons 100 GeV
-std::string evtFile = "output_evts_50_100_GeV_ThetaMinMax_40_140_PhiMinMax_0_6.28318.root";
+// std::string evtFile = "output_evts_50_100_GeV_ThetaMinMax_40_140_PhiMinMax_0_6.28318.root";
 // 1 pi0  50 GeV
 // std::string evtFile = "output_evts_1_pdg_111_50_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795.root";
 // 1 photon 50 GeV
 // std::string evtFile = "output_evts_1_pdg_22_50_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795.root";
 // 1 pi0  10 GeV
-// std::string evtFile = "output_evts_1_pdg_111_10_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795.root";
+std::string evtFile = "output_evts_1_pdg_111_10_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795.root";
 // 1 photon 10 GeV
 // std::string evtFile = "output_evts_1_pdg_22_10_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795.root";
 
@@ -105,7 +106,7 @@ const std::vector<int> mergedCells_Theta = {4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
 const std::vector<int> mergedModules = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
 
 bool drawParticles = true;
-bool drawMCtracks = false; // does not work
+bool drawMCtracks = true; // does not work
 bool drawHits = true;
 bool drawCells = true;
 bool drawMergedCells = false;
@@ -366,13 +367,15 @@ TGLViewer* rhoPhiGLView = nullptr;
 TGLViewer* rhoZGLView = nullptr;
 TEveScene* rhoPhiScene = nullptr;
 TEveScene* rhoPhiEventScene = nullptr;
+TEveScene* rhoPhiEventSceneManual = nullptr;
 TEveScene* rhoZScene = nullptr;
 TEveScene* rhoZEventScene = nullptr;
+TEveScene* rhoZEventSceneManual = nullptr;
 TEveProjectionManager* rhoPhiProjManager = nullptr;
 TEveProjectionManager* rhoZProjManager = nullptr;
 
 TGLConstAnnotation* eventLabel = nullptr;
-
+TGTextEntry *textEntry   = nullptr;
 
 /******************************************************************************/
 // CLASS TO READ AN EVENT FROM THE EVENT FILE
@@ -404,7 +407,7 @@ class EventReader
   //TTreeReaderArray<Int_t> *SimParticleSecondaries_generatorStatus = nullptr;
   //TTreeReaderArray<Int_t> *SimParticleSecondaries_simulatorStatus = nullptr;
   //TTreeReaderArray<Float_t> *SimParticleSecondaries_charge = nullptr;
-  //TTreeReaderArray<Float_t> *SimParticleSecondaries_time = nullptr;
+  TTreeReaderArray<Float_t> *SimParticleSecondaries_time = nullptr;
   TTreeReaderArray<Double_t> *SimParticleSecondaries_mass = nullptr;
   TTreeReaderArray<Double_t> *SimParticleSecondaries_vertex_x = nullptr;
   TTreeReaderArray<Double_t> *SimParticleSecondaries_vertex_y = nullptr;
@@ -481,7 +484,7 @@ class EventReader
 	//SimParticleSecondaries_generatorStatus = new TTreeReaderArray<Int_t>(*fReader, "SimParticleSecondaries.generatorStatus");
 	//SimParticleSecondaries_simulatorStatus = new TTreeReaderArray<Int_t>(*fReader, "SimParticleSecondaries.simulatorStatus");
 	//SimParticleSecondaries_charge = new TTreeReaderArray<Float_t>(*fReader, "SimParticleSecondaries.charge");
-	//SimParticleSecondaries_time = new TTreeReaderArray<Float_t>(*fReader, "SimParticleSecondaries.time");
+	SimParticleSecondaries_time = new TTreeReaderArray<Float_t>(*fReader, "SimParticleSecondaries.time");
 	SimParticleSecondaries_mass = new TTreeReaderArray<Double_t>(*fReader, "SimParticleSecondaries.mass");
 	SimParticleSecondaries_vertex_x = new TTreeReaderArray<Double_t>(*fReader, "SimParticleSecondaries.vertex.x");
 	SimParticleSecondaries_vertex_y = new TTreeReaderArray<Double_t>(*fReader, "SimParticleSecondaries.vertex.y");
@@ -556,7 +559,7 @@ class EventReader
       // delete SimParticleSecondaries_generatorStatus;
       // delete SimParticleSecondaries_simulatorStatus;
       // delete SimParticleSecondaries_charge;
-      // delete SimParticleSecondaries_time;
+      delete SimParticleSecondaries_time;
       delete SimParticleSecondaries_mass;
       delete SimParticleSecondaries_vertex_x;
       delete SimParticleSecondaries_vertex_y;
@@ -598,9 +601,13 @@ class EventReader
   }
 
   void loadEvent(int event = -1) {
-    if (event != -1)
-      eventId = event;
+
+    if (event != -1) eventId = event;
+
     printf("Loading event %d.\n", eventId);
+    textEntry->SetTextColor(0xff0000);
+    textEntry->SetText(Form("Loading event %d...",eventId));
+
     fReader->SetEntry(eventId);
 
     TString partType;
@@ -631,6 +638,7 @@ class EventReader
     //
     if (drawParticles) {
       cout << "Creating particles" << endl;
+      /*
       if (particles) {
 	// I haven't found a way to just delete the lines of the set
 	particles->Destroy();
@@ -642,13 +650,14 @@ class EventReader
 	particles->SetLineWidth(3);
 	gEve->AddElement(particles);
       }
-
+      */
       if (drawMCtracks) {
 	if (particlesMC == nullptr) {
 	  particlesMC = new TEveTrackList("particlesMC");
 	  TEveTrackPropagator* trkProp = particlesMC->GetPropagator();
-	  trkProp->SetMagField( 0.0 );
+	  trkProp->SetMagField( 0.01 );
 	  particlesMC->SetMainColor(kYellow);
+	  particlesMC->SetLineWidth(2);
 	  gEve->AddElement(particlesMC);
 	}
 	else
@@ -728,7 +737,7 @@ class EventReader
 	double y2 = y1 + py/p * rMax / sintheta;
 	double z2 = z1 + pz/p * rMax / sintheta;
 	double r2 = sqrt(x2*x2+y2*y2);
-	
+	/*	
 	particles->AddLine(x1,y1,z1, x2,y2,z2);
 	particles->SetElementTitle(Form("PDG = %d\nm = %f\np= %f\ntheta= %f\nphi = %f",
 					pdgID,
@@ -736,7 +745,22 @@ class EventReader
 					p,
 					acos(pz/p),
 					atan2(py,px)));
+	*/
 	
+	if (drawMCtracks) {
+	  TEveMCTrack mct;
+	  mct.SetPdgCode( pdgID );
+	  mct.SetMomentum( px, py, pz, sqrt(p*p + m*m) );
+	  mct.SetProductionVertex( x1, y1, z1, t );
+	  if (pdgID == 111) {mct.SetDaughter(0,1);mct.SetDaughter(1,2);}
+	  TEveTrack* track = new TEveTrack(&mct, particlesMC->GetPropagator());
+	  track->SetAttLineAttMarker(particlesMC);
+	  track->SetElementTitle(Form("p= %f\ntheta= %f\nphi = %f",
+				      p,
+				      acos(pz/p),
+				      atan2(py,px)));
+	  particlesMC->AddElement(track);
+	}	
       }
       else {
 	for (unsigned int i = 0; i < SimParticleSecondaries_PDG->GetSize(); i ++) {
@@ -754,7 +778,7 @@ class EventReader
 	  if (p<ParticleEnergyThreshold) continue;
 
 	  cout << "PDG = "<< pdgID << endl;
-	  //double t = (*SimParticleSecondaries_time)[i];
+	  double t = (*SimParticleSecondaries_time)[i];
 	  double x1 = (*SimParticleSecondaries_vertex_x)[i] * mm;
 	  double y1 = (*SimParticleSecondaries_vertex_y)[i] * mm;
 	  double z1 = (*SimParticleSecondaries_vertex_z)[i] * mm;
@@ -772,6 +796,7 @@ class EventReader
 	  cout << "x1 y1 z1 x2 y2 z2 = "
 	       << x1 << " " << y1 << " " << z1 << " "
 	       << x2 << " " << y2 << " " << z2 << endl;
+	  /*
 	  particles->AddLine(x1,y1,z1, x2,y2,z2);
 	  particles->SetElementTitle(Form("PDG = %d\nm = %f\np= %f\ntheta= %f\nphi = %f",
 					  pdgID,
@@ -779,8 +804,23 @@ class EventReader
 					  p,
 					  acos(pz/p),
 					  atan2(py,px)));
+	  */
+	  if (drawMCtracks) {
+	    TEveMCTrack mct;
+	    mct.SetPdgCode( pdgID );
+	    mct.SetMomentum( px, py, pz, sqrt(p*p + m*m) );
+	    mct.SetProductionVertex( x1, y1, z1, t );
+	    TEveTrack* track = new TEveTrack(&mct, particlesMC->GetPropagator());
+	    track->SetAttLineAttMarker(particlesMC);
+	    track->SetElementTitle(Form("p= %f\ntheta= %f\nphi = %f",
+					p,
+					acos(pz/p),
+					atan2(py,px)));
+	    particlesMC->AddElement(track);
+	  }
 	}
       }
+      if (drawMCtracks) particlesMC->MakeTracks();
     }
     
     //
@@ -923,8 +963,8 @@ class EventReader
       if (topoclusters_rhoz==nullptr) {
 	topoclusters_rhoz = new TEveElementList(Form("Clusters in rho-z (E>%.1f GeV)",TopoClusterEnergyThreshold));
 	// add to scene or manager?
-	rhoZProjManager->AddElement(topoclusters_rhoz);
-	//rhoZEventScene->AddElement(topoclusters_rhoz);
+	// rhoZProjManager->AddElement(topoclusters_rhoz);
+	rhoZEventSceneManual->AddElement(topoclusters_rhoz);
 	gEve->AddToListTree(topoclusters_rhoz,false);
       }
       else
@@ -932,9 +972,9 @@ class EventReader
 
       if (topoclusters_rhophi==nullptr) {
 	topoclusters_rhophi = new TEveElementList(Form("Clusters in rho-phi (E>%.1f GeV)",TopoClusterEnergyThreshold));
-	// add to scene or manager?
-	rhoPhiProjManager->AddElement(topoclusters_rhophi);
-	//rhoPhiEventScene->AddElement(topoclusters_rhophi);
+	// add to scene or manager? -- scene that is not auto-projected!
+	// rhoPhiProjManager->AddElement(topoclusters_rhophi);
+	rhoPhiEventSceneManual->AddElement(topoclusters_rhophi);
 	gEve->AddToListTree(topoclusters_rhophi,false);
       }
       else
@@ -1130,6 +1170,10 @@ class EventReader
     }
     
     cout << "Done" << endl;
+
+    textEntry->SetTextColor((Pixel_t)0x000000);
+    textEntry->SetText(Form("Event %d loaded", eventId));
+
   }
 };
 
@@ -1154,11 +1198,9 @@ void display(int evt = 0) {
   gStyle->SetPalette(kSienna);
   
   // first tab
-  //gEve->GetDefaultGLViewer()->SetCurrentCamera(TGLViewer::kCameraPerspYOZ);
   gEve->GetDefaultGLViewer()->SetGuideState(TGLUtil::kAxesOrigin, false, false, 0);
   gEve->GetDefaultGLViewer()->DrawGuides();
   gEve->GetDefaultViewer()->SetElementName("3D view");
-  //gEve->GetDefaultGLViewer()->GetClipSet()->SetClipType(TGLClip::EType(1));
   gEve->GetDefaultGLViewer()->CurrentCamera().RotateRad(-.7, 0.5);
 
   // Create the geometry and the readout
@@ -1180,11 +1222,9 @@ void display(int evt = 0) {
     barrel->SetPickableRecursively(kTRUE);
     geom->AddElement(barrel);
     TPRegexp re;
-    // hide bath as it slows down rendering a lot
+    // set transparency of the subvolumes of the bath
     re = TPRegexp("LAr_bath*");
     TEveElement* bath = barrel->FindChild(re);
-    bath->SetRnrSelfChildren(false, false);
-    // set transparency of the subvolumes
     TEveElement::List_t matches;
     re = TPRegexp("ECAL_Cryo*");
     barrel->FindChildren(matches, re);
@@ -1193,7 +1233,6 @@ void display(int evt = 0) {
     barrel->FindChildren(matches, re);
     for (auto a : matches) a->SetMainTransparency(70);
     // make lists of elements inside bath to turn on/off simultaneously
-    // not the correct way to go, volumes then appear twice..
     if (bath) {
       TEveElementList* newbath = new TEveElementList("LAr_bath");
       barrel->AddElement(newbath);
@@ -1213,6 +1252,8 @@ void display(int evt = 0) {
       for (auto a : matches3) passives->AddElement(a);
       newbath->AddElement(passives);
       barrel->RemoveElement(bath);
+      // hide elements inside bath by default because they are slow in 3D
+      newbath->SetRnrSelfChildren(true, false);
     }
     gEve->AddGlobalElement(geom);
     gEve->AddToListTree(geom, true);
@@ -1266,28 +1307,19 @@ void display(int evt = 0) {
   rhoPhiView->AddScene(rhoPhiScene);
   rhoPhiEventScene = gEve->SpawnNewScene("RhoPhi Event Data", "Scene holding projected event-data for the RhoPhi view.");
   rhoPhiView->AddScene(rhoPhiEventScene);
+  rhoPhiEventSceneManual = gEve->SpawnNewScene("RhoPhi Event Data 2", "Scene holding hand-crafted event-data for the RhoPhi view.");
+  rhoPhiView->AddScene(rhoPhiEventSceneManual);
   rhoPhiGLView = rhoPhiView->GetGLViewer();
   // set camera orientation
   rhoPhiGLView->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-  // create 3D->2D projection manager for 
+  // create 3D->2D projection manager for rho-phi
   rhoPhiProjManager = new TEveProjectionManager();
   rhoPhiProjManager->SetProjection(TEveProjection::kPT_RPhi);
-  rhoPhiScene->AddElement(rhoPhiProjManager);
   auto axes = new TEveProjectionAxes(rhoPhiProjManager);
   axes->SetElementName("Rho-Phi projection axes");
   rhoPhiScene->AddElement(axes);
-  //gEve->AddToListTree(axes, kTRUE);
-  //gEve->AddToListTree(rhoPhiProjManager, kTRUE);
-  if (useG4geom) {
+  if (useG4geom)
     rhoPhiProjManager->ImportElements(geom, rhoPhiScene);
-    // enable bath in 2D view
-    TEveElement* geomProj = rhoPhiProjManager->FindChild("Geometry [P]");
-    TPRegexp re("ECalBarrel_*");
-    TEveElement* barrelProj = geomProj->FindChild(re);
-    re = TPRegexp("LAr_bath*");
-    TEveElement* bath = barrelProj->FindChild(re);
-    bath->SetRnrSelfChildren(false, true);
-  }
   else
     rhoPhiProjManager->ImportElements(barrel, rhoPhiScene);
 
@@ -1308,8 +1340,7 @@ void display(int evt = 0) {
       gridmod->AddLine(x1, y1, 0., x2, y2, 0.);
     }
   }
-  // add to proj manager or to scene?
-  //rhoPhiProjManager->AddElement(gridmod);
+  // add to scene?
   rhoPhiScene->AddElement(gridmod);
   readout->AddElement(gridmod);
   
@@ -1319,34 +1350,24 @@ void display(int evt = 0) {
   rhoZView->AddScene(rhoZScene);
   rhoZEventScene = gEve->SpawnNewScene("RhoZ Event Data", "Scene holding projected event-data for the RhoZ view.");
   rhoZView->AddScene(rhoZEventScene);
+  rhoZEventSceneManual = gEve->SpawnNewScene("RhoZ Event Data 2", "Scene holding hand-crafted event-data for the RhoZ view.");
+  rhoZView->AddScene(rhoZEventSceneManual);
   rhoZGLView = rhoZView->GetGLViewer();
   rhoZGLView->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
 
   rhoZProjManager = new TEveProjectionManager();
   rhoZProjManager->SetProjection(TEveProjection::kPT_RhoZ);
-  rhoZScene->AddElement(rhoZProjManager);
   auto axes2 = new TEveProjectionAxes(rhoZProjManager);
   axes2->SetElementName("Rho-Z projection axes");
   rhoZScene->AddElement(axes2);
-  //gEve->AddToListTree(axes2, kTRUE);
-  //gEve->AddToListTree(rhoZProjManager, kTRUE);
-  if (useG4geom) {
+  if (useG4geom)
     rhoZProjManager->ImportElements(geom, rhoZScene);
-    // enable bath in 2D view
-    TEveElement* geomProj = rhoZProjManager->FindChild("Geometry [P]");
-    TPRegexp re("ECalBarrel_*");
-    TEveElement* barrelProj = geomProj->FindChild(re);
-    re = TPRegexp("LAr_bath*");
-    TEveElement* bath = barrelProj->FindChild(re);
-    bath->SetRnrSelfChildren(false, true);
-  }
   else
     rhoZProjManager->ImportElements(barrel, rhoZScene);
 
   // the theta readout grid
   TEveStraightLineSet* grid = new TEveStraightLineSet("theta readout");
   grid->SetLineColor(kViolet);
-  //grid->SetLineStyle(kDotted);
   for (int iTheta=0; iTheta<=nThetaBins; iTheta++) {
     double theta = thetaMin + iTheta*thetaGrid;
     double r1 = rMin;
@@ -1366,7 +1387,6 @@ void display(int evt = 0) {
       grid->AddLine(z1, -r1, 0., z2, -r2, 0.);
     }
   }
-  //rhoZProjManager->AddElement(grid);
   rhoZScene->AddElement(grid);
   readout->AddElement(grid);
   
@@ -1399,7 +1419,6 @@ void display(int evt = 0) {
       }
     }
   }
-  //rhoZProjManager->AddElement(grid2);
   rhoZScene->AddElement(grid2);
   readout->AddElement(grid2);
 
@@ -1439,58 +1458,68 @@ void display(int evt = 0) {
 class EvNavHandler
 {
 public:
-   void Fwd()
-   {
-      if (eventId < nEvents - 1) {
-         ++eventId;
-         eventReader->loadEvent();
-      } else {
-         printf("Already at last event.\n");
-      }
-   }
-   void Bck()
-   {
-      if (eventId > 0) {
-         --eventId;
-         eventReader->loadEvent();
-      } else {
-         printf("Already at first event.\n");
-      }
-   }
+  void Fwd()
+  {
+    if (eventId < nEvents - 1) {
+      ++eventId;
+      eventReader->loadEvent();
+    } else {
+      textEntry->SetTextColor(0xff0000);
+      textEntry->SetText("Already at last event");
+      printf("Already at last event.\n");
+    }
+  }
+  void Bck()
+  {
+    if (eventId > 0) {
+      --eventId;
+      eventReader->loadEvent();
+    } else {
+      textEntry->SetTextColor(0xff0000);
+      textEntry->SetText("Already at first event");
+      printf("Already at first event.\n");
+    }
+  }
 };
 
 void makeGui()
 {
-   // Create minimal GUI for event navigation.
+  // Create minimal GUI for event navigation.
 
-   TEveBrowser* browser = gEve->GetBrowser();
-   browser->StartEmbedding(TRootBrowser::kLeft);
+  TEveBrowser* browser = gEve->GetBrowser();
+  browser->StartEmbedding(TRootBrowser::kLeft);
 
-   TGMainFrame* frmMain = new TGMainFrame(gClient->GetRoot(), 1000, 600);
-   frmMain->SetWindowName("GUI");
-   frmMain->SetCleanup(kDeepCleanup);
-
-   TGHorizontalFrame* hf = new TGHorizontalFrame(frmMain);
-   {
-
-      TString icondir( Form("%s/icons/", gSystem->Getenv("ROOTSYS")) );
-      TGPictureButton* b = 0;
-      EvNavHandler    *fh = new EvNavHandler;
-
-      b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoBack.gif"));
-      hf->AddFrame(b);
-      b->Connect("Clicked()", "EvNavHandler", fh, "Bck()");
-
-      b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoForward.gif"));
-      hf->AddFrame(b);
-      b->Connect("Clicked()", "EvNavHandler", fh, "Fwd()");
-   }
-   frmMain->AddFrame(hf);
-
-   frmMain->MapSubwindows();
-   frmMain->Resize();
-   frmMain->MapWindow();
-
-   browser->StopEmbedding();
-   browser->SetTabTitle("Event Control", 0);
+  TGMainFrame* frmMain = new TGMainFrame(gClient->GetRoot(), 1000, 600);
+  frmMain->SetWindowName("GUI");
+  frmMain->SetCleanup(kDeepCleanup);
+  
+  TGHorizontalFrame* hf = new TGHorizontalFrame(frmMain);
+  {
+    
+    TString icondir( Form("%s/icons/", gSystem->Getenv("ROOTSYS")) );
+    TGPictureButton* b = 0;
+    EvNavHandler    *fh = new EvNavHandler;
+    
+    b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoBack.gif"));
+    hf->AddFrame(b, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 10, 2, 10, 10));
+    b->Connect("Clicked()", "EvNavHandler", fh, "Bck()");
+    
+    b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoForward.gif"));
+    hf->AddFrame(b, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 10, 10, 10));
+    b->Connect("Clicked()", "EvNavHandler", fh, "Fwd()");
+    
+    textEntry = new TGTextEntry(hf);
+    textEntry->SetEnabled(kFALSE);
+    hf->AddFrame(textEntry, new TGLayoutHints(kLHintsLeft | kLHintsCenterY  |
+					      kLHintsExpandX, 2, 10, 10, 10));
+    
+  }
+  frmMain->AddFrame(hf);
+  
+  frmMain->MapSubwindows();
+  frmMain->Resize();
+  frmMain->MapWindow();
+  
+  browser->StopEmbedding();
+  browser->SetTabTitle("Event Control", 0);
 }
