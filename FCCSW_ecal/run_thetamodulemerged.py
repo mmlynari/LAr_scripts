@@ -13,7 +13,12 @@ addNoise = False
 # reminder: cell granularity in theta = 0.5625 degrees
 # (in strips: 0.5625/4=0.14)
 
-momentum = 100 # in GeV
+#Nevts = 20000
+#Nevts = 50
+Nevts = 1
+#momentum = 100 # in GeV
+momentum = 50 # in GeV
+#momentum = 10 # in GeV
 _pi = 3.14159
 #thetaMin = 40 # degrees
 #thetaMax = 140 # degrees
@@ -21,8 +26,6 @@ thetaMin = 90 # degrees
 thetaMax = 90 # degrees
 phiMin = _pi/2.
 phiMax = _pi/2.
-#phiMin = _pi/2. - _pi*8/1545.
-#phiMax = _pi/2. + _pi*8/1545.
 #phiMin = 0
 #phiMax = 2 * _pi
 
@@ -31,7 +34,13 @@ pdgCode = 11
 #pdgCode = 22
 #pdgCode = 111
 
+# Set to true if history from Geant4 decays is needed (e.g. to get the
+# photons from pi0) 
+saveG4Hist = False
+if (pdgCode == 111): saveG4Hist = True
+
 magneticField = False
+
 
 from Gaudi.Configuration import *
 
@@ -101,18 +110,16 @@ geoservice.OutputLevel = INFO
 
 # Geant4 service
 # Configures the Geant simulation: geometry, physics list and user actions
-
 from Configurables import (
     SimG4FullSimActions, SimG4Alg,
     SimG4PrimariesFromEdmTool, SimG4SaveParticleHistory
 )
 actions = SimG4FullSimActions()
-# Uncomment if history from Geant4 decays is needed (e.g. to get the photons
-# from pi0) and set actions=actions in SimG4Svc + uncomment saveHistTool
-# in SimG4Alg
-actions.enableHistory=True
-actions.energyCut = 1.0 * GeV
-saveHistTool = SimG4SaveParticleHistory("saveHistory")
+
+if saveG4Hist:
+    actions.enableHistory=True
+    actions.energyCut = 1.0 * GeV
+    saveHistTool = SimG4SaveParticleHistory("saveHistory")
 
 from Configurables import SimG4Svc
 geantservice = SimG4Svc(
@@ -185,7 +192,10 @@ saveHCalTool = SimG4SaveCalHits(
 )
 saveHCalTool.CaloHits.Path = "HCalBarrelPositionedHits"
 
-#saveHCalEndcapTool = SimG4SaveCalHits("saveHCalEndcapHits", readoutName = hcalEndcapReadoutName)
+#saveHCalEndcapTool = SimG4SaveCalHits(
+#    "saveHCalEndcapHits",
+#    readoutName = hcalEndcapReadoutName
+#)
 #saveHCalEndcapTool.CaloHits.Path = "HCalEndcapHits"
 
 # next, create the G4 algorithm, giving the list of names of tools ("XX/YY")
@@ -194,14 +204,17 @@ particle_converter = SimG4PrimariesFromEdmTool("EdmConverter")
 particle_converter.GenParticles.Path = genParticlesOutputName
 
 from Configurables import SimG4Alg
+outputTools = [
+    saveECalBarrelTool,
+    saveHCalTool,
+    saveECalEndcapTool,
+    #saveHCalEndcapTool
+]
+if saveG4Hist:
+    outputTools += [saveHistTool]
+
 geantsim = SimG4Alg("SimG4Alg",
-                    outputs= [
-                        saveECalBarrelTool,
-                        saveHCalTool,
-                        saveECalEndcapTool,
-                        #saveHCalEndcapTool
-                        saveHistTool
-                    ],
+                    outputs = outputTools,
                     eventProvider=particle_converter,
                     OutputLevel=INFO)
 
@@ -498,8 +511,6 @@ out = PodioOutput("out",
 #out.outputCommands = ["keep *", "drop HCal*", "drop ECalBarrel*", "drop emptyCaloCells"]
 out.outputCommands = ["keep *", "drop HCal*", "drop emptyCaloCells"]
 
-Nevts = 1
-#Nevts = 50
 import uuid
 # out.filename = "root/output_fullCalo_SimAndDigi_withTopoCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
 out.filename = "./root_merge/output_evts_"+str(Nevts)+"_pdg_"+str(pdgCode)+"_"+str(momentum)+"_GeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_PhiMinMax_"+str(phiMin)+"_"+str(phiMax)+"_MagneticField_"+str(magneticField)+"_Noise"+str(addNoise)+".root"

@@ -53,7 +53,7 @@ def get_ref_charge(SF, E_dep = 1 * pow(10, 6)): #E_dep en eV, choose 1 MeV
     return E_dep * SF * (1 - r_recomb) / (2 * w_lar) # nA, the factor 2 comes from: Q_tot = I_0 * t_drift * 1/2  (rectangle --> triangle), t_drift cancels out from the formula to get I_0 which has v_drift/d_gap (Ramo Shockley).
                                                      # Assumption: shaping time is similar or bigger to drift time
 
-# what is this??
+# Sampling fraction in each layer
 SFfcc = [0.36504678560781667] * 1 + [0.09974087165838573] * 1 + [0.12392336840429007] * 1 + [0.1413266332223572] * 1 + [0.15415123193238958] * 1 + [0.1639900875460671] * 1 + [0.17156597031962592] * 1 + [0.17810674932424356] * 1 + [0.18340048249397345] * 1 + [0.18855877603870688] * 1 + [0.19307873042890955] * 1 + [0.21746137329706489] * 1
 nLayers = len(SFfcc)
 

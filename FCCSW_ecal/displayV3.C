@@ -93,20 +93,21 @@ std::string geomFile = "ECalBarrel.root";
 
 // 50 electrons 100 GeV
 // std::string evtFile = "output_evts_50_100_GeV_ThetaMinMax_40_140_PhiMinMax_0_6.28318.root";
+// 1 electron 50 GeV
+// std::string evtFile = "output_evts_1_pdg_11_50_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795_MagneticField_False_NoiseFalse.root";
 // 1 pi0  50 GeV
-// std::string evtFile = "output_evts_1_pdg_111_50_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795.root";
+std::string evtFile = "output_evts_1_pdg_111_50_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795_MagneticField_False_NoiseFalse.root";
 // 1 photon 50 GeV
-// std::string evtFile = "output_evts_1_pdg_22_50_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795.root";
+// std::string evtFile = "output_evts_1_pdg_22_50_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795_MagneticField_False_NoiseFalse.root";
 // 1 pi0  10 GeV
-std::string evtFile = "output_evts_1_pdg_111_10_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795.root";
+// std::string evtFile = "output_evts_1_pdg_111_10_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795_MagneticField_False_NoiseFalse.root";
 // 1 photon 10 GeV
-// std::string evtFile = "output_evts_1_pdg_22_10_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795.root";
+// std::string evtFile = "output_evts_1_pdg_22_10_GeV_ThetaMinMax_90_90_PhiMinMax_1.570795_1.570795_MagneticField_False_NoiseFalse.root";
 
 const std::vector<int> mergedCells_Theta = {4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
 const std::vector<int> mergedModules = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
 
 bool drawParticles = true;
-bool drawMCtracks = true; // does not work
 bool drawHits = true;
 bool drawCells = true;
 bool drawMergedCells = false;
@@ -197,7 +198,8 @@ double _phi(double alpha, double r_in, double r_out) {
 // r=r_in, inclined in phi by alpha, and at distance L 
 // from beginning of electrode
 double _r(double alpha, double r_in, double L) {
-  return sqrt((r_in+L*cos(alpha))*(r_in+L*cos(alpha))+(L*sin(alpha))*(L*sin(alpha)));
+  return sqrt( (r_in+L*cos(alpha)) * (r_in+L*cos(alpha))
+	       + (L*sin(alpha)) * (L*sin(alpha)) );
 }
 
 // length of electrodes
@@ -347,8 +349,7 @@ class TGLConstAnnotation : public TGLAnnotation
 
 Int_t eventId = 0; // Current event id
 Int_t nEvents = 0; // Number of events in file
-TEveStraightLineSet* particles = nullptr;
-TEveTrackList* particlesMC = nullptr;
+TEveTrackList* particles = nullptr;
 TEvePointSet* hits = nullptr;
 TEvePointSet* cells = nullptr;
 TEvePointSet* cells_merged = nullptr;
@@ -638,189 +639,107 @@ class EventReader
     //
     if (drawParticles) {
       cout << "Creating particles" << endl;
-      /*
-      if (particles) {
-	// I haven't found a way to just delete the lines of the set
-	particles->Destroy();
-	particles = nullptr;
-      }
       if (particles == nullptr) {
-	particles = new TEveStraightLineSet("particles");
+	particles = new TEveTrackList("particles");
+	TEveTrackPropagator* trkProp = particles->GetPropagator();
+	trkProp->SetMagField( 0.01 );
 	particles->SetMainColor(kYellow);
-	particles->SetLineWidth(3);
+	particles->SetLineWidth(2);
 	gEve->AddElement(particles);
       }
-      */
-      if (drawMCtracks) {
-	if (particlesMC == nullptr) {
-	  particlesMC = new TEveTrackList("particlesMC");
-	  TEveTrackPropagator* trkProp = particlesMC->GetPropagator();
-	  trkProp->SetMagField( 0.01 );
-	  particlesMC->SetMainColor(kYellow);
-	  particlesMC->SetLineWidth(2);
-	  gEve->AddElement(particlesMC);
-	}
-	else
-	  particlesMC->DestroyElements();
-      }
+      else
+	particles->DestroyElements();
 
-      /*
-      int ipmax=-1;
-      for (unsigned int i = 0; i < genParticles_generatorStatus->GetSize(); i ++) {
-	if ( (*genParticles_generatorStatus)[i] != 1 ) continue;
-	float px = (*genParticles_momentum_x)[i];
-	float py = (*genParticles_momentum_y)[i];
-	float pz = (*genParticles_momentum_z)[i];
-	float p = sqrt( px*px + py*py + pz*pz );
-	//cout << p << endl;
-	if (p==0.) continue;
-	if (p>pmax) {
-	  pmax = p;
-	  ipmax = i;
-	}
-          
-	float m = (*genParticles_mass)[i];
-	float px = (*genParticles_momentum_x)[i];
-	float py = (*genParticles_momentum_y)[i];
-	float pz = (*genParticles_momentum_z)[i];
-	float m = (*genParticles_mass)[i];
-	float p = sqrt( px*px + py*py + pz*pz );
-	int pdgID = (*genParticles_PDG)[i];
-	double t = (*genParticles_time)[i];
-	double x1 = (*genParticles_vertex_x)[i] * mm;
-	double y1 = (*genParticles_vertex_y)[i] * mm;
-	double z1 = (*genParticles_vertex_z)[i] * mm;
-	double r1 = sqrt(x1*x1+y1*y1);
-	double sintheta = sqrt(px*px + py*py)/p;
-	double x2 = x1 + px/p * rMax / sintheta;
-	double y2 = y1 + py/p * rMax / sintheta;
-	double z2 = z1 + pz/p * rMax / sintheta;
-	double r2 = sqrt(x2*x2+y2*y2);
+      // handle differently the e/gamma vs pi0 particle guns
+      // (for pi0, need to look for the two photons in secondary particle list
+      // unfortunately cannot just use the latter to show particles since
+      // info about endpoint is broken (identical to vertex)
+      float m = (*genParticles_mass)[ipmax];
+      float px = (*genParticles_momentum_x)[ipmax];
+      float py = (*genParticles_momentum_y)[ipmax];
+      float pz = (*genParticles_momentum_z)[ipmax];
+      float p = sqrt( px*px + py*py + pz*pz );
 	
-	particles->AddLine(x1,y1,z1, x2,y2,z2);
-	particles->SetElementTitle(Form("PDG = %d\nm = %f\np= %f\ntheta= %f\nphi = %f",
-					pdgID,
-					m,
-					p,
-					acos(pz/p),
-					atan2(py,px),));
+      double t = (*genParticles_time)[ipmax];
+      double x1 = (*genParticles_vertex_x)[ipmax] * mm;
+      double y1 = (*genParticles_vertex_y)[ipmax] * mm;
+      double z1 = (*genParticles_vertex_z)[ipmax] * mm;
+      double r1 = sqrt(x1*x1+y1*y1);
+      double sintheta = sqrt(px*px + py*py)/p;
+      double x2 = x1 + px/p * rMax / sintheta;
+      double y2 = y1 + py/p * rMax / sintheta;
+      double z2 = z1 + pz/p * rMax / sintheta;
+      double r2 = sqrt(x2*x2+y2*y2);
 
-	if (drawMCtracks) {
-	  TEveMCTrack mct;
-	  mct.SetPdgCode( pdgID );
-	  mct.SetMomentum( px, py, pz, sqrt(p*p + m*m) );
-	  mct.SetProductionVertex( x1, y1, z1, t );
-	  TEveTrack* track = new TEveTrack(&mct);
-	  track->SetAttLineAttMarker(particlesMC);
-	  particlesMC->AddElement(track);
-	}
-      }
-      if (drawMCtracks) particlesMC->MakeTracks();
-      */
-      
-      // handle differently the e/gamma vs pi0 particle guns (for pi0, need to look for the two photons in secondary particle list
-      // unfortunately cannot just use the latter to show particles since info about endpoint is broken (identical to vertex)
-      if (pdgID != 111) {
-	float m = (*genParticles_mass)[ipmax];
-	float px = (*genParticles_momentum_x)[ipmax];
-	float py = (*genParticles_momentum_y)[ipmax];
-	float pz = (*genParticles_momentum_z)[ipmax];
-	float p = sqrt( px*px + py*py + pz*pz );
-	
-	double t = (*genParticles_time)[ipmax];
-	double x1 = (*genParticles_vertex_x)[ipmax] * mm;
-	double y1 = (*genParticles_vertex_y)[ipmax] * mm;
-	double z1 = (*genParticles_vertex_z)[ipmax] * mm;
-	double r1 = sqrt(x1*x1+y1*y1);
-	double sintheta = sqrt(px*px + py*py)/p;
-	double x2 = x1 + px/p * rMax / sintheta;
-	double y2 = y1 + py/p * rMax / sintheta;
-	double z2 = z1 + pz/p * rMax / sintheta;
-	double r2 = sqrt(x2*x2+y2*y2);
-	/*	
-	particles->AddLine(x1,y1,z1, x2,y2,z2);
-	particles->SetElementTitle(Form("PDG = %d\nm = %f\np= %f\ntheta= %f\nphi = %f",
-					pdgID,
-					m,
-					p,
-					acos(pz/p),
-					atan2(py,px)));
-	*/
-	
-	if (drawMCtracks) {
-	  TEveMCTrack mct;
-	  mct.SetPdgCode( pdgID );
-	  mct.SetMomentum( px, py, pz, sqrt(p*p + m*m) );
-	  mct.SetProductionVertex( x1, y1, z1, t );
-	  if (pdgID == 111) {mct.SetDaughter(0,1);mct.SetDaughter(1,2);}
-	  TEveTrack* track = new TEveTrack(&mct, particlesMC->GetPropagator());
-	  track->SetAttLineAttMarker(particlesMC);
-	  track->SetElementTitle(Form("p= %f\ntheta= %f\nphi = %f",
-				      p,
-				      acos(pz/p),
-				      atan2(py,px)));
-	  particlesMC->AddElement(track);
-	}	
-      }
-      else {
+      TEveMCTrack mct;
+      mct.SetPdgCode( pdgID );
+      mct.SetMomentum( px, py, pz, sqrt(p*p + m*m) );
+      mct.SetProductionVertex( x1, y1, z1, t );
+      TEveTrack* track = new TEveTrack(&mct, particles->GetPropagator());
+      track->SetAttLineAttMarker(particles);
+      track->SetElementTitle(Form("p = %.3f GeV\ntheta = %f\nphi = %f\nx = %f cm\ny = %f cm\nz= %f cm",
+				  p, acos(pz/p), atan2(py,px),
+				  x1/cm, y1/cm, z1/cm));
+      particles->AddElement(track);
+
+      // if the particle is a pi0, also draw the two photons, and set the endpoint
+      // of the pi0 track
+      if (pdgID == 111) {
+	bool decayVtxSet = false;
 	for (unsigned int i = 0; i < SimParticleSecondaries_PDG->GetSize(); i ++) {
-	  int pdgID = (*SimParticleSecondaries_PDG)[i];
+	  pdgID = (*SimParticleSecondaries_PDG)[i];
 	  // keep only photons
 	  if (pdgID!=22) continue;
 	  //if ( (*SimParticleSecondaries_generatorStatus)[i] != 1 ) continue;
-	  float px = (*SimParticleSecondaries_momentum_x)[i];
-	  float py = (*SimParticleSecondaries_momentum_y)[i];
-	  float pz = (*SimParticleSecondaries_momentum_z)[i];
-	  float m = (*SimParticleSecondaries_mass)[i];
-	  float p = sqrt( px*px + py*py + pz*pz );
+	  px = (*SimParticleSecondaries_momentum_x)[i];
+	  py = (*SimParticleSecondaries_momentum_y)[i];
+	  pz = (*SimParticleSecondaries_momentum_z)[i];
+	  m = (*SimParticleSecondaries_mass)[i];
+	  p = sqrt( px*px + py*py + pz*pz );
 	  float e = sqrt(p*p + m*m);
-	  cout << "p = "<< p << endl;
+	  // cout << "p = "<< p << endl;
 	  if (p<ParticleEnergyThreshold) continue;
 
-	  cout << "PDG = "<< pdgID << endl;
-	  double t = (*SimParticleSecondaries_time)[i];
-	  double x1 = (*SimParticleSecondaries_vertex_x)[i] * mm;
-	  double y1 = (*SimParticleSecondaries_vertex_y)[i] * mm;
-	  double z1 = (*SimParticleSecondaries_vertex_z)[i] * mm;
-	  double r1 = sqrt(x1*x1+y1*y1);
+	  // cout << "PDG = "<< pdgID << endl;
+	  t = (*SimParticleSecondaries_time)[i];
+	  x1 = (*SimParticleSecondaries_vertex_x)[i] * mm;
+	  y1 = (*SimParticleSecondaries_vertex_y)[i] * mm;
+	  z1 = (*SimParticleSecondaries_vertex_z)[i] * mm;
+	  r1 = sqrt(x1*x1+y1*y1);
 	  // the two photons from a pi0 in the origin must come from small R
 	  if (r1>1.) continue;
-	  double sintheta = sqrt(px*px + py*py)/p;
-	  double x2 = x1 + px/p * rMax / sintheta;
-	  double y2 = y1 + py/p * rMax / sintheta;
-	  double z2 = z1 + pz/p * rMax / sintheta;
+	  sintheta = sqrt(px*px + py*py)/p;
+	  x2 = x1 + px/p * rMax / sintheta;
+	  y2 = y1 + py/p * rMax / sintheta;
+	  z2 = z1 + pz/p * rMax / sintheta;
 	  //double x2 = (*SimParticleSecondaries_endpoint_x)[i] * mm;
 	  //double y2 = (*SimParticleSecondaries_endpoint_y)[i] * mm;
 	  //double z2 = (*SimParticleSecondaries_endpoint_z)[i] * mm;
-	  double r2 = sqrt(x2*x2+y2*y2);
-	  cout << "x1 y1 z1 x2 y2 z2 = "
-	       << x1 << " " << y1 << " " << z1 << " "
-	       << x2 << " " << y2 << " " << z2 << endl;
-	  /*
-	  particles->AddLine(x1,y1,z1, x2,y2,z2);
-	  particles->SetElementTitle(Form("PDG = %d\nm = %f\np= %f\ntheta= %f\nphi = %f",
-					  pdgID,
-					  m,
-					  p,
-					  acos(pz/p),
-					  atan2(py,px)));
-	  */
-	  if (drawMCtracks) {
-	    TEveMCTrack mct;
-	    mct.SetPdgCode( pdgID );
-	    mct.SetMomentum( px, py, pz, sqrt(p*p + m*m) );
-	    mct.SetProductionVertex( x1, y1, z1, t );
-	    TEveTrack* track = new TEveTrack(&mct, particlesMC->GetPropagator());
-	    track->SetAttLineAttMarker(particlesMC);
-	    track->SetElementTitle(Form("p= %f\ntheta= %f\nphi = %f",
-					p,
-					acos(pz/p),
-					atan2(py,px)));
-	    particlesMC->AddElement(track);
+	  r2 = sqrt(x2*x2+y2*y2);
+	  // cout << "x1 y1 z1 x2 y2 z2 = "
+	  //      << x1 << " " << y1 << " " << z1 << " "
+	  //      << x2 << " " << y2 << " " << z2 << endl;
+	  // set pi0 decay point
+	  if (!decayVtxSet) {
+	    TEveVectorF v; v[0] = x1; v[1]=y1; v[2]=z1;
+	    TEvePathMark mark(TEvePathMark::kDecay, v);
+	    track->AddPathMark(mark);
+	    decayVtxSet = true;
 	  }
+	  TEveMCTrack mct;
+	  mct.SetPdgCode( pdgID );
+	  mct.SetMomentum( px, py, pz, sqrt(p*p + m*m) );
+	  mct.SetProductionVertex( x1, y1, z1, t );
+	  TEveTrack* track = new TEveTrack(&mct, particles->GetPropagator());
+	  track->SetAttLineAttMarker(particles);
+	  track->SetElementTitle(Form("p = .3%f GeV\ntheta = %f\nphi = %f\nx = %f cm\ny = %f cm\nz= %f cm",
+				      p, acos(pz/p), atan2(py,px),
+				      x1/cm, y1/cm, z1/cm));
+	  
+	  particles->AddElement(track);
 	}
       }
-      if (drawMCtracks) particlesMC->MakeTracks();
+      particles->MakeTracks();
     }
     
     //
@@ -923,9 +842,10 @@ class EventReader
       for (unsigned int i = 0; i < CorrectedCaloTopoClusters_position_x->GetSize(); i ++) {
 	float E = (*CorrectedCaloTopoClusters_energy)[i];
 	if (E < TopoClusterEnergyThreshold) continue;
+	// cluster positions are in cm and hits/cells in mm ...
 	clusters->SetNextPoint( (*CorrectedCaloTopoClusters_position_x)[i] * cm ,
 				(*CorrectedCaloTopoClusters_position_y)[i] * cm ,
-				(*CorrectedCaloTopoClusters_position_z)[i] * cm ); // why cluster positions are in cm and hits/cells in mm???
+				(*CorrectedCaloTopoClusters_position_z)[i] * cm ); 
       }
 
       
@@ -961,7 +881,8 @@ class EventReader
       
       // clusters in 2D
       if (topoclusters_rhoz==nullptr) {
-	topoclusters_rhoz = new TEveElementList(Form("Clusters in rho-z (E>%.1f GeV)",TopoClusterEnergyThreshold));
+	topoclusters_rhoz = new TEveElementList(Form("Clusters in rho-z (E>%.1f GeV)",
+						     TopoClusterEnergyThreshold));
 	// add to scene or manager?
 	// rhoZProjManager->AddElement(topoclusters_rhoz);
 	rhoZEventSceneManual->AddElement(topoclusters_rhoz);
@@ -971,7 +892,8 @@ class EventReader
 	topoclusters_rhoz->DestroyElements();
 
       if (topoclusters_rhophi==nullptr) {
-	topoclusters_rhophi = new TEveElementList(Form("Clusters in rho-phi (E>%.1f GeV)",TopoClusterEnergyThreshold));
+	topoclusters_rhophi = new TEveElementList(Form("Clusters in rho-phi (E>%.1f GeV)",
+						       TopoClusterEnergyThreshold));
 	// add to scene or manager? -- scene that is not auto-projected!
 	// rhoPhiProjManager->AddElement(topoclusters_rhophi);
 	rhoPhiEventSceneManual->AddElement(topoclusters_rhophi);
@@ -994,7 +916,8 @@ class EventReader
 	  qs_rhophi.push_back(nullptr);
 	}
 	else {
-	  TEveQuadSet* aqs = new TEveQuadSet(TEveQuadSet::kQT_FreeQuad, false, 32, Form("cluster %d", (int) i));
+	  TEveQuadSet* aqs = new TEveQuadSet(TEveQuadSet::kQT_FreeQuad, false, 32,
+					     Form("cluster %d", (int) i));
 	  aqs->SetMainTransparency(80);
 	  // by calling SetOwnIds(kTRUE) the digit-set becomes
 	  // the owner of the assigned objects and deletes
@@ -1009,7 +932,8 @@ class EventReader
 	  qs_rhoz.push_back(aqs);
 	  topoclusters_rhoz->AddElement(aqs);
 	  
-	  TEveQuadSet* aqs2 = new TEveQuadSet(TEveQuadSet::kQT_FreeQuad, false, 32, Form("cluster %d", (int) i));
+	  TEveQuadSet* aqs2 = new TEveQuadSet(TEveQuadSet::kQT_FreeQuad, false, 32,
+					      Form("cluster %d", (int) i));
 	  aqs2->SetMainTransparency(80);
 	  aqs2->SetOwnIds(kTRUE);
 	  aqs2->SetPalette(pal);
@@ -1040,7 +964,8 @@ class EventReader
       for (unsigned int i = 0; i < PositionedCaloTopoClusterCells_energy->GetSize(); i ++) {
 	int icl = -1;
 	for (unsigned int j = 0; j < CorrectedCaloTopoClusters_energy->GetSize(); j ++) {
-	  if (i >= (*CorrectedCaloTopoClusters_hits_begin)[j] && i < (*CorrectedCaloTopoClusters_hits_end)[j]) {
+	  if (i >= (*CorrectedCaloTopoClusters_hits_begin)[j] &&
+	      i < (*CorrectedCaloTopoClusters_hits_end)[j]) {
 	    icl = j;
 	    break;
 	  }
@@ -1144,7 +1069,9 @@ class EventReader
     }
 
     if (eventLabel == nullptr) {
-      eventLabel = new TGLConstAnnotation(gEve->GetDefaultGLViewer(), Form("%s, %.1f GeV\nEvent %d", partType.Data(), pmax, eventId), 0.1, 0.9);
+      eventLabel = new TGLConstAnnotation(gEve->GetDefaultGLViewer(),
+					  Form("%s, %.1f GeV\nEvent %d",
+					       partType.Data(), pmax, eventId), 0.1, 0.9);
       eventLabel->SetTextSize(0.05);// % of window diagonal
       eventLabel->SetAllowClose(false);
     }
@@ -1303,11 +1230,14 @@ void display(int evt = 0) {
   // create second tab (R-phi view)
   rhoPhiView = gEve->SpawnNewViewer("Projection Rho-Phi");
   // two scenes, for geometry and event
-  rhoPhiScene = gEve->SpawnNewScene("Rho-Phi geometry", "Scene holding projected geometry data for the RhoPhi view.");
+  rhoPhiScene = gEve->SpawnNewScene("Rho-Phi geometry",
+				    "Scene holding projected geometry data for the RhoPhi view.");
   rhoPhiView->AddScene(rhoPhiScene);
-  rhoPhiEventScene = gEve->SpawnNewScene("RhoPhi Event Data", "Scene holding projected event-data for the RhoPhi view.");
+  rhoPhiEventScene = gEve->SpawnNewScene("RhoPhi Event Data",
+					 "Scene holding projected event-data for the RhoPhi view.");
   rhoPhiView->AddScene(rhoPhiEventScene);
-  rhoPhiEventSceneManual = gEve->SpawnNewScene("RhoPhi Event Data 2", "Scene holding hand-crafted event-data for the RhoPhi view.");
+  rhoPhiEventSceneManual = gEve->SpawnNewScene("RhoPhi Event Data 2",
+					       "Scene holding hand-crafted event-data for the RhoPhi view.");
   rhoPhiView->AddScene(rhoPhiEventSceneManual);
   rhoPhiGLView = rhoPhiView->GetGLViewer();
   // set camera orientation
@@ -1346,11 +1276,14 @@ void display(int evt = 0) {
   
   // third tab (R-z view)
   rhoZView = gEve->SpawnNewViewer("Projection Rho-Z");
-  rhoZScene = gEve->SpawnNewScene("Rho-Z geometry", "Scene holding projected geometry data for the RhoZ view.");
+  rhoZScene = gEve->SpawnNewScene("Rho-Z geometry",
+				  "Scene holding projected geometry data for the RhoZ view.");
   rhoZView->AddScene(rhoZScene);
-  rhoZEventScene = gEve->SpawnNewScene("RhoZ Event Data", "Scene holding projected event-data for the RhoZ view.");
+  rhoZEventScene = gEve->SpawnNewScene("RhoZ Event Data",
+				       "Scene holding projected event-data for the RhoZ view.");
   rhoZView->AddScene(rhoZEventScene);
-  rhoZEventSceneManual = gEve->SpawnNewScene("RhoZ Event Data 2", "Scene holding hand-crafted event-data for the RhoZ view.");
+  rhoZEventSceneManual = gEve->SpawnNewScene("RhoZ Event Data 2",
+					     "Scene holding hand-crafted event-data for the RhoZ view.");
   rhoZView->AddScene(rhoZEventSceneManual);
   rhoZGLView = rhoZView->GetGLViewer();
   rhoZGLView->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
