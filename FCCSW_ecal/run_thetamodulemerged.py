@@ -222,9 +222,9 @@ geantsim = SimG4Alg("SimG4Alg",
 # EM scale calibration (sampling fraction)
 from Configurables import CalibrateInLayersTool
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
-                                   samplingFraction = [0.3632447480841956] * 1 + [0.13187261040190248] * 1 + [0.14349714292943705] * 1 + [0.150266118277841] * 1 + [0.15502683375826457] * 1 + [0.15954408786354762] * 1 + [0.16375302347299436] * 1 + [0.16840384714588075] * 1 + [0.17219540619311383] * 1 + [0.1755068643940401] * 1 + [0.17816980262822366] * 1 + [0.18131266048670405] * 1,
-                                   readoutName = ecalBarrelReadoutName,
-                                   layerFieldName = "layer")
+                                        samplingFraction = [0.35920833517910844] * 1 + [0.13624356500953932] * 1 + [0.14386554236870444] * 1 + [0.14928465075470942] * 1 + [0.15373827173933277] * 1 + [0.1590691464263249] * 1 + [0.1616598353661629] * 1 + [0.16611800053971013] * 1 + [0.169986924691829] * 1 + [0.1727827697437898] * 1 + [0.175009158726329] * 1 + [0.1767637635193861] * 1,
+                                        readoutName = ecalBarrelReadoutName,
+                                        layerFieldName = "layer")
 
 from Configurables import CalibrateCaloHitsTool
 calibHcells = CalibrateCaloHitsTool("CalibrateHCal", invSamplingFraction="31.4")
