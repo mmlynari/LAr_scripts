@@ -35,6 +35,9 @@
 #include <TPolyLine3D.h>
 #include <TMaterial.h>
 #include <TView.h>
+#include <TGeoManager.h>
+#include <TGeoVolume.h>
+#include <TGeoNode.h>
 #include <TGeoTube.h>
 #include <TGeoBBox.h>
 #include <TGeoMatrix.h>
@@ -154,7 +157,7 @@ const std::vector<double> drNom(
 const int nLayers = drNom.size();
 
 // number of electrodes
-const int nModules = 1545;
+const int nModules = 1536;
 
 // inclination angle of electrodes
 const double alpha = 50*TMath::Pi()/180.;
@@ -316,6 +319,81 @@ ULong_t ThetaBin(ULong_t cellID) {
 // return the sign of a float
 int sgn(float val) {
   return (val > 0.) - (val < 0.);
+}
+
+
+/******************************************************************************/
+// DISPLAY DETECTOR STORED IN GDML (AND OPTIONALLY CONVERT TO ROOT EVE FORMAT)
+/******************************************************************************/
+
+void displayGDMLModel(bool larOnly=false, int dim=3, bool dumpToRoot=false)
+{
+  TEveManager::Create();
+  
+  TFile::SetCacheFileDir(".");
+  gGeoManager = TGeoManager::Import("GeantDetector.gdml");
+  gGeoManager->DefaultColors();
+  gGeoManager->SetNsegments(200); // has no effect in tube rendering in OpenGL (overridden by OGL)
+  // makes the code crash..
+  //gGeoManager->SetDefaultUnits(TGeoManager::kRootUnits);
+  //gGeoManager->SetDefaultUnits(TGeoManager::kG4Units);
+  
+  if (larOnly) {
+    // only Lar
+    TGeoVolume* vol = gGeoManager->GetVolume("ECalBarrel_vol");
+    vol->SetFillColorAlpha(kBlue, 0.05);
+    vol->SetTransparency(90);
+    TObjArray* nodes = gGeoManager->GetTopVolume()->GetNodes();
+    TObjArrayIter nodeIter(nodes);
+    TGeoNode* barrel = nullptr;
+    while (TGeoNode* node = (TGeoNode*) nodeIter.Next()) {
+      TString name(node->GetName());
+      //cout << name << endl;
+      if (name.BeginsWith("ECalBarrel_vol_14")) {
+	barrel = node;
+	break;
+      }
+    }
+    if (barrel == nullptr) {
+      cout << "Could not find ECalBarrel volume in GDML" << endl;
+      return;
+    }
+    TEveGeoTopNode* inn = new TEveGeoTopNode(gGeoManager, barrel);
+    inn->SetVisOption(1);
+    inn->SetVisLevel(3);
+    gEve->AddGlobalElement(inn);
+    gEve->AddToListTree(inn, true);
+    inn->ExpandIntoListTreesRecursively();
+    inn->SetCSGExportNSeg(2000);
+    if (dumpToRoot) inn->SaveExtract("ECalBarrel.root", "ECalBarrel_vol", false);
+  }
+  else {
+    // full detector
+    auto tn = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
+    tn->SetVisLevel(3);
+    gEve->AddGlobalElement(tn);
+    gEve->AddToListTree(tn, true);
+    tn->ExpandIntoListTreesRecursively();
+    if (dumpToRoot) tn->SaveExtract("FCCDetector.root", "world", false);
+  }
+  
+  gEve->FullRedraw3D(kTRUE);
+  
+  // EClipType not exported to CINT (see TGLUtil.h):
+  // 0 - no clip, 1 - clip plane, 2 - clip box
+  auto v = gEve->GetDefaultGLViewer();
+  
+  if (dim==3) {
+    // 3d view
+    v->GetClipSet()->SetClipType(TGLClip::EType(1));
+    v->CurrentCamera().RotateRad(-.7, 0.5);
+  }
+  else {
+    // 2d view
+    v->GetClipSet()->SetClipType(TGLClip::EType(0));
+    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+  }
+  v->DoDraw();
 }
 
 

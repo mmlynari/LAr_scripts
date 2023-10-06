@@ -5,6 +5,7 @@ from GaudiKernel.SystemOfUnits import MeV, GeV, tesla
 
 use_pythia = False
 addNoise = False
+dumpGDML = False
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set
@@ -130,7 +131,9 @@ geantservice = SimG4Svc(
 )
 
 # from Configurables import GeoToGdmlDumpSvc
-# gdmldumpservice = GeoToGdmlDumpSvc("GeoToGdmlDumpSvc")
+if dumpGDML:
+    from Configurables import GeoToGdmlDumpSvc
+    gdmldumpservice = GeoToGdmlDumpSvc("GeoToGdmlDumpSvc")
 
 # Fixed seed to have reproducible results, change it for each job if you
 # split one production into several jobs
@@ -533,6 +536,10 @@ from Configurables import EventCounter
 event_counter = EventCounter('event_counter')
 event_counter.Frequency = 10
 
+ExtSvc = [geoservice, podioevent, geantservice, audsvc]
+if dumpGDML:
+    ExtSvc += [gdmldumpservice]
+
 from Configurables import ApplicationMgr
 ApplicationMgr(
     TopAlg = [
@@ -559,7 +566,6 @@ ApplicationMgr(
               ],
     EvtSel = 'NONE',
     EvtMax = Nevts,
-    ExtSvc = [geoservice, podioevent, geantservice, audsvc],
-#    ExtSvc = [geoservice, podioevent, geantservice, gdmldumpservice, audsvc],
+    ExtSvc = ExtSvc,
     StopOnSignal = True,
  )
