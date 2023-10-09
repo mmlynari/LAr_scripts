@@ -28,6 +28,7 @@ neighbours = CreateFCCeeCaloNeighbours("neighbours",
                                        activeFieldNamesModuleTheta = ["layer"],
                                        activeVolumesNumbers = [12],
                                        #activeVolumesTheta = [1.2524, 1.2234, 1.1956, 1.1561, 1.1189, 1.0839, 1.0509, 0.9999, 0.9534, 0.91072],
+                                       includeDiagonalCells = False,
                                        readoutNamesVolumes = [],
                                        connectBarrels = False, 
                                        OutputLevel = DEBUG)
