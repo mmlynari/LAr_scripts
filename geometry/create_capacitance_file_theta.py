@@ -34,28 +34,29 @@ verbose = True
 #ECalConstruction     INFO active passive initial overlap (before subtraction) (cm) = 0.1 = 50 %
 
 # latest version
-# Info: ECAL cryostat: front: rmin (cm) = 215.4 rmax (cm) = 216.78 dz (cm) = 310
-# Info: ECAL cryostat: back: rmin (cm) = 261.33 rmax (cm) = 271.6 dz (cm) = 310
-# Info: ECAL cryostat: side: rmin (cm) = 216.78 rmax (cm) = 261.33 dz (cm) = 3.38
-# Info: ECAL services: front: rmin (cm) = 216.78 rmax (cm) = 217.28 dz (cm) = 306.62
-# Info: ECAL services: back: rmin (cm) = 257.33 rmax (cm) = 261.33 dz (cm) = 306.62
-# Info: ECAL bath: material = LAr rmin (cm) =  217.28 rmax (cm) = 257.33 thickness in front of ECal (cm) = 0.5 thickness behind ECal (cm) = 4
-# Info: ECAL calorimeter volume rmin (cm) =  217.28 rmax (cm) = 257.33
-# Info: passive inner material = Lead
-# and outer material = lArCaloSteel
-# thickness of inner part at inner radius (cm) =  0.18
-# thickness of inner part at outer radius (cm) =  0.18
-# thickness of outer part (cm) =  0.01
-# thickness of total (cm) =  0.2
-# rotation angle = 0.872665
-# Info: number of passive plates = 1545 azim. angle difference =  0.00406679
-# Info:  distance at inner radius (cm) = 0.883631
-# distance at outer radius (cm) = 1.04651
-# Info: readout material = PCB
-# thickness of readout planes (cm) =  0.12
-# number of readout layers = 12
-# Info: thickness of calorimeter (cm) = 40.05
-# length of passive or readout planes (cm) =  56.586
+#  Debug: Number of layers: 12 total thickness 40
+#  Info: ECAL cryostat: front: rmin (cm) = 215.4 rmax (cm) = 216.78 dz (cm) = 310
+#  Info: ECAL cryostat: back: rmin (cm) = 261.33 rmax (cm) = 271.6 dz (cm) = 310
+#  Info: ECAL cryostat: side: rmin (cm) = 216.78 rmax (cm) = 261.33 dz (cm) = 3.38
+#  Info: ECAL services: front: rmin (cm) = 216.78 rmax (cm) = 217.28 dz (cm) = 306.62
+#  Info: ECAL services: back: rmin (cm) = 257.33 rmax (cm) = 261.33 dz (cm) = 306.62
+#  Info: ECAL bath: material = LAr rmin (cm) =  217.28 rmax (cm) = 257.33 thickness in front of ECal (cm) = 0.5 thickness behind ECal (cm) = 4
+#  Info: ECAL calorimeter volume rmin (cm) =  217.28 rmax (cm) = 257.33
+#  Info: passive inner material = Lead
+#  and outer material = lArCaloSteel
+#  thickness of inner part at inner radius (cm) =  0.18
+#  thickness of inner part at outer radius (cm) =  0.18
+#  thickness of outer part (cm) =  0.01
+#  thickness of total (cm) =  0.2
+#  rotation angle = 0.872665
+#  Info: number of passive plates = 1536 azim. angle difference =  0.00409062
+#  Info:  distance at inner radius (cm) = 0.888809
+#  distance at outer radius (cm) = 1.05264
+#  Info: readout material = PCB
+#  thickness of readout planes (cm) =  0.12
+#  number of readout layers = 12
+#  Info: thickness of calorimeter (cm) = 40.05
+#  length of passive or readout planes (cm) =  56.586
 
 filename = "capacitances_perSource_ecalBarrelFCCee_theta.root"
 #filename = "capacitances_ecalBarrelFCCee_nLayer_%d_fromAnalytical.root"%numLayers
