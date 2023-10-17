@@ -17,23 +17,7 @@ debug = False
 verbose = True
 
 #Dimensions
-### FCCee
-#ECalConstruction     INFO ECAL cryostat: front: rmin (cm) = 210 rmax (cm) = 215 dz (cm) = 226
-#ECalConstruction     INFO ECAL cryostat: back: rmin (cm) = 260 rmax (cm) = 270 dz (cm) = 226
-#ECalConstruction     INFO ECAL cryostat: side: rmin (cm) = 215 rmax (cm) = 260 dz (cm) = 10
-#ECalConstruction     INFO ECAL services: front: rmin (cm) = 215 rmax (cm) = 216 dz (cm) = 216
-#ECalConstruction     INFO ECAL services: back: rmin (cm) = 256 rmax (cm) = 260 dz (cm) = 216
-#ECalConstruction     INFO ECAL bath: material = LAr rmin (cm) =  216 rmax (cm) = 256 thickness in front of ECal (cm) = 1 thickness behind ECal (cm) = 4
-#ECalConstruction     INFO ECAL calorimeter volume rmin (cm) =  216 rmax (cm) = 256
-#ECalConstruction     INFO passive inner material = Lead and outer material = lArCaloSteel thickness of inner part (cm) =  0.14 thickness of outer part (cm) =  0.04 thickness of total (cm) =  0.2 rotation angle = 0.872665
-#ECalConstruction     INFO number of passive plates = 1536 azim. angle difference =  0.00409062
-#ECalConstruction     INFO  distance at inner radius (cm) = 0.883573 distance at outer radius (cm) = 1.0472
-#ECalConstruction     INFO readout material = PCB thickness of readout planes (cm) =  0.12 number of readout layers = 12
-#ECalConstruction     INFO thickness of calorimeter (cm) = 40 length of passive or readout planes (cm) =  56.4964
-#ECalConstruction     INFO active material = LAr active layers thickness at inner radius (cm) = 0.247949 thickness at outer radious (cm) = 0.479746 making 93.4857 % increase.
-#ECalConstruction     INFO active passive initial overlap (before subtraction) (cm) = 0.1 = 50 %
-
-# latest version
+### FCCee, latest version, with LAr gap size adjusted to obtain 1536 modules (default gives 1545)
 #  Debug: Number of layers: 12 total thickness 40
 #  Info: ECAL cryostat: front: rmin (cm) = 215.4 rmax (cm) = 216.78 dz (cm) = 310
 #  Info: ECAL cryostat: back: rmin (cm) = 261.33 rmax (cm) = 271.6 dz (cm) = 310
@@ -64,20 +48,6 @@ filename = "capacitances_perSource_ecalBarrelFCCee_theta.root"
 # layer 2 require special care as it is separated in several cells and that the shield run beneath the etch: cell 2 signal pad top capa: 0.68 + 0.20 = 0.88, cell 2 signal pad bot: 0.56 + 0.21 = 0.77, cell 3: 0.34 + 2.4 = 2.74, cell 4: 1 + 0.25 = 1.25, cell 5: 1.85 + 0.28 = 2.13 
 
 # 1*15mm + 11*35mm = 400
-# activeTotal = 400.0
-# inclinedTotal = 564.964
-# tracesPerLayer = [6, 1, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7] # only one trace for strip layer because 4 cells instead of one
-# ncells_strip_layer = 4.0
-# careful, this is not really the radial spacing, it is, after dilution, the spacing in the parallel direction --> radial depth spacing will not be constant
-# readoutLayerRadialLengths = [1.500000] * 1 + [3.500000] * 11
-# Detector
-# rmin = 2160
-# Nplanes = 1536
-# inclination_degree = 50
-# angle = inclination_degree / 180. * pi #inclination angle inn radian
-# passiveThickness = 2.0 #mm
-
-# latest
 activeTotal = 400.5
 inclinedTotal = 565.86
 tracesPerLayer = [6, 1, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7] # only one trace for strip layer because 4 cells instead of one
@@ -86,7 +56,7 @@ ncells_strip_layer = 4.0
 readoutLayerRadialLengths = [1.500000] * 1 + [3.500000] * 11
 # Detector
 rmin = 2172.8
-Nplanes = 1545
+Nplanes = 1536
 inclination_degree = 50
 angle = inclination_degree / 180. * pi #inclination angle inn radian
 passiveThickness = 2.0 #mm
@@ -127,14 +97,16 @@ print("pcbThickness: %f"%pcbThickness)
 epsilonR = 4.4 # PCB
 #conversion factor: 1 inch = 25.4 mm
 inch2mm = 25.4
-#capa per length from maxwel
+#capa per length from maxwel1
 capa_per_mm = 0.123 # pF/mm
 capa_per_mm_stripLayer = 0.062 # pF/mm
-# multiplicative factor
-# factor two because we merge two phi cells together, another factor 2 because we have two 1) signal pad / shield capa  2) HV plate / absorber capa per cell
-nmult = 2
-nmult_trace = 1 # for the trace only the number of phi cell merged playes a role
-# GM: should the above two be 4 and 2 since we merge 2 phi cells together?
+# multiplicative factors
+# factor two because we merge two phi cells together
+numberOfMergedCellsInPhi = 2
+# for the trace, another factor 2 because we have two HV plate / absorber capa per cell
+nmultTrace = 2
+# for the shield, where we use maxwell, the extra factor 2 (two signal pad / shield capa) is already accounted for
+nmultShield = 1
 epsilonRLAr = 1.5 # LAr at 88 K
 epsilon0 = 8.854/1000. #pF/mm
 
@@ -154,7 +126,7 @@ current_electrode_length = 0
 for idx in range(numLayers):# first pass to get all length parallel to the readout, real radial separation, inclination at the middle of the layer
     readoutLayerRadialLengths[idx] *= 10
     parallel_length = readoutLayerRadialLengths[idx] * dilution_factor
-    # Tricky point: in the xml geo, you define 'radial'segmentation, but these depths will be the one parallel to the plates after scaling by the dilution factor --> even when setting constant radial depth, the geoemtry builder will make constant parallel length step, not constant radial steps
+    # Tricky point: in the xml geo, you define 'radial'segmentation, but these depths will be the one parallel to the plates after scaling by the dilution factor --> even when setting constant radial depth, the geometry builder will make constant parallel length step, not constant radial steps
     readoutLayerParallelLengths.append(parallel_length)
     if outer: # prepare the starting trace length when starting to extract by the back of the PCB
         trace_length_outer += parallel_length
@@ -275,25 +247,24 @@ for i in range (0, len(readoutLayerParallelLengths)):
             print("eta = ", eta)
             print("delta eta = ", deltaEta)
                          
-        # take into account the inclination in eta
-        #traceLength = trace_length[i] / (sin(2. * atan(exp(-eta))))
+        # take into account the inclination in theta
         traceLength = trace_length[i] / sin(theta)
         #print("Layer %d trace length %f"%(i+1, traceLength))
         #Trace capacitance (stripline)
         logStripline = log(3.1 * hs / (0.8 * w + t))
-        capacitanceTrace = nmult_trace * 1 / inch2mm * 1.41 * epsilonR / logStripline * traceLength
+        # analytical formula
+        capacitanceTrace = nmultTrace * numberOfMergedCellsInPhi * 1 / inch2mm * 1.41 * epsilonR / logStripline * traceLength
         hCapTrace[i].SetBinContent(index+1, capacitanceTrace)
     
         #Shield capacitance (microstrip)
-        #cellLength = readoutLayerParallelLengths[i] / (sin(2. * atan(exp(-eta))))
         cellLength = readoutLayerParallelLengths[i] / sin(theta)
         logMicrostrip = log(5.98 * hm / (0.8 * ws + t))
-        # analytical formula 
-        #capacitanceShield = nmult * cellLength * tracesPerLayer[i] * 1 / inch2mm * 0.67 * (epsilonR + 1.41) / logMicrostrip
-        # from maxwell 
-        capacitanceShield = nmult * cellLength * tracesPerLayer[i] * capa_per_mm
+        # analytical formula (nmultShield = 2)
+        #capacitanceShield = nmultShield * numberOfMergedCellsInPhi * cellLength * tracesPerLayer[i] * 1 / inch2mm * 0.67 * (epsilonR + 1.41) / logMicrostrip
+        # from maxwell (nmultShield = 1)
+        capacitanceShield = nmultShield * numberOfMergedCellsInPhi * cellLength * tracesPerLayer[i] * capa_per_mm
         if i == 1: #strip layer has smaller capacitance due to traces running beneath the anti-etch
-            capacitanceShield = nmult * cellLength * tracesPerLayer[i] * capa_per_mm_stripLayer
+            capacitanceShield = numberOfMergedCellsInPhi * cellLength * tracesPerLayer[i] * capa_per_mm_stripLayer
         if capacitanceShield > capa_shield_max:
             capa_shield_max = capacitanceShield
         hCapShield[i].SetBinContent(index+1, capacitanceShield)
@@ -308,13 +279,13 @@ for i in range (0, len(readoutLayerParallelLengths)):
         area = abs( real_radial_separation[i] * ( 1 / tan(thetaNext) -  1 / tan(theta) )
                  + real_radial_separation[i + 1] * ( 1 / tan(thetaNext) -  1 / tan(theta))
                  ) / 2. * (real_radial_separation[i+1] - real_radial_separation[i])
-        # get the cell size perpendicular to the plate direction from the cell size on the circle at given radius and the inclination w.r.t. radial dir, then remove the PCB and lead thickness (no need for any factor here because we are perpendicular to the PCB and lead plates) --> gives the LAr gap sizxe perpendicular
+        # get the cell size perpendicular to the plate direction from the cell size on the circle at given radius and the inclination w.r.t. radial dir, then remove the PCB and lead thickness (no need for any factor here because we are perpendicular to the PCB and lead plates) --> gives the LAr gap size perpendicular
         distance = (2 * pi * (real_radial_separation[i+1] + real_radial_separation[i]) / 2. / Nplanes * cos (inclinations_wrt_radial_dir_at_middleRadialDepth[i]) - pcbThickness - passiveThickness) / 2. # divided by two because two lar gap per cell
         distance += hhv #the capa is between signal plate and absorber --> need to add distance between HV plate and signal pad
         distance += t #the capa is between signal plate and absorber --> need to add distance between HV plate and signal pad
         if (abs(theta - pi/2.)<1e-4):
             print("LAr gap size (perpendicular) + hhv + t: %f mm"%distance)
-        capacitanceDetector = nmult * epsilon0 * epsilonRLAr * area / distance
+        capacitanceDetector = numberOfMergedCellsInPhi * epsilon0 * epsilonRLAr * area / distance
         if i == 1: #strip layer has smaller capacitance because it is divided in 4 smaller cells
             capacitanceDetector /= ncells_strip_layer
         hCapDetector[i].SetBinContent(index+1, capacitanceDetector)
