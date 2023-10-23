@@ -50,7 +50,7 @@ filename = "capacitances_perSource_ecalBarrelFCCee_theta.root"
 # 1*15mm + 11*35mm = 400
 activeTotal = 400.5
 inclinedTotal = 565.86
-tracesPerLayer = [6, 1, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7] # only one trace for strip layer because 4 cells instead of one
+tracesPerLayer = [0, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] # only one trace for strip layer because 4 cells instead of one. Version where we extract all channels from the back
 ncells_strip_layer = 4.0
 # careful, this is not really the radial spacing, it is, after dilution, the spacing in the parallel direction --> radial depth spacing will not be constant
 readoutLayerRadialLengths = [1.500000] * 1 + [3.500000] * 11
