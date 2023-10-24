@@ -40,7 +40,6 @@ ECalNoiseTool = ReadNoiseVsThetaFromFileTool("ReadNoiseFromFileToolECal",
                                              OutputLevel = INFO)
 
 HCalNoiseTool = ReadNoiseFromFileTool("ReadNoiseFromFileToolHCal",
-                                      useSegmentation = True,
                                       readoutName = hcalBarrelReadoutName,
                                       noiseFileName = BarrelNoisePath,
                                       elecNoiseHistoName = ecalBarrelNoiseHistName,
