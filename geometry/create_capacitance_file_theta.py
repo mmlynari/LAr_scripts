@@ -51,7 +51,8 @@ filename = "capacitances_perSource_ecalBarrelFCCee_theta.root"
 activeTotal = 400.5
 inclinedTotal = 565.86
 tracesPerLayer = [0, 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] # only one trace for strip layer because 4 cells instead of one. Version where we extract all channels from the back
-ncells_strip_layer = 4.0
+nMergedThetaCells = [4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+nMergedModules = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 # careful, this is not really the radial spacing, it is, after dilution, the spacing in the parallel direction --> radial depth spacing will not be constant
 readoutLayerRadialLengths = [1.500000] * 1 + [3.500000] * 11
 # Detector
@@ -61,7 +62,7 @@ inclination_degree = 50
 angle = inclination_degree / 180. * pi #inclination angle inn radian
 passiveThickness = 2.0 #mm
 #Segmentation
-deltaTheta = 0.009817477
+deltaTheta = 0.009817477/4.
 minTheta = 0.58905
 maxTheta = pi-minTheta
 numTheta = int(ceil((maxTheta-minTheta)/deltaTheta))
@@ -97,16 +98,15 @@ print("pcbThickness: %f"%pcbThickness)
 epsilonR = 4.4 # PCB
 #conversion factor: 1 inch = 25.4 mm
 inch2mm = 25.4
-#capa per length from maxwel1
-capa_per_mm = 0.123 # pF/mm
-capa_per_mm_stripLayer = 0.062 # pF/mm
+# capa per length from maxwel1 (pF/mm)
+# strip layer has smaller capacitance due to traces running beneath the anti-etch
+capa_per_mm = [0.123, 0.062, 0.123, 0.123, 0.123, 0.123, 0.123, 0.123, 0.123, 0.123, 0.123, 0.123]
 # multiplicative factors
-# factor two because we merge two phi cells together
-numberOfMergedCellsInPhi = 2
-# for the trace, another factor 2 because we have two HV plate / absorber capa per cell
+# for the trace, factor 2 because we have two HV plate / absorber capa per cell
 nmultTrace = 2
 # for the shield, where we use maxwell, the extra factor 2 (two signal pad / shield capa) is already accounted for
 nmultShield = 1
+# dielectric constants
 epsilonRLAr = 1.5 # LAr at 88 K
 epsilon0 = 8.854/1000. #pF/mm
 
@@ -250,21 +250,19 @@ for i in range (0, len(readoutLayerParallelLengths)):
         # take into account the inclination in theta
         traceLength = trace_length[i] / sin(theta)
         #print("Layer %d trace length %f"%(i+1, traceLength))
-        #Trace capacitance (stripline)
+        #Trace capacitance (stripline) - not used since already accounted for elsewhere
         logStripline = log(3.1 * hs / (0.8 * w + t))
         # analytical formula
-        capacitanceTrace = nmultTrace * numberOfMergedCellsInPhi * 1 / inch2mm * 1.41 * epsilonR / logStripline * traceLength
+        capacitanceTrace = nmultTrace * 1 / inch2mm * 1.41 * epsilonR / logStripline * traceLength
         hCapTrace[i].SetBinContent(index+1, capacitanceTrace)
     
         #Shield capacitance (microstrip)
         cellLength = readoutLayerParallelLengths[i] / sin(theta)
         logMicrostrip = log(5.98 * hm / (0.8 * ws + t))
         # analytical formula (nmultShield = 2)
-        #capacitanceShield = nmultShield * numberOfMergedCellsInPhi * cellLength * tracesPerLayer[i] * 1 / inch2mm * 0.67 * (epsilonR + 1.41) / logMicrostrip
+        #capacitanceShield = nmultShield * nMergedModules[i] * cellLength * tracesPerLayer[i] * 1 / inch2mm * 0.67 * (epsilonR + 1.41) / logMicrostrip
         # from maxwell (nmultShield = 1)
-        capacitanceShield = nmultShield * numberOfMergedCellsInPhi * cellLength * tracesPerLayer[i] * capa_per_mm
-        if i == 1: #strip layer has smaller capacitance due to traces running beneath the anti-etch
-            capacitanceShield = numberOfMergedCellsInPhi * cellLength * tracesPerLayer[i] * capa_per_mm_stripLayer
+        capacitanceShield = nmultShield * nMergedModules[i] * nMergedThetaCells[i] * cellLength * tracesPerLayer[i] * capa_per_mm[i]
         if capacitanceShield > capa_shield_max:
             capa_shield_max = capacitanceShield
         hCapShield[i].SetBinContent(index+1, capacitanceShield)
@@ -285,9 +283,7 @@ for i in range (0, len(readoutLayerParallelLengths)):
         distance += t #the capa is between signal plate and absorber --> need to add distance between HV plate and signal pad
         if (abs(theta - pi/2.)<1e-4):
             print("LAr gap size (perpendicular) + hhv + t: %f mm"%distance)
-        capacitanceDetector = numberOfMergedCellsInPhi * epsilon0 * epsilonRLAr * area / distance
-        if i == 1: #strip layer has smaller capacitance because it is divided in 4 smaller cells
-            capacitanceDetector /= ncells_strip_layer
+        capacitanceDetector = nMergedModules[i] * nMergedThetaCells[i] * 2 * epsilon0 * epsilonRLAr * area / distance # factor 2 is because there are 2 LAr gaps for each cell
         hCapDetector[i].SetBinContent(index+1, capacitanceDetector)
         if capacitanceDetector > capa_det_max:
             capa_det_max = capacitanceDetector
