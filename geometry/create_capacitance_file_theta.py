@@ -262,7 +262,9 @@ for i in range (0, len(readoutLayerParallelLengths)):
         # analytical formula (nmultShield = 2)
         #capacitanceShield = nmultShield * nMergedModules[i] * cellLength * tracesPerLayer[i] * 1 / inch2mm * 0.67 * (epsilonR + 1.41) / logMicrostrip
         # from maxwell (nmultShield = 1)
-        capacitanceShield = nmultShield * nMergedModules[i] * nMergedThetaCells[i] * cellLength * tracesPerLayer[i] * capa_per_mm[i]
+        # dont multiply by nMergedThetaCells:  the shield/pad capa is reasonably independent of the cell size and the fact that there is some merging
+        # done for theta cells is already taken into account by the tracesPerLayer
+        capacitanceShield = nmultShield * nMergedModules[i] * cellLength * tracesPerLayer[i] * capa_per_mm[i]
         if capacitanceShield > capa_shield_max:
             capa_shield_max = capacitanceShield
         hCapShield[i].SetBinContent(index+1, capacitanceShield)
