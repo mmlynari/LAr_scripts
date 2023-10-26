@@ -296,7 +296,7 @@ createEcalBarrelPositionedCells = CreateCaloCellPositionsFCCee(
     "ECalBarrelPositionedCells",
     OutputLevel = INFO
 )
-createEcalBarrelPositionedCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCells.positionsTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCells.hits.Path = EcalBarrelCellsName
 createEcalBarrelPositionedCells.positionedHits.Path = "ECalBarrelPositionedCells"
 
@@ -309,7 +309,7 @@ createEcalBarrelPositionedCells2 = CreateCaloCellPositionsFCCee(
     "ECalBarrelPositionedCells2",
     OutputLevel = INFO
 )
-createEcalBarrelPositionedCells2.positionsECalBarrelTool = cellPositionEcalBarrelTool2
+createEcalBarrelPositionedCells2.positionsTool = cellPositionEcalBarrelTool2
 createEcalBarrelPositionedCells2.hits.Path = EcalBarrelCellsName2
 createEcalBarrelPositionedCells2.positionedHits.Path = "ECalBarrelPositionedCells2"
 
@@ -402,7 +402,7 @@ createEcalBarrelPositionedCaloClusterCells = CreateCaloCellPositionsFCCee(
     "ECalBarrelPositionedCaloClusterCells",
     OutputLevel = INFO
 )
-createEcalBarrelPositionedCaloClusterCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCaloClusterCells.positionsTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCaloClusterCells.hits.Path = "CaloClusterCells"
 createEcalBarrelPositionedCaloClusterCells.positionedHits.Path = "PositionedCaloClusterCells"
 
@@ -484,8 +484,8 @@ createEcalBarrelPositionedCaloTopoClusterCells = CreateCaloCellPositionsFCCee(
     "ECalBarrelPositionedCaloTopoClusterCells",
     OutputLevel = INFO
 )
-#createEcalBarrelPositionedCaloTopoClusterCells.positionsECalBarrelTool = cellPositionEcalBarrelTool2
-createEcalBarrelPositionedCaloTopoClusterCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+#createEcalBarrelPositionedCaloTopoClusterCells.positionsTool = cellPositionEcalBarrelTool2
+createEcalBarrelPositionedCaloTopoClusterCells.positionsTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCaloTopoClusterCells.hits.Path = "CaloTopoClusterCells"
 createEcalBarrelPositionedCaloTopoClusterCells.positionedHits.Path = "PositionedCaloTopoClusterCells"
 

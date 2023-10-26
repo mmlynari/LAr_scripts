@@ -142,7 +142,7 @@ cellPositionEcalBarrelTool = CellPositionsECalBarrelTool("CellPositionsECalBarre
 
 from Configurables import CreateCaloCellPositionsFCCee
 createEcalBarrelPositionedCells = CreateCaloCellPositionsFCCee("ECalBarrelPositionedCells", OutputLevel = INFO)
-createEcalBarrelPositionedCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCells.positionsTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCells.hits.Path = EcalBarrelCellsName
 createEcalBarrelPositionedCells.positionedHits.Path = "ECalBarrelPositionedCells"
 

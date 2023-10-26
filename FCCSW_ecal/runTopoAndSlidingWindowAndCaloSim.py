@@ -89,8 +89,15 @@ actions = SimG4FullSimActions()
 #actions.energyCut = 0.2 * GeV
 #saveHistTool = SimG4SaveParticleHistory("saveHistory")
 
+# Magnetic field
+from Configurables import SimG4ConstantMagneticFieldTool
+if magneticField == 1:
+    field = SimG4ConstantMagneticFieldTool("SimG4ConstantMagneticFieldTool", FieldComponentZ = -2 * tesla, FieldOn = True, IntegratorStepper = "ClassicalRK4")
+else:
+    field = SimG4ConstantMagneticFieldTool("SimG4ConstantMagneticFieldTool", FieldOn = False)
+
 from Configurables import SimG4Svc
-geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist="SimG4FtfpBert", actions=actions)
+geantservice = SimG4Svc("SimG4Svc", detector='SimG4DD4hepDetector', physicslist="SimG4FtfpBert", actions=actions, magneticField = field)
 
 # Fixed seed to have reproducible results, change it for each job if you split one production into several jobs
 # Mind that if you leave Gaudi handle random seed and some job start within the same second (very likely) you will have duplicates
@@ -100,12 +107,6 @@ geantservice.seedValue = 4242
 # Range cut
 geantservice.g4PreInitCommands += ["/run/setCut 0.1 mm"]
 
-# Magnetic field
-from Configurables import SimG4ConstantMagneticFieldTool
-if magneticField == 1:
-    field = SimG4ConstantMagneticFieldTool("SimG4ConstantMagneticFieldTool", FieldComponentZ=-2*tesla, FieldOn=True,IntegratorStepper="ClassicalRK4")
-else:
-    field = SimG4ConstantMagneticFieldTool("SimG4ConstantMagneticFieldTool",FieldOn=False)
 
 # Geant4 algorithm
 # Translates EDM to G4Event, passes the event to G4, writes out outputs via tools
@@ -252,7 +253,7 @@ cellPositionEcalBarrelTool = CellPositionsECalBarrelTool("CellPositionsECalBarre
 
 from Configurables import CreateCaloCellPositionsFCCee
 createEcalBarrelPositionedCells = CreateCaloCellPositionsFCCee("ECalBarrelPositionedCells", OutputLevel = INFO)
-createEcalBarrelPositionedCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCells.positionsTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCells.hits.Path = EcalBarrelCellsName
 createEcalBarrelPositionedCells.positionedHits.Path = "ECalBarrelPositionedCells"
 
@@ -337,7 +338,7 @@ createClusters.clusters.Path = "CaloClusters"
 createClusters.clusterCells.Path = "CaloClusterCells"
 
 createEcalBarrelPositionedCaloClusterCells = CreateCaloCellPositionsFCCee("ECalBarrelPositionedCaloClusterCells", OutputLevel = INFO)
-createEcalBarrelPositionedCaloClusterCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCaloClusterCells.positionsTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCaloClusterCells.hits.Path = "CaloClusterCells"
 createEcalBarrelPositionedCaloClusterCells.positionedHits.Path = "PositionedCaloClusterCells"
 
@@ -408,7 +409,7 @@ createTopoClusters.clusters.Path ="CaloTopoClusters"
 createTopoClusters.clusterCells.Path = "CaloTopoClusterCells"
 
 createEcalBarrelPositionedCaloTopoClusterCells = CreateCaloCellPositionsFCCee("ECalBarrelPositionedCaloTopoClusterCells", OutputLevel = INFO)
-createEcalBarrelPositionedCaloTopoClusterCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCaloTopoClusterCells.positionsTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCaloTopoClusterCells.hits.Path = "CaloTopoClusterCells"
 createEcalBarrelPositionedCaloTopoClusterCells.positionedHits.Path = "PositionedCaloTopoClusterCells"
 
