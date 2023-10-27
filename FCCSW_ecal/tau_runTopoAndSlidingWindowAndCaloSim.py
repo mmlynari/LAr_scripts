@@ -249,7 +249,7 @@ cellPositionEcalBarrelTool = CellPositionsECalBarrelTool("CellPositionsECalBarre
 
 from Configurables import CreateCaloCellPositionsFCCee
 createEcalBarrelPositionedCells = CreateCaloCellPositionsFCCee("ECalBarrelPositionedCells", OutputLevel = INFO)
-createEcalBarrelPositionedCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCells.positionsTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCells.hits.Path = EcalBarrelCellsName
 createEcalBarrelPositionedCells.positionedHits.Path = "ECalBarrelPositionedCells"
 
@@ -317,7 +317,7 @@ createClusters.clusters.Path = "CaloClusters"
 createClusters.clusterCells.Path = "CaloClusterCells"
 
 createEcalBarrelPositionedCaloClusterCells = CreateCaloCellPositionsFCCee("ECalBarrelPositionedCaloClusterCells", OutputLevel = INFO)
-createEcalBarrelPositionedCaloClusterCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCaloClusterCells.positionsTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCaloClusterCells.hits.Path = "CaloClusterCells"
 createEcalBarrelPositionedCaloClusterCells.positionedHits.Path = "PositionedCaloClusterCells"
 
@@ -389,7 +389,7 @@ createTopoClusters.clusters.Path ="CaloTopoClusters"
 createTopoClusters.clusterCells.Path = "CaloTopoClusterCells"
 
 createEcalBarrelPositionedCaloTopoClusterCells = CreateCaloCellPositionsFCCee("ECalBarrelPositionedCaloTopoClusterCells", OutputLevel = INFO)
-createEcalBarrelPositionedCaloTopoClusterCells.positionsECalBarrelTool = cellPositionEcalBarrelTool
+createEcalBarrelPositionedCaloTopoClusterCells.positionsTool = cellPositionEcalBarrelTool
 createEcalBarrelPositionedCaloTopoClusterCells.hits.Path = "CaloTopoClusterCells"
 createEcalBarrelPositionedCaloTopoClusterCells.positionedHits.Path = "PositionedCaloTopoClusterCells"
 
