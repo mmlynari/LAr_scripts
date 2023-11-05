@@ -1,12 +1,11 @@
 import os, sys
 from xml.dom import minidom
-# python write_calibration_xml.py ../../FCCDetectors/Detector/DetFCCeeECalInclined/compact/FCCee_ECalBarrel.xml
-# careful: if you use the FCC_DETECTOR environment variable, you have to recompile after modifying the xml so that they go in the right place
+# python write_calibration_xml.py ../../k4geo/FCCee/ALLEGRO/compact/ALLEGRO_o1_v02/FCCee_ECalBarrel_thetamodulemerged.xml
 
 input_xml_path = sys.argv[1]
 output_xml_path_sf = input_xml_path.replace(".xml", "_calibration.xml")
 output_xml_path_upstream = input_xml_path.replace(".xml", "_upstream.xml")
-detDim_xml_path = os.path.join(os.path.dirname(input_xml_path), "../../DetFCCeeIDEA-LAr/compact/FCCee_DectDimensions.xml")
+detDim_xml_path = os.path.join(os.path.dirname(input_xml_path), "FCCee_DectDimensions.xml")
 
 list_of_pair_layerThickness_numberOfLayer = []
 
