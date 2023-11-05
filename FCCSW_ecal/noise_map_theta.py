@@ -2,13 +2,14 @@ from Gaudi.Configuration import *
 # Detector geometry
 from Configurables import GeoSvc
 geoservice = GeoSvc("GeoSvc")
-# if FCC_DETECTORS is empty, this should use relative path to working directory
 import os
-path_to_detector = os.environ.get("FCCDETECTORS", "")
+# if K4GEO is empty, this should use relative path to working directory
+path_to_detectors = os.environ.get("K4GEO", "")
 print(path_to_detector)
 detectors_to_use=[
-                    'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster_thetamodulemerged.xml'
-                  ]
+    #'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster_thetamodulemerged.xml'
+    'FCCee/ALLEGRO/compact/ALLEGRO_o1_v02/ALLEGRO_o1_v02.xml'
+]                  ]
 # prefix all xmls with path_to_detector
 geoservice.detectors = [os.path.join(path_to_detector, _det) for _det in detectors_to_use]
 geoservice.OutputLevel = INFO
