@@ -18,9 +18,13 @@ git clone git@github.com:BrieucF/LAr_scripts.git
 # if outside CERN
 scp yourlogin@lxplus.cern.ch:/eos/user/b/brfranco/rootfile_storage/neighbours_map_barrel.root LAr_scripts/data/
 scp yourlogin@lxplus.cern.ch:/eos/user/b/brfranco/rootfile_storage/cellNoise_map_electronicsNoiseLevel.root LAr_scripts/data/
+scp yourlogin@lxplus.cern.ch:/eos/user/g/gmarchio/rootfile_storage/neighbours_map_barrel_thetamodulemerged.root LAr_scripts/data/
+scp yourlogin@lxplus.cern.ch:/eos/user/g/gmarchio/rootfile_storage/cellNoise_map_electronicsNoiseLevel_thetamodulemerged.root LAr_scripts/data/
 # if at CERN
 cp /eos/user/b/brfranco/rootfile_storage/neighbours_map_barrel.root LAr_scripts/data/
 cp /eos/user/b/brfranco/rootfile_storage/cellNoise_map_electronicsNoiseLevel.root LAr_scripts/data/
+cp /eos/user/g/gmarchio/rootfile_storage/neighbours_map_barrel_thetamodulemerged.root LAr_scripts/data/
+cp /eos/user/g/gmarchio/rootfile_storage/cellNoise_map_electronicsNoiseLevel_thetamodulemerged.root LAr_scripts/data/
 ```
 
 ### Getting additional packages
@@ -59,10 +63,11 @@ cd ../../
 ```
 export FCCDETECTORS=$PWD/FCCDetectors/
 export K4FWCORE=$PWD/k4FWCore/install/share/k4FWCore
+export K4GEO=$PWD/k4geo/install/share/k4geo
 export K4RECCALORIMETER=$PWD/k4RecCalorimeter/install/share/k4RecCalorimeter
-export PATH=$PWD/k4RecCalorimeter/install/bin/:$PWD/k4FWCore/install/bin/:$PATH
-export CMAKE_PREFIX_PATH=$PWD/k4RecCalorimeter/install:$PWD/k4FWCore/install/:$PWD/FCCDetectors/install/:$CMAKE_PREFIX_PATH
-export LD_LIBRARY_PATH=$PWD/k4RecCalorimeter/install/lib:$PWD/k4RecCalorimeter/install/lib64:$PWD/k4FWCore/install/lib:$PWD/FCCDetectors/install/lib:$PWD/FCCDetectors/install/lib64:$LD_LIBRARY_PATH
+export PATH=$PWD/k4RecCalorimeter/install/bin/:$PWD/k4geo/install/bin/:$PWD/k4FWCore/install/bin/:$PATH
+export CMAKE_PREFIX_PATH=$PWD/k4RecCalorimeter/install:$PWD/k4geo/install/:$PWD/k4FWCore/install/:$PWD/FCCDetectors/install/:$CMAKE_PREFIX_PATH
+export LD_LIBRARY_PATH=$PWD/k4RecCalorimeter/install/lib:$PWD/k4RecCalorimeter/install/lib64:$PWD/k4geo/install/lib:$PWD/k4geo/install/lib64:$PWD/k4FWCore/install/lib:$PWD/FCCDetectors/install/lib:$PWD/FCCDetectors/install/lib64:$LD_LIBRARY_PATH
 export PYTHONPATH=$PWD/k4RecCalorimeter/install/python:$PWD/k4FWCore/install/python:$PYTHONPATH
 ```
 

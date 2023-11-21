@@ -8,6 +8,6 @@ Upon detector geometry change, the noise values, noise maps and neighbor maps (u
 If using the theta-module segmentation (with inclined modules and merging of cells along theta and/or module directions) then the following scripts should be used instead:
 - `create_capacitance_file_theta.py`
 - `create_noise_file_chargePreAmp_theta.py`
-- you then have to go to `../FCCSW_ecal` to run `neighbours_theta.py` and `noise_map_theta.py`
+- you then have to go to `../FCCSW_ecal` and execute `fccrun neighbours_theta.py` and `fccrun noise_map_theta.py`
 
-NB: At the moment those files are provided from `/eos/user/b/brfranco/rootfile_storage/` (which has restricted writing permissions) as explained in the main README. This should probably be updated to take them from e.g. a public cern box link but meanwhile you can just point `TopoCaloNeighbours` and `TopoCaloNoisyCells` to the local updated files or contact Brieuc so that he updates the files directly there.
+NB: At the moment those files are provided from `/eos/user/b/brfranco/rootfile_storage/` and `/eos/user/g/gmarchio/rootfile_storage/` (which have restricted writing permissions) as explained in the main README. This should probably be updated to take them from e.g. a public cern box link but meanwhile you can just point `TopoCaloNeighbours` and `TopoCaloNoisyCells` to the local updated files or contact Brieuc/Giovanni to update the files directly there.
