@@ -21,8 +21,8 @@ geoservice.OutputLevel = INFO
 # Geant4 service
 # Configures the Geant simulation: geometry, physics list and user actions
 neighbours = CreateFCCeeCaloNeighbours("neighbours",
-                                       readoutNames=[
-                                       "ECalBarrelModuleThetaMerged"],
+                                       outputFileName = "neighbours_map_barrel_thetamodulemerged.root",
+                                       readoutNames=["ECalBarrelModuleThetaMerged"],
                                        systemNames=["system"],
                                        systemValues=[4],
                                        activeFieldNames=["layer"],
