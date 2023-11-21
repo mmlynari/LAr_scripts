@@ -7,7 +7,6 @@ import os
 path_to_detectors = os.environ.get("K4GEO", "")
 print(path_to_detector)
 detectors_to_use=[
-    #'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster_thetamodulemerged.xml'
     'FCCee/ALLEGRO/compact/ALLEGRO_o1_v02/ALLEGRO_o1_v02.xml'
 ]                  ]
 # prefix all xmls with path_to_detector
