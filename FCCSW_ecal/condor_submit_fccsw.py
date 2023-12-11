@@ -45,7 +45,7 @@ def get_condor_submit_header(executable_regex, jobFlavour = 'longlunch'):
 Log            = $(filename).log
 Output         = $(filename).out
 Error          = $(filename).err
-requirements    = ( (OpSysAndVer =?= "CentOS7") && (Machine =!= LastRemoteHost) && (TARGET.has_avx2 =?= True) )
+requirements    = ( (OpSysAndVer =?= "AlmaLinux9") && (Machine =!= LastRemoteHost) && (TARGET.has_avx2 =?= True) )
 max_retries    = 3
 +JobFlavour    = "{0}"
 RequestCpus = 1
