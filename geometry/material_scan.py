@@ -10,12 +10,15 @@ ApplicationMgr().OutputLevel = INFO
 # DD4hep geometry service
 from Configurables import GeoSvc
 ## parse the given xml file
-path_to_detectors = os.environ.get("FCCDETECTORS", "")
+# path_to_detectors = os.environ.get("FCCDETECTORS", "")
+path_to_detectors = os.environ.get("K4GEO", "")
 geoservice = GeoSvc("GeoSvc")
 geoservice.detectors = [
-                          #os.path.join(path_to_detectors, 'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster.xml'),
-                          os.path.join(path_to_detectors, 'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster_forX0.xml'),
-                          #os.path.join(path_to_detectors, 'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectEmptyMaster.xml'),
+    #os.path.join(path_to_detectors, 'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster.xml'),
+    #os.path.join(path_to_detectors, 'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster_forX0.xml'),
+    #os.path.join(path_to_detectors, 'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectEmptyMaster.xml'),
+    #os.path.join(path_to_detectors, 'Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster_thetamodulemerged.xml'),
+    os.path.join(path_to_detectors, 'FCCee/ALLEGRO/compact/ALLEGRO_o1_v02/ALLEGRO_o1_v02.xml'),
                        ]
 geoservice.OutputLevel = INFO 
 ApplicationMgr().ExtSvc += [geoservice]
