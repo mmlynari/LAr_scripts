@@ -4,7 +4,9 @@ from Configurables import AuditorSvc, ChronoAuditor
 from Configurables import PodioOutput
 from Configurables import CorrectCaloClusters
 from Configurables import CreateCaloClustersSlidingWindow
+from Configurables import CreateCaloClustersSlidingWindowFCCee
 from Configurables import CaloTowerTool
+from Configurables import CaloTowerToolFCCee
 from Configurables import CreateEmptyCaloCellsCollection
 from Configurables import CreateCaloCellPositionsFCCee
 from Configurables import CellPositionsECalBarrelModuleThetaSegTool
@@ -401,11 +403,9 @@ else:
 createemptycells = CreateEmptyCaloCellsCollection("CreateEmptyCaloCells")
 createemptycells.cells.Path = "emptyCaloCells"
 
-# Produce sliding window clusters
-towers = CaloTowerTool("towers",
-                       deltaEtaTower=0.01, deltaPhiTower=2*_pi/768,
-                       radiusForPosition=2160 + 40 / 2.0,
-                       # ecalBarrelReadoutName = ecalBarrelReadoutNamePhiEta,
+# PRODUCE SLIDING WINDOW CLUSTERS
+towers = CaloTowerToolFCCee("towers",
+                       deltaThetaTower = 0.009817477, deltaPhiTower = 2*2*_pi/1536.,
                        ecalBarrelReadoutName=ecalBarrelReadoutName,
                        ecalEndcapReadoutName=ecalEndcapReadoutName,
                        ecalFwdReadoutName="",
@@ -414,7 +414,8 @@ towers = CaloTowerTool("towers",
                        hcalEndcapReadoutName="",
                        hcalFwdReadoutName="",
                        OutputLevel=INFO)
-towers.ecalBarrelCells.Path = ecalBarrelCellsName
+towers.ecalBarrelCells.Path = ecalBarrelPositionedCellsName
+#towers.ecalBarrelCells.Path = ecalBarrelCellsName
 towers.ecalEndcapCells.Path = "ECalEndcapCells"
 towers.ecalFwdCells.Path = "emptyCaloCells"
 
@@ -424,23 +425,23 @@ towers.hcalEndcapCells.Path = "emptyCaloCells"
 towers.hcalFwdCells.Path = "emptyCaloCells"
 
 # Cluster variables
-windE = 9
+windT = 9
 windP = 17
-posE = 5
+posT = 5
 posP = 11
-dupE = 7
+dupT = 7
 dupP = 13
-finE = 9
+finT = 9
 finP = 17
 # Minimal energy to create a cluster in GeV (FCC-ee detectors have to reconstruct low energy particles)
 threshold = 0.040
 
-createClusters = CreateCaloClustersSlidingWindow("CreateClusters",
+createClusters = CreateCaloClustersSlidingWindowFCCee("CreateClusters",
                                                  towerTool=towers,
-                                                 nEtaWindow=windE, nPhiWindow=windP,
-                                                 nEtaPosition=posE, nPhiPosition=posP,
-                                                 nEtaDuplicates=dupE, nPhiDuplicates=dupP,
-                                                 nEtaFinal=finE, nPhiFinal=finP,
+                                                 nThetaWindow=windT, nPhiWindow=windP,
+                                                 nThetaPosition=posT, nPhiPosition=posP,
+                                                 nThetaDuplicates=dupT, nPhiDuplicates=dupP,
+                                                 nThetaFinal=finT, nPhiFinal=finP,
                                                  energyThreshold=threshold,
                                                  energySharingCorrection=False,
                                                  attachCells=True,
@@ -580,7 +581,7 @@ else:
     out.outputCommands = ["keep *", "drop HCal*", "drop emptyCaloCells"]
 
 # out.filename = "root/output_fullCalo_SimAndDigi_withTopoCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
-out.filename = "./root_merge/output_evts_"+str(Nevts)+"_pdg_"+str(pdgCode)+"_"+str(momentum)+"_GeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(
+out.filename = "./root/output_evts_"+str(Nevts)+"_pdg_"+str(pdgCode)+"_"+str(momentum)+"_GeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(
     thetaMax)+"_PhiMinMax_"+str(phiMin)+"_"+str(phiMax)+"_MagneticField_"+str(magneticField)+"_Noise"+str(addNoise)+".root"
 
 # CPU information
@@ -624,9 +625,9 @@ if runHCal:
     ]
 TopAlg += [
     createemptycells,
-    # createClusters,
-    # createEcalBarrelPositionedCaloClusterCells,
-    # correctCaloClusters,
+    createClusters,
+    createEcalBarrelPositionedCaloClusterCells,
+    correctCaloClusters,
     createTopoClusters,
     createEcalBarrelPositionedCaloTopoClusterCells,
     correctCaloTopoClusters,
