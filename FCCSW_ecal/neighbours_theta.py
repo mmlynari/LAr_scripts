@@ -1,10 +1,17 @@
+from Configurables import GeoSvc
 from Configurables import ApplicationMgr
 from Configurables import CreateFCCeeCaloNeighbours
 import os
-from Gaudi.Configuration import *
+from Gaudi.Configuration import INFO, DEBUG
+
+# produce neighbour map also for HCal
+doHCal = True
+
+# only relevant if doHCal is True, set to True
+# for combined ECal+HCal topoclusters
+linkECalHCalBarrels = True
 
 # Detector geometry
-from Configurables import GeoSvc
 geoservice = GeoSvc("GeoSvc")
 # if K4GEO is empty, this should use relative path to working directory
 path_to_detector = os.environ.get("K4GEO", "")
@@ -18,18 +25,40 @@ geoservice.detectors = [os.path.join(
     path_to_detector, _det) for _det in detectors_to_use]
 geoservice.OutputLevel = INFO
 
-# Geant4 service
-# Configures the Geant simulation: geometry, physics list and user actions
-neighbours = CreateFCCeeCaloNeighbours("neighbours",
-                                       outputFileName = "neighbours_map_barrel_thetamodulemerged.root",
-                                       readoutNames=["ECalBarrelModuleThetaMerged"],
-                                       systemNames=["system"],
-                                       systemValues=[4],
-                                       activeFieldNames=["layer"],
-                                       activeVolumesNumbers=[12],
-                                       includeDiagonalCells=False,
-                                       connectBarrels=False,
-                                       OutputLevel=DEBUG)
+if doHCal:
+    # create the neighbour file for ECAL+HCAL barrel cells
+    neighbours = CreateFCCeeCaloNeighbours("neighbours",
+                                           outputFileName="neighbours_map_ecalB_thetamodulemerged_hcalB_thetaphi.root",
+                                           readoutNames=[
+                                               "ECalBarrelModuleThetaMerged", "BarHCal_Readout_phitheta"],
+                                           systemNames=["system", "system"],
+                                           systemValues=[4, 8],
+                                           activeFieldNames=["layer", "layer"],
+                                           activeVolumesNumbers=[12, 13],
+                                           activeVolumesTheta=[
+                                               [],
+                                               [
+                                                   0.788969, 0.797785, 0.806444, 0.814950, 0.823304,
+                                                   0.839573, 0.855273, 0.870425, 0.885051, 0.899172,
+                                                   0.912809, 0.938708, 0.962896
+                                               ]
+                                           ],
+                                           includeDiagonalCells=False,
+                                           connectBarrels=linkECalHCalBarrels,
+                                           OutputLevel=DEBUG)
+else:
+    # create the neighbour file for ECAL+HCAL barrel cells
+    neighbours = CreateFCCeeCaloNeighbours("neighbours",
+                                           outputFileName="neighbours_map_ecalB_thetamodulemerged.root",
+                                           readoutNames=[
+                                               "ECalBarrelModuleThetaMerged"],
+                                           systemNames=["system"],
+                                           systemValues=[4],
+                                           activeFieldNames=["layer"],
+                                           activeVolumesNumbers=[12],
+                                           includeDiagonalCells=False,
+                                           connectBarrels=False,
+                                           OutputLevel=DEBUG)
 
 # ApplicationMgr
 ApplicationMgr(TopAlg=[],
