@@ -339,7 +339,6 @@ createEcalBarrelCells2 = CreateCaloCells("CreateECalBarrelCells2",
 
 # Add to Ecal barrel cells the position information
 # (good for physics, all coordinates set properly)
-
 cellPositionEcalBarrelTool = CellPositionsECalBarrelModuleThetaSegTool(
     "CellPositionsECalBarrel",
     readoutName=ecalBarrelReadoutName,
