@@ -8,7 +8,7 @@ from Configurables import CellPositionsECalBarrelModuleThetaSegTool
 import os
 from Gaudi.Configuration import INFO, DEBUG
 
-doHCal = False
+doHCal = True
 
 # Detector geometry
 geoservice = GeoSvc("GeoSvc")
