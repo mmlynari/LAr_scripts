@@ -3,9 +3,7 @@ from Configurables import EventCounter
 from Configurables import AuditorSvc, ChronoAuditor
 from Configurables import PodioOutput
 from Configurables import CorrectCaloClusters
-from Configurables import CreateCaloClustersSlidingWindow
 from Configurables import CreateCaloClustersSlidingWindowFCCee
-from Configurables import CaloTowerTool
 from Configurables import CaloTowerToolFCCee
 from Configurables import CreateEmptyCaloCellsCollection
 from Configurables import CreateCaloCellPositionsFCCee
@@ -415,7 +413,6 @@ towers = CaloTowerToolFCCee("towers",
                        hcalFwdReadoutName="",
                        OutputLevel=INFO)
 towers.ecalBarrelCells.Path = ecalBarrelPositionedCellsName
-#towers.ecalBarrelCells.Path = ecalBarrelCellsName
 towers.ecalEndcapCells.Path = "ECalEndcapCells"
 towers.ecalFwdCells.Path = "emptyCaloCells"
 
