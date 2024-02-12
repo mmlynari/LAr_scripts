@@ -59,16 +59,16 @@ Nevts = 10
 # momentum = 100  # in GeV
 momentum = 50  # in GeV
 # momentum = 10  # in GeV
-thetaMin = 40  # degrees
-thetaMax = 140  # degrees
+# thetaMin = 40  # degrees
+# thetaMax = 140  # degrees
 # thetaMin = 89
 # thetaMax = 91
-# thetaMin = 90  # degrees
-# thetaMax = 90  # degrees
-# phiMin = halfpi
-# phiMax = halfpi
-phiMin = 0
-phiMax = twopi
+thetaMin = 90  # degrees
+thetaMax = 90  # degrees
+phiMin = halfpi
+phiMax = halfpi
+# phiMin = 0
+# phiMax = twopi
 
 # particle origin
 # origR = 1000.0*mm
@@ -77,9 +77,9 @@ origTheta = halfpi
 origPhi = 0.0
 
 # particle type: 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
-pdgCode = 11
+# pdgCode = 11
 # pdgCode = 22
-# pdgCode = 111
+pdgCode = 111
 # pdgCode = 211
 
 # Set to true if history from Geant4 decays is needed (e.g. to get the
@@ -462,7 +462,7 @@ createemptycells.cells.Path = "emptyCaloCells"
 
 # Produce sliding window clusters (ECAL only)
 towers = CaloTowerToolFCCee("towers",
-                            deltaThetaTower = 0.009817477, deltaPhiTower = 2*2*pi/1536.,
+                            deltaThetaTower=4 * 0.009817477/4, deltaPhiTower=2 * 2 * pi / 1536.,
                             ecalBarrelReadoutName=ecalBarrelReadoutName,
                             ecalEndcapReadoutName=ecalEndcapReadoutName,
                             ecalFwdReadoutName="",
@@ -588,6 +588,7 @@ createTopoClusters = CaloTopoClusterFCCee("CreateTopoClusters",
 createTopoClusters.clusters.Path = "CaloTopoClusters"
 createTopoClusters.clusterCells.Path = "CaloTopoClusterCells"
 
+
 # Correction below is for EM-only clusters
 # What to do for EM+HAD topoclusters?
 correctCaloTopoClusters = CorrectCaloClusters(
@@ -629,8 +630,8 @@ else:
     out.outputCommands = ["keep *", "drop HCal*", "drop emptyCaloCells"]
 
 # out.filename = "root/output_fullCalo_SimAndDigi_withTopoCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
-out.filename = "./root/output_evts_"+str(Nevts)+"_pdg_"+str(pdgCode)+"_"+str(momentum)+"_GeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(
-    thetaMax)+"_PhiMinMax_"+str(phiMin)+"_"+str(phiMax)+"_MagneticField_"+str(magneticField)+"_Noise"+str(addNoise)+".root"
+out.filename = "./root/output_evts_" + str(Nevts) + "_pdg_" + str(pdgCode) + "_" + str(momentum) + "_GeV" + "_ThetaMinMax_" + str(thetaMin) + "_" + str(
+    thetaMax) + "_PhiMinMax_" + str(phiMin) + "_" + str(phiMax) + "_MagneticField_" + str(magneticField) + "_Noise" + str(addNoise) + ".root"
 
 # CPU information
 chra = ChronoAuditor()

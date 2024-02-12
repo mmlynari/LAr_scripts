@@ -84,7 +84,7 @@ createcellsBarrel.cells.Path="ECalBarrelCells"
 from Configurables import EnergyInCaloLayers
 energy_in_layers = EnergyInCaloLayers("energyInLayers",
                                       readoutName="ECalBarrelEta",
-                                      numLayers = 12,
+                                      numLayers=12,
                                       # sampling fraction is given as the energy correction will be applied on
                                       # calibrated cells
                                       samplingFractions = [0.3632447480841956] * 1 + [0.13187261040190248] * 1 + [0.14349714292943705] * 1 + [0.150266118277841] * 1 + [0.15502683375826457] * 1 + [0.15954408786354762] * 1 + [0.16375302347299436] * 1 + [0.16840384714588075] * 1 + [0.17219540619311383] * 1 + [0.1755068643940401] * 1 + [0.17816980262822366] * 1 + [0.18131266048670405] * 1,
