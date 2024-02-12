@@ -380,7 +380,7 @@ createEcalEndcapCells.cells.Path = "ECalEndcapCells"
 
 if runHCal:
     # Create cells in HCal
-    # 1. merge hits into cells with the default readout
+    # 1 - merge hits into cells with the default readout
     hcalBarrelCellsName = "HCalBarrelCells"
     createHcalBarrelCells = CreateCaloCells("CreateHCalBarrelCells",
                                             doCellCalibration=True,
@@ -392,7 +392,7 @@ if runHCal:
                                             cells=hcalBarrelCellsName,
                                             OutputLevel=INFO)
 
-    # 2. attach positions to the cells
+    # 2 - attach positions to the cells
     from Configurables import CellPositionsHCalBarrelPhiThetaSegTool
     cellPositionHcalBarrelTool = CellPositionsHCalBarrelPhiThetaSegTool(
         "CellPositionsHCalBarrel",
@@ -540,11 +540,9 @@ createTopoInput = CaloTopoClusterInputTool("CreateTopoInput",
                                            OutputLevel=INFO)
 
 createTopoInput.ecalBarrelCells.Path = ecalBarrelPositionedCellsName
-# createTopoInput.ecalBarrelCells.Path = "emptyCaloCells"
 createTopoInput.ecalEndcapCells.Path = "emptyCaloCells"
 createTopoInput.ecalFwdCells.Path = "emptyCaloCells"
 createTopoInput.hcalBarrelCells.Path = hcalBarrelPositionedCellsName2
-# createTopoInput.hcalBarrelCells.Path = "emptyCaloCells"
 createTopoInput.hcalExtBarrelCells.Path = "emptyCaloCells"
 createTopoInput.hcalEndcapCells.Path = "emptyCaloCells"
 createTopoInput.hcalFwdCells.Path = "emptyCaloCells"
