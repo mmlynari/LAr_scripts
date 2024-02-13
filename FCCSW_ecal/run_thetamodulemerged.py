@@ -513,11 +513,11 @@ correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                           lastLayerIDs=[11],
                                           readoutNames=[ecalBarrelReadoutName],
                                           # do not split the following line or it will break scripts that update the values of the corrections
-                                          upstreamParameters = [[0.058864331927749855, -15.549660804403437, -310.88067701195934, 0.5053423600216016, -3.0625402732760274, -6.676790918677253]],
+                                          upstreamParameters = [[0.03900891447361534, -4.322941016402328, -139.1811369546787, 0.498342628339746, -3.3545078429754813, -13.99996971344221]],
                                           upstreamFormulas=[
                                               ['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
                                           # do not split the following line or it will break scripts that update the values of the corrections
-                                          downstreamParameters = [[-0.0005205167450154308, 0.005578605296102919, 0.9655490526396115, -0.9413296516352254, 0.06744137229085076, 4.550503857930032]],
+                                          downstreamParameters = [[-0.000347089575424904, 0.0054783610176883, 1.0925004473602618, -1.636683541204462, -0.0018794537834755098, 8.210905237964804]],
                                           downstreamFormulas=[
                                               ['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel=INFO
@@ -595,10 +595,10 @@ correctCaloTopoClusters = CorrectCaloClusters(
     lastLayerIDs=[11],
     readoutNames=[ecalBarrelReadoutName],
     # do not split the following line or it will break scripts that update the values of the corrections
-    upstreamParameters = [[0.058864331927749855, -15.549660804403437, -310.88067701195934, 0.5053423600216016, -3.0625402732760274, -6.676790918677253]],
+    upstreamParameters = [[0.03900891447361534, -4.322941016402328, -139.1811369546787, 0.498342628339746, -3.3545078429754813, -13.99996971344221]],
     upstreamFormulas=[['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
     # do not split the following line or it will break scripts that update the values of the corrections
-    downstreamParameters = [[-0.0005205167450154308, 0.005578605296102919, 0.9655490526396115, -0.9413296516352254, 0.06744137229085076, 4.550503857930032]],
+    downstreamParameters = [[-0.000347089575424904, 0.0054783610176883, 1.0925004473602618, -1.636683541204462, -0.0018794537834755098, 8.210905237964804]],
     downstreamFormulas=[['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
     OutputLevel=INFO
 )
