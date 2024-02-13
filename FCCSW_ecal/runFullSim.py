@@ -365,13 +365,13 @@ from Configurables import CorrectCaloClusters
 correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                           inClusters = createClusters.clusters.Path,
                                           outClusters = "Corrected"+createClusters.clusters.Path,
-                                          numLayers = [12],
+                                          numLayers=[12],
                                           firstLayerIDs = [0],
-                                          lastLayerIDs = [11],
+                                          lastLayerIDs=[11],
                                           readoutNames = [ecalBarrelReadoutNamePhiEta],
-                                          upstreamParameters = [[0.033955208567442975, -3.818122686176795, -146.59497297249345, 0.563447903447204, -3.7906629536351906, -8.569962044554627]],
+                                          upstreamParameters = [[0.058864331927749855, -15.549660804403437, -310.88067701195934, 0.5053423600216016, -3.0625402732760274, -6.676790918677253]],
                                           upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          downstreamParameters = [[-0.00357017357914002, 0.006624434345822984, 1.0065650241358008, -1.285181650875406, -0.0707783194915608, 12.907319280196257]],
+                                          downstreamParameters = [[-0.0005205167450154308, 0.005578605296102919, 0.9655490526396115, -0.9413296516352254, 0.06744137229085076, 4.550503857930032]],
                                           downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel = INFO
                                           )
