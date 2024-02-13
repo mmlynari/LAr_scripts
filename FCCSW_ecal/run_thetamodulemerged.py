@@ -35,7 +35,7 @@ from Gaudi.Configuration import INFO
 import os
 
 from GaudiKernel.SystemOfUnits import GeV, tesla, mm
-from GaudiKernel.PhysicalConstants import pi, halfpi  # , twopi
+from GaudiKernel.PhysicalConstants import pi, halfpi, twopi
 from math import cos, sin, tan
 
 use_pythia = False
@@ -59,16 +59,16 @@ Nevts = 10
 # momentum = 100  # in GeV
 momentum = 50  # in GeV
 # momentum = 10  # in GeV
-# thetaMin = 40  # degrees
-# thetaMax = 140  # degrees
+thetaMin = 50  # degrees
+thetaMax = 130  # degrees
 # thetaMin = 89
 # thetaMax = 91
-thetaMin = 90  # degrees
-thetaMax = 90  # degrees
-phiMin = halfpi
-phiMax = halfpi
-# phiMin = 0
-# phiMax = twopi
+# thetaMin = 90  # degrees
+# thetaMax = 90  # degrees
+# phiMin = halfpi
+# phiMax = halfpi
+phiMin = 0
+phiMax = twopi
 
 # particle origin
 # origR = 1000.0*mm
