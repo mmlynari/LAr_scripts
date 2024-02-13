@@ -106,8 +106,8 @@ os.system("sed -i 's/activeVolumesNumber.*,/activeVolumesNumber=%d,/' run*.py" %
 print("number of layers updated in run*.py")
 
 # modify the number of layers in noise_map.py
-os.system("sed -i 's/numRadialLayers.*,/numRadialLayers=%d,/' noise_map.py" % numberOfLayer)
-os.system("sed -i 's/activeVolumesNumbers.*,/activeVolumesNumbers=[%d],/' noise_map.py neighbours.py" % numberOfLayer)
+os.system("sed -i 's/numRadialLayers.*,/numRadialLayers = %d,/' noise_map.py" % numberOfLayer)
+os.system("sed -i 's/activeVolumesNumbers.*,/activeVolumesNumbers = [%d],/' noise_map.py neighbours.py" % numberOfLayer)
 print("number of layers updated in noise_map.py and neighbours.py")
 
 # modify the tower definition in clustering algorithms

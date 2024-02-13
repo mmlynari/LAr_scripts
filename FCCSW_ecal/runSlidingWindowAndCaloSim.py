@@ -146,7 +146,7 @@ geantsim = SimG4Alg("SimG4Alg",
 # EM scale calibration (sampling fraction)
 from Configurables import CalibrateInLayersTool
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
-                                   samplingFraction = [0.3632447480841956] * 1 + [0.13187261040190248] * 1 + [0.14349714292943705] * 1 + [0.150266118277841] * 1 + [0.15502683375826457] * 1 + [0.15954408786354762] * 1 + [0.16375302347299436] * 1 + [0.16840384714588075] * 1 + [0.17219540619311383] * 1 + [0.1755068643940401] * 1 + [0.17816980262822366] * 1 + [0.18131266048670405] * 1,
+                                   samplingFraction=[0.3864252122990472] * 1 + [0.13597644835735828] * 1 + [0.14520427829645913] * 1 + [0.1510076084632846] * 1 + [0.1552347580991012] * 1 + [0.159694330729184] * 1 + [0.1632954482794191] * 1 + [0.16720711037339814] * 1 + [0.17047749048884808] * 1 + [0.17461698117974286] * 1 + [0.1798984163980135] * 1 + [0.17920355117405806] * 1,
                                    readoutName = ecalBarrelReadoutName,
                                    layerFieldName = "layer")
 
@@ -316,13 +316,13 @@ from Configurables import CorrectCaloClusters
 correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                           inClusters = createClusters.clusters.Path,
                                           outClusters = "Corrected"+createClusters.clusters.Path,
-                                          numLayers = [12],
+                                          numLayers=[12],
                                           firstLayerIDs = [0],
-                                          lastLayerIDs = [11],
+                                          lastLayerIDs=[11],
                                           readoutNames = [ecalBarrelReadoutNamePhiEta],
-                                          upstreamParameters = [[0.033955208567442975, -3.818122686176795, -146.59497297249345, 0.563447903447204, -3.7906629536351906, -8.569962044554627]],
+                                          upstreamParameters = [[0.058864331927749855, -15.549660804403437, -310.88067701195934, 0.5053423600216016, -3.0625402732760274, -6.676790918677253]],
                                           upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          downstreamParameters = [[-0.00357017357914002, 0.006624434345822984, 1.0065650241358008, -1.285181650875406, -0.0707783194915608, 12.907319280196257]],
+                                          downstreamParameters = [[-0.0005205167450154308, 0.005578605296102919, 0.9655490526396115, -0.9413296516352254, 0.06744137229085076, 4.550503857930032]],
                                           downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel = INFO
                                           )
