@@ -35,7 +35,7 @@ from Gaudi.Configuration import INFO
 import os
 
 from GaudiKernel.SystemOfUnits import GeV, tesla, mm
-from GaudiKernel.PhysicalConstants import pi, halfpi, twopi
+from GaudiKernel.PhysicalConstants import pi, halfpi  # , twopi
 from math import cos, sin, tan
 
 use_pythia = False
@@ -279,8 +279,7 @@ geantsim = SimG4Alg("SimG4Alg",
 # Digitization (Merging hits into cells, EM scale calibration)
 # EM scale calibration (sampling fraction)
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
-                                        samplingFraction=[0.36599110182660616] * 1 + [0.1366222373338866] * 1 + [0.1452035173747207] * 1 + [0.1504319190969367] * 1 + [0.15512713637727382] * 1 + [0.1592916726494782] * 1 + [
-                                            0.16363478857307595] * 1 + [0.1674697333180323] * 1 + [0.16998205747422343] * 1 + [0.1739146363733975] * 1 + [0.17624609543603845] * 1 + [0.1768613530850488] * 1,
+                                        samplingFraction=[0.36599110182660616] * 1 + [0.1366222373338866] * 1 + [0.1452035173747207] * 1 + [0.1504319190969367] * 1 + [0.15512713637727382] * 1 + [0.1592916726494782] * 1 + [0.16363478857307595] * 1 + [0.1674697333180323] * 1 + [0.16998205747422343] * 1 + [0.1739146363733975] * 1 + [0.17624609543603845] * 1 + [0.1768613530850488] * 1,
                                         readoutName=ecalBarrelReadoutName,
                                         layerFieldName="layer")
 
@@ -513,16 +512,12 @@ correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                           firstLayerIDs=[0],
                                           lastLayerIDs=[11],
                                           readoutNames=[ecalBarrelReadoutName],
-                                          # upstreamParameters = [
-                                          #   [0.02729094887360858, -1.378665489864182, -68.40424543618059, 3.6930827214130053, -5528.714729126099, -1630.7911298009794]],
-                                          upstreamParameters=[
-                                              [0.02729094887360858, -1.378665489864182, -68.40424543618059, 3.6930827214130053, -5528.714729126099, -1630.7911298009794]],
+                                          # do not split the following line or it will break scripts that update the values of the corrections
+                                          upstreamParameters = [[0.058864331927749855, -15.549660804403437, -310.88067701195934, 0.5053423600216016, -3.0625402732760274, -6.676790918677253]],
                                           upstreamFormulas=[
                                               ['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          # downstreamParameters = [
-                                          #   [-0.0032351643028483354, 0.006597484738888312, 0.8972024981692965, -1.0207168610322181, 0.017878133854084398, 9.108099243443101]],
-                                          downstreamParameters=[
-                                              [-0.0032351643028483354, 0.006597484738888312, 0.8972024981692965, -1.0207168610322181, 0.017878133854084398, 9.108099243443101]],
+                                          # do not split the following line or it will break scripts that update the values of the corrections
+                                          downstreamParameters = [[-0.0005205167450154308, 0.005578605296102919, 0.9655490526396115, -0.9413296516352254, 0.06744137229085076, 4.550503857930032]],
                                           downstreamFormulas=[
                                               ['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel=INFO
@@ -599,15 +594,11 @@ correctCaloTopoClusters = CorrectCaloClusters(
     firstLayerIDs=[0],
     lastLayerIDs=[11],
     readoutNames=[ecalBarrelReadoutName],
-    # upstreamParameters = [[0.02729094887360858, -1.378665489864182, -68.40424543618059,
-    #                        3.6930827214130053, -5528.714729126099, -1630.7911298009794]],
-    upstreamParameters=[[0.02729094887360858, -1.378665489864182, -68.40424543618059,
-                         3.6930827214130053, -5528.714729126099, -1630.7911298009794]],
+    # do not split the following line or it will break scripts that update the values of the corrections
+    upstreamParameters = [[0.058864331927749855, -15.549660804403437, -310.88067701195934, 0.5053423600216016, -3.0625402732760274, -6.676790918677253]],
     upstreamFormulas=[['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-    # downstreamParameters = [[-0.0032351643028483354, 0.006597484738888312, 0.8972024981692965,
-    #                           -1.0207168610322181, 0.017878133854084398, 9.108099243443101]],
-    downstreamParameters=[[-0.0032351643028483354, 0.006597484738888312, 0.8972024981692965,
-                           -1.0207168610322181, 0.017878133854084398, 9.108099243443101]],
+    # do not split the following line or it will break scripts that update the values of the corrections
+    downstreamParameters = [[-0.0005205167450154308, 0.005578605296102919, 0.9655490526396115, -0.9413296516352254, 0.06744137229085076, 4.550503857930032]],
     downstreamFormulas=[['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
     OutputLevel=INFO
 )
