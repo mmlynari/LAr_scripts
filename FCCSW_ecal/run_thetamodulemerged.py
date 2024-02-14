@@ -42,8 +42,12 @@ use_pythia = False
 addNoise = False
 dumpGDML = False
 runHCal = False
+# for big productions, save significant space removing hits and cells
+# however, hits and cluster cells might be wanted for small productions for detailed event displays
+# also, cluster cells are needed for the MVA training
 saveHits = False
 saveCells = False
+saveClusterCells = True
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set
@@ -624,6 +628,8 @@ else:
 
 if not saveCells:
     out.outputCommands.append("drop ECal*Cells*")
+if not saveClusterCells:
+    out.outputCommands.append("drop *ClusterCells*")
 if not saveHits:
     out.outputCommands.append("drop ECal*Hits*")
 
