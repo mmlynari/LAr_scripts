@@ -143,7 +143,7 @@ class ClusterJobProcessor(JobProcessor):
         executeCmd(cmd)
         cmd = f"sed -i 's/saveCells *=.*/saveCells = False/' {self.script}"
         return executeCmd(cmd)
-    
+
 
 class ProductionJobProcessor(JobProcessor):
     def __init__(self, script, outdir, output_tag):
@@ -252,7 +252,7 @@ def run_the_jobs(jobProcessor, energies, thetas, nEvt, do_preprocess, do_process
         if do_postprocess:
             print("Doing postprocessing")
             # Do it sequentially
-            # res = p.starmap(jobProcessor.postprocess, energies_and_thetas, chunksize=50)
+            res = p.starmap(jobProcessor.postprocess, energies_and_thetas, chunksize=50)
             jobProcessor.postprocess_glob()
 
 
