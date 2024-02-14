@@ -42,6 +42,8 @@ use_pythia = False
 addNoise = False
 dumpGDML = False
 runHCal = False
+saveHits = False
+saveCells = False
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set
@@ -77,9 +79,9 @@ origTheta = halfpi
 origPhi = 0.0
 
 # particle type: 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
-# pdgCode = 11
+pdgCode = 11
 # pdgCode = 22
-pdgCode = 111
+# pdgCode = 111
 # pdgCode = 211
 
 # Set to true if history from Geant4 decays is needed (e.g. to get the
@@ -619,6 +621,11 @@ if runHCal:
     out.outputCommands = ["keep *", "drop emptyCaloCells"]
 else:
     out.outputCommands = ["keep *", "drop HCal*", "drop emptyCaloCells"]
+
+if not saveCells:
+    out.outputCommands.append("drop ECal*Cells*")
+if not saveHits:
+    out.outputCommands.append("drop ECal*Hits*")
 
 # out.filename = "root/output_fullCalo_SimAndDigi_withTopoCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
 out.filename = "./root/output_evts_" + str(Nevts) + "_pdg_" + str(pdgCode) + "_" + str(momentum) + "_GeV" + "_ThetaMinMax_" + str(thetaMin) + "_" + str(
