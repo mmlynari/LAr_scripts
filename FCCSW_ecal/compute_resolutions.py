@@ -6,7 +6,7 @@ import csv
 import ROOT
 import numpy as np
 
-Nplates = 1486
+Nplates = 1536
 
 def main():
     """Read command line and trigger processing"""
