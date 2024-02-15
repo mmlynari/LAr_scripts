@@ -42,9 +42,9 @@ def SubmitToCondor(cmd,nbtrials):
 
 def get_condor_submit_header(executable_regex, jobFlavour = 'longlunch'):
     return """executable     = $(filename)
-Log            = $(filename).log
-Output         = $(filename).out
-Error          = $(filename).err
+Log            = $Fpn(filename)/condor.log
+Output         = $Fpn(filename)/condor.out
+Error          = $Fpn(filename)/condor.err
 requirements    = ( (OpSysAndVer =?= "AlmaLinux9") && (Machine =!= LastRemoteHost) && (TARGET.has_avx2 =?= True) )
 max_retries    = 3
 +JobFlavour    = "{0}"
@@ -210,6 +210,9 @@ if __name__ == "__main__":
                 else:
                     command = command_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx)).replace('SEED', str(job_idx))
                 exec_filename = exec_filename_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy)).replace('PMAX', str(energy)).replace('THETAMIN', str(theta)).replace('THETAMAX', str(theta)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
+                if not os.path.isdir(exec_filename.replace(".sh","")):
+                    os.mkdir(exec_filename.replace(".sh",""))
+
                 with open(exec_filename, "w") as f:
                     f.write(get_exec_file_header())
                     f.write(command)
