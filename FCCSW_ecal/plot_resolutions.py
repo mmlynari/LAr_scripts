@@ -10,8 +10,10 @@ from scipy import optimize as opt
 
 import ROOT
 
+graphicFormat = 'pdf'
+
 def main():
-    style.use('seaborn-colorblind')
+    # style.use('seaborn-colorblind')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--outDir', default='./', type=str, help='output directory for plots')
@@ -66,9 +68,9 @@ def plot(args):
         for d in distributions:
             fig = simple_plot(df, d, cl, do_fit=args.doFits, tag=args.fileDescr)
             if args.fileDescr:
-                out_f_name = f"{args.outDir}/fig_{args.fileDescr}_{cl}_{d}.png"
+                out_f_name = f"{args.outDir}/fig_{args.fileDescr}_{cl}_{d}.{graphicFormat}"
             else:
-                out_f_name = f"{args.outDir}/fig_{cl}_{d}.png"
+                out_f_name = f"{args.outDir}/fig_{cl}_{d}.{graphicFormat}"
             print(f"Saving {out_f_name}")
             fig.savefig(out_f_name)
             plt.close()
@@ -88,9 +90,9 @@ def compare_clusters(args):
     for d in distributions:
         fig = comparison_plot_clusters(df, d, clusters_colls, do_fit=args.doFits, tag=args.fileDescr)
         if args.fileDescr:
-            out_f_name = f"{args.outDir}/fig_compare_clusters_{args.fileDescr}_{d}.png"
+            out_f_name = f"{args.outDir}/fig_compare_clusters_{args.fileDescr}_{d}.{graphicFormat}"
         else:
-            out_f_name = f"{args.outDir}/fig_compare_clusters_{d}.png"
+            out_f_name = f"{args.outDir}/fig_compare_clusters_{d}.{graphicFormat}"
         print(f"Saving {out_f_name}")
         fig.savefig(out_f_name)
         plt.close()
@@ -117,7 +119,7 @@ def compare_files(args):
     for cl in clusters_colls:
         for d in distributions:
             fig = comparison_plot_files(dfs, tags, d, cl, do_fit=args.doFits)
-            out_f_name = f"{args.outDir}/fig_compare_files_{cl}_{d}.png"
+            out_f_name = f"{args.outDir}/fig_compare_files_{cl}_{d}.{graphicFormat}"
             print(f"Saving {out_f_name}")
             fig.savefig(out_f_name)
             plt.close()
@@ -153,6 +155,8 @@ def extract_values(df, name, clusters, do_fit = False, fit_fcn=resol_curve):
 def prepare_fig(name, tag=None):
     fig, ax = plt.subplots(figsize = (4.8, 4.8), constrained_layout = True, subplot_kw=dict(box_aspect=1))
     ax.set_xlabel("E (GeV)")
+    #ax.set_yscale('log')
+    #ax.set_xscale('log')
     if "resp" in name:
         what = "Response"
     elif "resol" in name:
