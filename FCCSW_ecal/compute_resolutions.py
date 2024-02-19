@@ -5,6 +5,8 @@ import argparse
 import csv
 import ROOT
 import numpy as np
+from math import sqrt
+from scipy.stats import iqr
 
 Nplates = 1536
 
@@ -43,8 +45,8 @@ def run(in_directory, clusters_colls, out_file, MVAcalibCalo, MVAcalibTopo):
 
 
 def init_stuff():
-    readoutName = "ECalBarrelPhiEta"
-    geometryFile = "../../FCCDetectors/Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster.xml"
+    readoutName = "ECalBarrelModuleThetaMerged"
+    geometryFile = "../../k4geo/FCCee/ALLEGRO/compact/ALLEGRO_o1_v02/ALLEGRO_o1_v02.xml"
     ROOT.gROOT.SetBatch(True)
     ROOT.gSystem.Load("libFCCAnalyses")
     _fcc = ROOT.dummyLoader
@@ -75,7 +77,15 @@ def get_resolutions(in_directory, clusters_colls):
     results = []
     for f in in_files:
         results_f = {}
-        truth_e = float(f[f.rfind('_')+1:f.rfind('.')])/1000
+        if f.find('fccsw_output') > -1:
+            if f.find("_forTests") > -1: continue
+            # format of file names from condor submit
+            start_pos = f.find('_pMin_')+len('_pMin_') 
+            stop_pos = f.find('_', start_pos)
+            truth_e = float(f[start_pos:stop_pos])/1000.
+        else:
+            # format of file names from runParallel
+            truth_e = float(f[f.rfind('_')+1:f.rfind('.')])/1000
         print(f"Now running on {f} for truth energy {truth_e} GeV")
         df = ROOT.ROOT.RDataFrame("events", f)
         num_init = df.Count()
@@ -104,7 +114,8 @@ def get_resolutions(in_directory, clusters_colls):
                 )
             h_phi = df2.Histo1D("response_phi")
             h_theta = df2.Histo1D("response_theta")
-            h_e = df2.Histo1D(("", "", 500, -0.5, 0.5), "response_e")
+            #h_e = df2.Histo1D(("", "", 500, -0.5, 0.5), "response_e")
+            h_e = df2.Histo1D(("", "", 500, -0.25*sqrt(1./truth_e+1.5), 0.25*sqrt(1/truth_e+1.5)), "response_e")
             h_phi_e = df2.Histo2D(("", "", 40, -0.005, 0.005, 100, -0.5, 0.5), "good_clusters_phi_mod", "response_e")
             p_phi_e = df2.Profile1D(("", "", 40, -0.005, 0.005), "good_clusters_phi_mod", "response_e")
             num_pass = df2.Count()
@@ -228,9 +239,19 @@ def get_MVAcalib_resolution(in_directory, clusters, MVAcalib_file):
 
 
 def get_response_and_resol(h, mean_guess=0, resol_guess=1):
-    res = h.Fit("gaus", "LS", "", mean_guess-2*resol_guess, mean_guess+2*resol_guess)
+    #
+    #res = h.Fit("gaus", "LS", "", mean_guess-2*resol_guess, mean_guess+2*resol_guess)
     # Resolution should be corrected for the response (i.e as if response was brutally adjusted per energy)
-    return (res.Parameter(1), res.Parameter(2)/(1+res.Parameter(1)))
+    #return (res.Parameter(1), res.Parameter(2)/(1+res.Parameter(1)))
+    nq = 100
+    xq = np.empty(nq + 1)
+    for i in range(nq+1): xq[i] = i/nq 
+    yq = np.empty(nq + 1)
+    h.GetQuantiles(nq + 1, yq, xq);
+    print(h)
+    sigma = (yq[90]-yq[10])/1.645/2.0
+    median = yq[50]
+    return (median, sigma/(1+median))
 
 def write_output(results, out_file):
     with open(out_file, 'w') as csvfile:
