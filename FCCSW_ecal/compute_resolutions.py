@@ -78,6 +78,8 @@ def get_resolutions(in_directory, clusters_colls):
     for f in in_files:
         results_f = {}
         if f.find('fccsw_output') > -1:
+            # format of file names from condor_submit
+            # skip the small files saved for tests
             if f.find("_forTests") > -1: continue
             # format of file names from condor submit
             start_pos = f.find('_pMin_')+len('_pMin_') 
@@ -85,7 +87,10 @@ def get_resolutions(in_directory, clusters_colls):
             truth_e = float(f[start_pos:stop_pos])/1000.
         else:
             # format of file names from runParallel
-            truth_e = float(f[f.rfind('_')+1:f.rfind('.')])/1000
+            start_pos = f.find('_energy_')+len('_energy_')
+            stop_pos = f.find('_', start_pos)
+            truth_e = float(f[start_pos:stop_pos])/1000.
+
         print(f"Now running on {f} for truth energy {truth_e} GeV")
         df = ROOT.ROOT.RDataFrame("events", f)
         num_init = df.Count()
