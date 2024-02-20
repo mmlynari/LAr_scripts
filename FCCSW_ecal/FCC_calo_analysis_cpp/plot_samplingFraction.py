@@ -261,7 +261,7 @@ if calo_init.args.plotSFvsEnergy:
         dict_layer_sfVSenergyGraph[islice].GetXaxis().SetRangeUser(
             calo_init.energy(0) - 10, calo_init.energy(-1) + calo_init.energy(-1) / 10.0)
         if calo_init.args.theta:
-            x_axis_label = "#theta angle [degrees]"
+            x_axis_label = "#theta [#circ]"
             graph_title = "Sampling fraction versus polar angle: layer %d" % islice
         else:
             x_axis_label = "Energy [GeV]"
