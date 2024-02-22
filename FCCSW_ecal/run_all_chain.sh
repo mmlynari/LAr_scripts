@@ -17,46 +17,46 @@ python write_calibration_xml.py $xmlbasedir/$xmldir/$xmlfileECal.xml
 #
 cd ../geometry
 
-# tracker only
-# prepare steering file
+# 1. tracker only
+# - prepare steering file
 cp -f material_scan.py material_scan_tracker.py
 sed -i 's%#detcard%'$xmldir/$xmlfileFullDet'_trackeronly.xml%' material_scan_tracker.py
 sed -i 's%#suffix%tracker%' material_scan_tracker.py
 sed -i 's%#etamax%2.7%' material_scan_tracker.py
 sed -i 's%#etabinning%0.1%' material_scan_tracker.py
-# scan
+# - scan
 fccrun material_scan_tracker.py
-# plot vs costheta
+# - plot vs costheta
 python material_plot_vs_theta.py --f out_material_scan_tracker.root --s _tracker -c 1.0
-# plot vs theta
+# - plot vs theta
 python material_plot_vs_theta.py --f out_material_scan_tracker.root --s _tracker -t 0.0
 
-# ecal only
-# prepare steering file
+# 2. ecal only
+# - prepare steering file
 cp -f material_scan.py material_scan_ecal.py
 sed -i 's%#detcard%'$xmldir/$xmlfileFullDet'_ecalonly.xml%' material_scan_ecal.py
 sed -i 's%#suffix%ecal%' material_scan_ecal.py
 sed -i 's%#etamax%2.9%' material_scan_ecal.py
 sed -i 's%#etabinning%0.1%' material_scan_ecal.py
-# scan
+# - scan
 fccrun material_scan_ecal.py
-# plot vs costheta
+# - plot vs costheta
 python material_plot_vs_theta.py --f out_material_scan_ecal.root --s _ecal -c 1.0
-# plot vs theta
+# - plot vs theta
 python material_plot_vs_theta.py --f out_material_scan_ecal.root --s _ecal -t 0.0
 
-# full detector
-# prepare steering file
+# 3. full detector
+# - prepare steering file
 cp -f material_scan.py material_scan_all.py
 sed -i 's%#detcard%'$xmldir/$xmlfileFullDet'.xml%' material_scan_all.py
 sed -i 's%#suffix%all%' material_scan_all.py
 sed -i 's%#etamax%2.7%' material_scan_all.py
 sed -i 's%#etabinning%0.1%' material_scan_all.py
-# scan
+# - scan
 fccrun material_scan_all.py
-# plot vs costheta
+# - plot vs costheta
 python material_plot_vs_theta.py --f out_material_scan_all.root --s _all -c 1.0
-# plot vs theta
+# - plot vs theta
 python material_plot_vs_theta.py --f out_material_scan_all.root --s _all -t 0.0
 
 cd ../FCCSW_ecal/
@@ -73,16 +73,14 @@ cp ../geometry/plots/*pdf $runname/geometry
 # Compute sampling fractions and update scripts
 #
 
-# one energy is enough as they are independent of energy and direction
+# - one energy is enough as they are independent of energy and direction
 python runParallel.py --outDir $runname/sampling --nEvt 1000 --energies 20000 --sampling
 
-# otherwise, to plot sampling fractions vs energy or direction, one can do
+# - otherwise, to plot sampling fractions vs energy or direction and check directly this independence, one can do
 # python runParallel.py --outDir $runname/sampling --nEvt 1000 --energies 1000 10000 50000 100000 --sampling
-# cd FCC_calo_analysis_cpp 
-# python plot_samplingFraction.py ../$runname/sampling/calibration_sampling_output_energy_?_theta_90.root 1 10 20 50 100 -r 1000 10000 20000 50000 100000 --totalNumLayers 12 --preview -outputfolder plots_sampling_fraction_$today --plotSFvsEnergy
-# cd ..
 # python runParallel.py --outDir $runname/sampling --nEvt 1000 --energies 10000 --thetas 90 80 70 60 50 --sampling
 # cd FCC_calo_analysis_cpp 
+# python plot_samplingFraction.py ../$runname/sampling/calibration_sampling_output_energy_?_theta_90.root 1 10 20 50 100 -r 1000 10000 20000 50000 100000 --totalNumLayers 12 --preview -outputfolder plots_sampling_fraction_$today --plotSFvsEnergy
 # python plot_samplingFraction.py ../$runname/sampling/calibration_sampling_output_energy_10000_theta_?.root 50 60 70 80 90 -r 50 60 70 80 90 --totalNumLayers 12 --preview -outputfolder plots_sampling_fraction_$today --plotSFvsEnergy --theta
 # cd ..
 
@@ -95,30 +93,36 @@ python runParallel.py --outDir $runname/sampling --nEvt 1000 --energies 20000 --
 # The values of the parameters vs particle energy are then fitted to obtain
 # a parameterisation of the corrections vs energy
 #
-python runParallel.py --outDir $runname/upstream --nEvt 1000 --energies 1000 5000 10000 15000 20000 30000 50000 75000 100000 --upstream --SF $runname/sampling/SF.json
+python runParallel.py --outDir $runname/upstream --nEvt 1000 --energies 1000 5000 10000 15000 20000 30000 50000 75000 100000 --upstream --SF $runname/sampling/SF.json --no-process
 
 
 # Generate clusters for upstream studies (??)
-#
+
 # python runParallel.py --outDir $runname/upstreamProd --nEvt 1000000 --upstreamProd --SF $runname/sampling/SF.json
 
 # Generate clusters for MVA training
-# Only 300k events here. Move up to 3M if needed
-python runParallel.py --outDir $runname/production --nEvt 3000000 --production --SF $runname/sampling/SF.json --corrections $runname/upstream/corr_params_1d.json
+# Only 300k events here. Move up to 3M if needed 
+# (~1M/day on APC server)
+# python runParallel.py --outDir $runname/production --nEvt 3000000 --production --SF $runname/sampling/SF.json --corrections $runname/upstream/corr_params_1d.json
 
-# Then train the MVA on CaloClusters and CaloTopoClusters
-# python training.py CaloClusters -i $runname/production/ --json $runname/upstream/corr_params_1d.json -o $runname/training_calo.json
-# python training.py CaloTopoClusters -i $runname/production/ --json $runname/upstream/corr_params_1d.json -o $runname/training_topo.json
+# Train the MVA on CaloClusters and CaloTopoClusters with XGBoost
+python training.py CaloClusters -i $runname/production/ -o $runname/training_calo.json
+python training.py CaloTopoClusters -i $runname/production/ -o $runname/training_topo.json
+# This instead will not run the training, just write numpy arrays with input features and target, to use a different MVA tool
+# python training.py CaloClusters -i $runname/production/ -o $runname/training_calo.json --no-training --writeFeatures $runname/production/features --writeTarget $runname/production/target
+# python training.py CaloTopoClusters -i $runname/production/ -o $runname/training_topo.json --no-training --writeFeatures $runname/production/features --writeTarget $runname/production/target
 
-# Run clustering algs to compute resolutions
-# python runParallel.py --outDir $runname/clusters --nEvt 1000 --energies 500 1000 5000 10000 15000 20000 30000 50000 75000 100000 --clusters --SF $runname/sampling/SF.json --corrections $runname/upstream/corr_params_1d.json
-#python runParallel.py --outDir $runname/clusters --nEvt 100 --energies 5000 --clusters --SF $runname/sampling/SF.json --corrections $runname/upstream/corr_params_1d.json
+# Produce events at various fixed energies and run clustering algs to form clusters to study resolutions 
+python runParallel.py --outDir $runname/clusters --nEvt 5000 --energies 500 1000 5000 10000 15000 20000 30000 50000 75000 100000 --clusters --SF $runname/sampling/SF.json --corrections $runname/upstream/corr_params_1d.json
 
+# Compute resolutions and responses of the clusters produced in the previous step, also applying the MVA calibrations
+python compute_resolutions.py --inputDir $runname/clusters --outFile $runname/results.csv --clusters CaloClusters CorrectedCaloClusters CaloTopoClusters CorrectedCaloTopoClusters --MVAcalibCalo $runname/training_calo.json --MVAcalibTopo $runname/training_topo.json
 
-# Compute resolutions and responses
-#python compute_resolutions.py --inputDir $runname/clusters --outFile $runname/results.csv --clusters CaloClusters CorrectedCaloClusters CaloTopoClusters CorrectedCaloTopoClusters --MVAcalibCalo $runname/training_calo.json --MVAcalibTopo $runname/training_topo.json
-
-# And make plots
-#python plot_resolutions.py --outDir $runname --doFits plot $runname/results.csv --all
-#python plot_resolutions.py --outDir $runname --doFits compare clusters CaloClusters CorrectedCaloClusters CaloTopoClusters CorrectedCaloTopoClusters CalibratedCaloClusters CalibratedCaloTopoClusters $runname/results.csv --all
-#
+# Make resolution plots
+# - for each energy point estimate the responses and resolutions
+python plot_resolutions.py --outDir $runname --doFits plot $runname/results.csv --all
+# - compare the resolutions among different cluster collections and calibrations
+# 1. showing also raw clusters and clusters with up/downstream corrections
+python plot_resolutions.py --outDir $runname --doFits compare clusters CaloClusters CorrectedCaloClusters CaloTopoClusters CorrectedCaloTopoClusters CalibratedCaloClusters CalibratedCaloTopoClusters $runname/results.csv --all
+# 2. showing only the calibrated clusters
+python plot_resolutions.py --outDir $runname --doFits compare clusters CalibratedCaloClusters CalibratedCaloTopoClusters $runname/results.csv --all
