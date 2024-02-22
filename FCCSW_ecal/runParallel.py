@@ -91,17 +91,20 @@ class UpstreamJobProcessor(JobProcessor):
         self.postprocess_dir = os.path.join(os.getenv("FCCBASEDIR"), 'k4SimGeant4/Detector/DetStudies/scripts/')
 
     def postprocess(self, energy, theta):
+        # for each energy point, determine (fit) the dependence of energy upstream vs energy in 1st layer
         emax = 0.015 * (1. + log10(energy / 1000.))
         emin = 0.002 * (1. + log10(energy / 1000.))
-
-        # for each energy point, determine (fit) the dependence of energy upstream vs energy in 1st layer
         cmd = f"{self.postprocess_dir}/cec_process_events -i {self.outdir}/{self.output_tag}_energy_{energy}_theta_{theta}.root -t upstream --plot-file-format png \
             -o {self.outdir}/fit_results.json --plot-directory {self.outdir} --func-from {emin} --func-to {emax}"
         executeCmd(cmd)
 
         # for each energy point, determine (fit) the dependence of energy downstream vs energy in last layer
+        emax = 0.04 * energy / 1000
+        if energy >= 10000:
+            emax *= (log10(energy / 1000.))
+        emin = 0.005
         cmd = f"{self.postprocess_dir}/cec_process_events -i {self.outdir}/{self.output_tag}_energy_{energy}_theta_{theta}.root -t downstream --function pol2  \
-        --plot-file-format png -o {self.outdir}/fit_results.json --plot-directory {self.outdir} --func-from 0.005 --func-to 10"
+        --plot-file-format png -o {self.outdir}/fit_results.json --plot-directory {self.outdir}  --func-from {emin} --func-to {emax}"
         return executeCmd(cmd)
 
     def postprocess_glob(self):
@@ -124,7 +127,7 @@ class ClusterJobProcessor(JobProcessor):
     def __init__(self, outdir, sampling_fracs=None, corrections=None):
         # script = "runTopoAndSlidingWindowAndCaloSim.py"
         script = "run_thetamodulemerged.py"
-        output_tag = "upstream_output"
+        output_tag = "cluster_output"
         super().__init__(script, outdir, output_tag)
         if sampling_fracs:
             self.extra_args += "--samplingFraction "
@@ -212,23 +215,23 @@ def run_the_jobs(jobProcessor, energies, thetas, nEvt, do_preprocess, do_process
         jobProcessor.preprocess()
 
     with mp.Pool() as p:
-        if do_process:
-            nEvtMaxPerJob = [int(1000 * (10000. / e)**1.5) for e in energies]  # 3000 evts for 10GeV, with power scaling
-            nEvtPerJob = [min(nEvt, nMax) for nMax in nEvtMaxPerJob]
-            args = []
-            energies_and_thetas = []
-            jobId = 1
-            for theta in thetas:
-                for e, nEvtPerJobForE in zip(energies, nEvtPerJob):
-                    nEvtToLaunch = nEvt
-                    while nEvtToLaunch > 0:
-                        nLaunched = min(nEvtToLaunch, nEvtPerJobForE)
-                        args.append((nLaunched, e, theta, jobId))
-                        jobId += 1
-                        nEvtToLaunch -= nLaunched
-                for e in energies:
-                    energies_and_thetas.append((e, theta))
+        nEvtMaxPerJob = [int(1000 * (10000. / e)**1.5) for e in energies]  # 3000 evts for 10GeV, with power scaling
+        nEvtPerJob = [min(nEvt, nMax) for nMax in nEvtMaxPerJob]
+        args = []
+        energies_and_thetas = []
+        jobId = 1
+        for theta in thetas:
+            for e, nEvtPerJobForE in zip(energies, nEvtPerJob):
+                nEvtToLaunch = nEvt
+                while nEvtToLaunch > 0:
+                    nLaunched = min(nEvtToLaunch, nEvtPerJobForE)
+                    args.append((nLaunched, e, theta, jobId))
+                    jobId += 1
+                    nEvtToLaunch -= nLaunched
+            for e in energies:
+                energies_and_thetas.append((e, theta))
 
+        if do_process:
             print("About to send jobs with parameters:")
             for a in args:
                 print(a)
@@ -297,6 +300,7 @@ def main():
                         help='energies to process')
     parser.add_argument('--thetas', default=[90], action='extend', nargs='*', type=int,
                         help='thetas (in degrees) to process')
+    parser.add_argument('--process', default=True, action=argparse.BooleanOptionalAction, help='if no-process is set, do only the pre- and post-processing - no simulation jobs are run')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--sampling', action='store_true', help='compute the sampling fractions')
     group.add_argument('--upstream', action='store_true', help='compute the upstream corrections')
@@ -332,19 +336,19 @@ def main():
     # energies = [500, 1000, 5000, 10000, 15000, 20000, 30000, 50000, 75000, 100000]
     if args.sampling:
         samJobPr = SamplingJobProcessor(args.outDir)
-        run_the_jobs(samJobPr, energies, thetas, args.nEvt, False, True, True)
+        run_the_jobs(samJobPr, energies, thetas, args.nEvt, False, True and args.process, True)
     if args.upstream:
         upJobPr = UpstreamJobProcessor(args.outDir, sampling_fracs=sampling_fracs)
-        run_the_jobs(upJobPr, energies, thetas, args.nEvt, False, True, True)
+        run_the_jobs(upJobPr, energies, thetas, args.nEvt, False, True and args.process, True)
     elif args.clusters:
         clJobPr = ClusterJobProcessor(args.outDir, sampling_fracs=sampling_fracs, corrections=corrections)
-        run_the_jobs(clJobPr, energies, thetas, args.nEvt, True, True, False)
+        run_the_jobs(clJobPr, energies, thetas, args.nEvt, True, True and args.process, False)
     elif args.production:
         clJobPr = ClusterProductionJobProcessor(args.outDir, sampling_fracs=sampling_fracs, corrections=corrections)
-        run_production(clJobPr, args.nEvt, True, True)
+        run_production(clJobPr, args.nEvt, True, True and args.process)
     elif args.upstreamProd:
         upJobPr = UpstreamProductionJobProcessor(args.outDir, sampling_fracs=sampling_fracs)
-        run_production(upJobPr, args.nEvt, False, True)
+        run_production(upJobPr, args.nEvt, False, True and args.process)
 
 
 if __name__ == "__main__":
