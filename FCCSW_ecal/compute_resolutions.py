@@ -6,24 +6,28 @@ import csv
 import ROOT
 import numpy as np
 from math import sqrt
-from scipy.stats import iqr
 
 Nplates = 1536
+
 
 def main():
     """Read command line and trigger processing"""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--inputDir", default = "FCCSW_ecal/baseline_LAr_testResol_1/",
-            help = "Directory containing the input files to process", type=str)
-    parser.add_argument("-o", "--outFile", default = "out.csv",
-            help = "Output CSV file", type=str)
+    parser.add_argument("-i", "--inputDir", default="FCCSW_ecal/baseline_LAr_testResol_1/",
+                        help="Directory containing the input files to process",
+                        type=str)
+    parser.add_argument("-o", "--outFile", default="out.csv",
+                        help="Output CSV file",
+                        type=str)
     parser.add_argument("--clusters", nargs='+', action="extend", default=[],
-            help = "Cluster collections to use", type=str)
-    parser.add_argument("--MVAcalibCalo", help = "Path to XGBoost json file used to calibrate CaloClusters",
-    type=str)
-    parser.add_argument("--MVAcalibTopo", help = "Path to XGBoost json file used to calibrate CaloTopoClusters",
-    type=str)
+                        help="Cluster collections to use", type=str)
+    parser.add_argument("--MVAcalibCalo",
+                        help="Path to XGBoost json file used to calibrate CaloClusters",
+                        type=str)
+    parser.add_argument("--MVAcalibTopo",
+                        help="Path to XGBoost json file used to calibrate CaloTopoClusters",
+                        type=str)
     args = parser.parse_args()
     run(args.inputDir, args.clusters, args.outFile, args.MVAcalibCalo, args.MVAcalibTopo)
 
@@ -55,6 +59,7 @@ def init_stuff():
     ROOT.CaloNtupleizer.loadGeometry(geometryFile, readoutName)
     ROOT.ROOT.EnableImplicitMT(32)
 
+
 class Results:
     def __init__(self, n_init, n_pass, resp_e, resol_e, h_e, resp_theta, resol_theta, h_theta, resp_phi, resol_phi, h_phi, h_phi_e, p_phi_e):
         self.n_init = n_init
@@ -73,23 +78,24 @@ class Results:
 
 
 def get_resolutions(in_directory, clusters_colls):
-    in_files = glob.glob(in_directory+"/*.root")
+    in_files = glob.glob(in_directory + "/*.root")
     results = []
     for f in in_files:
         results_f = {}
         if f.find('fccsw_output') > -1:
             # format of file names from condor_submit
             # skip the small files saved for tests
-            if f.find("_forTests") > -1: continue
+            if f.find("_forTests") > -1:
+                continue
             # format of file names from condor submit
-            start_pos = f.find('_pMin_')+len('_pMin_') 
+            start_pos = f.find('_pMin_') + len('_pMin_')
             stop_pos = f.find('_', start_pos)
-            truth_e = float(f[start_pos:stop_pos])/1000.
+            truth_e = float(f[start_pos:stop_pos]) / 1000.
         else:
             # format of file names from runParallel
-            start_pos = f.find('_energy_')+len('_energy_')
+            start_pos = f.find('_energy_') + len('_energy_')
             stop_pos = f.find('_', start_pos)
-            truth_e = float(f[start_pos:stop_pos])/1000.
+            truth_e = float(f[start_pos:stop_pos]) / 1000.
 
         print(f"Now running on {f} for truth energy {truth_e} GeV")
         df = ROOT.ROOT.RDataFrame("events", f)
@@ -98,29 +104,29 @@ def get_resolutions(in_directory, clusters_colls):
             df
             .Define("e_theta", "atan2(sqrt(genParticles.momentum.y*genParticles.momentum.y+genParticles.momentum.x*genParticles.momentum.x), genParticles.momentum.z)")
             .Define("e_phi", "atan2(genParticles.momentum.y,genParticles.momentum.x)")
-            )
+        )
         for clusters in clusters_colls:
             df2 = (
                 df
-                .Alias(f"clusters_energy", f"{clusters}.energy")
-                .Define(f"good_clusters", f"{clusters}[clusters_energy>0.1]")
-                .Filter(f"good_clusters.size()>0", ">=1 cluster with E>100MeV")
-                .Define(f"good_clusters_e", f"getCaloCluster_energy(good_clusters)")
-                .Define(f"good_clusters_x", f"getCaloCluster_x(good_clusters)")
-                .Define(f"good_clusters_y", f"getCaloCluster_y(good_clusters)")
-                .Define(f"good_clusters_z", f"getCaloCluster_z(good_clusters)")
-                .Define(f"good_clusters_theta", f"atan2(sqrt(good_clusters_y*good_clusters_y + good_clusters_x*good_clusters_x), good_clusters_z)")
-                .Define(f"good_clusters_phi", f"atan2(good_clusters_y,good_clusters_x)")
-                .Define(f"good_clusters_phi_mod", f"fmod(good_clusters_phi,{2*np.pi/Nplates})")
-                .Define(f"leading_cluster_idx", f"ArgMax(good_clusters_e)")
-                .Define(f"response_e", f"(good_clusters_e[leading_cluster_idx] - {truth_e}) / {truth_e}")
-                .Define(f"response_theta", f"ROOT::VecOps::DeltaPhi(e_theta[0], good_clusters_theta[leading_cluster_idx])")
-                .Define(f"response_phi", f"ROOT::VecOps::DeltaPhi(e_phi[0], good_clusters_phi[leading_cluster_idx])")
-                )
+                .Alias("clusters_energy", f"{clusters}.energy")
+                .Define("good_clusters", f"{clusters}[clusters_energy>0.1]")
+                .Filter("good_clusters.size()>0", ">=1 cluster with E>100MeV")
+                .Define("good_clusters_e", "getCaloCluster_energy(good_clusters)")
+                .Define("good_clusters_x", "getCaloCluster_x(good_clusters)")
+                .Define("good_clusters_y", "getCaloCluster_y(good_clusters)")
+                .Define("good_clusters_z", "getCaloCluster_z(good_clusters)")
+                .Define("good_clusters_theta", "atan2(sqrt(good_clusters_y*good_clusters_y + good_clusters_x*good_clusters_x), good_clusters_z)")
+                .Define("good_clusters_phi", "atan2(good_clusters_y,good_clusters_x)")
+                .Define("good_clusters_phi_mod", f"fmod(good_clusters_phi,{2*np.pi/Nplates})")
+                .Define("leading_cluster_idx", "ArgMax(good_clusters_e)")
+                .Define("response_e", f"(good_clusters_e[leading_cluster_idx] - {truth_e}) / {truth_e}")
+                .Define("response_theta", "ROOT::VecOps::DeltaPhi(e_theta[0], good_clusters_theta[leading_cluster_idx])")
+                .Define("response_phi", "ROOT::VecOps::DeltaPhi(e_phi[0], good_clusters_phi[leading_cluster_idx])")
+            )
             h_phi = df2.Histo1D("response_phi")
             h_theta = df2.Histo1D("response_theta")
-            #h_e = df2.Histo1D(("", "", 500, -0.5, 0.5), "response_e")
-            h_e = df2.Histo1D(("", "", 500, -0.25*sqrt(1./truth_e+1.5), 0.25*sqrt(1/truth_e+1.5)), "response_e")
+            # h_e = df2.Histo1D(("", "", 500, -0.5, 0.5), "response_e")
+            h_e = df2.Histo1D(("", "", 500, -0.25 * sqrt(1. / truth_e + 1.5), 0.25 * sqrt(1. / truth_e + 1.5)), "response_e")
             h_phi_e = df2.Histo2D(("", "", 40, -0.005, 0.005, 100, -0.5, 0.5), "good_clusters_phi_mod", "response_e")
             p_phi_e = df2.Profile1D(("", "", 40, -0.005, 0.005), "good_clusters_phi_mod", "response_e")
             num_pass = df2.Count()
@@ -139,21 +145,20 @@ def get_resolutions(in_directory, clusters_colls):
             c = ROOT.TCanvas()
             v.h_phi.Draw()
             resp_phi_v, resol_phi_v = get_response_and_resol(v.h_phi, v.resp_phi.GetValue(), v.resol_phi.GetValue())
-            c.Print(in_directory+'/'+v.h_phi.GetName()+'.png')
+            c.Print(in_directory + '/' + v.h_phi.GetName() + '.png')
             v.h_theta.Draw()
             resp_theta_v, resol_theta_v = get_response_and_resol(v.h_theta, v.resp_theta.GetValue(), v.resol_theta.GetValue())
-            c.Print(in_directory+'/'+v.h_theta.GetName()+'.png')
+            c.Print(in_directory + '/' + v.h_theta.GetName() + '.png')
             v.h_e.Draw()
             resp_e_v, resol_e_v = get_response_and_resol(v.h_e, v.resp_e.GetValue(), v.resol_e.GetValue())
-            c.Print(in_directory+'/'+v.h_e.GetName()+'.png')
-            #v.h_phi_e.Draw("colz")
-            #c.Print(in_directory+f"/Phi_E_{k}_{truth_e}.png")
-            #v.p_phi_e.Draw()
-            #c.Print(in_directory+f"/Prof_phi_E_{k}_{truth_e}.png")
+            c.Print(in_directory + '/' + v.h_e.GetName() + '.png')
+            # v.h_phi_e.Draw("colz")
+            # c.Print(in_directory+f"/Phi_E_{k}_{truth_e}.png")
+            # v.p_phi_e.Draw()
+            # c.Print(in_directory+f"/Prof_phi_E_{k}_{truth_e}.png")
 
             row = [truth_e, k, v.n_init.GetValue(), v.n_pass.GetValue(), resp_e_v, resol_e_v, resp_theta_v, resol_theta_v, resp_phi_v, resol_phi_v]
             results.append(row)
-
 
     results.sort(key=lambda it: it[0])
     return results
@@ -164,10 +169,23 @@ def get_MVAcalib_resolution(in_directory, clusters, MVAcalib_file):
     reg = xgb.XGBRegressor(tree_method="hist")
     reg.load_model(MVAcalib_file)
 
-    in_files = glob.glob(in_directory+"/*.root")
+    in_files = glob.glob(in_directory + "/*.root")
     results = []
     for f in in_files:
-        truth_e = float(f[f.rfind('_')+1:f.rfind('.')])/1000
+        if f.find('fccsw_output') > -1:
+            # format of file names from condor_submit
+            # skip the small files saved for tests
+            if f.find("_forTests") > -1:
+                continue
+            # format of file names from condor submit
+            start_pos = f.find('_pMin_') + len('_pMin_')
+            stop_pos = f.find('_', start_pos)
+            truth_e = float(f[start_pos:stop_pos]) / 1000.
+        else:
+            # format of file names from runParallel
+            start_pos = f.find('_energy_') + len('_energy_')
+            stop_pos = f.find('_', start_pos)
+            truth_e = float(f[start_pos:stop_pos]) / 1000.
         print(f"Now running on {f} for truth energy {truth_e} GeV")
         df = ROOT.ROOT.RDataFrame("events", f)
         num_init = df.Count()
@@ -177,14 +195,14 @@ def get_MVAcalib_resolution(in_directory, clusters, MVAcalib_file):
             cells = "CaloTopoClusterCells"
         df = (
             df
-            .Alias(f"clusters_energy", f"{clusters}.energy")
-            .Define(f"good_clusters", f"{clusters}[clusters_energy>0.1]")
-            .Filter(f"good_clusters.size()>0", ">=1 cluster with E>100MeV")
-            .Define(f"good_clusters_e", f"getCaloCluster_energy(good_clusters)")
-            .Define(f"good_clusters_EnergyInLayers", f"getCaloCluster_energyInLayers(good_clusters, {cells}, 12)")
-            .Define(f"lc_idx", f"ArgMax(good_clusters_e)")
-            .Define(f"Cluster_E", f"good_clusters_e[lc_idx]")
-            )
+            .Alias("clusters_energy", f"{clusters}.energy")
+            .Define("good_clusters", f"{clusters}[clusters_energy>0.1]")
+            .Filter("good_clusters.size()>0", ">=1 cluster with E>100MeV")
+            .Define("good_clusters_e", "getCaloCluster_energy(good_clusters)")
+            .Define("good_clusters_EnergyInLayers", f"getCaloCluster_energyInLayers(good_clusters, {cells}, 12)")
+            .Define("lc_idx", "ArgMax(good_clusters_e)")
+            .Define("Cluster_E", "good_clusters_e[lc_idx]")
+        )
         for i in range(12):
             df = df.Define(f"good_clusters_E{i}", f"getFloatAt({i})(good_clusters_EnergyInLayers)")
             df = df.Define(f"Cluster_E{i}", f"good_clusters_E{i}[lc_idx]")
@@ -193,15 +211,14 @@ def get_MVAcalib_resolution(in_directory, clusters, MVAcalib_file):
         cols_to_use += ["Cluster_E"]
         v_cols_to_use = ROOT.std.vector('string')(cols_to_use)
         # Filter to remove weird events and get a proper tree
-        #filter_str = "&&".join([f" Cluster_E{i}!=0 " for i in range(12)])
-        #df2 = df.Filter(filter_str + " && Cluster_E!=0", "Remove bad clusters with missing cell links")
+        # filter_str = "&&".join([f" Cluster_E{i}!=0 " for i in range(12)])
+        # df2 = df.Filter(filter_str + " && Cluster_E!=0", "Remove bad clusters with missing cell links")
         df2 = df.Filter("Cluster_E5!=0 && Cluster_E!=0", "Remove bad clusters with missing cell links")
         cols = df2.AsNumpy(v_cols_to_use)
         num_pass = df2.Count()
-        #df2.Report().Print()
+        # df2.Report().Print()
 
-        layers = np.array(
-        [
+        layers = np.array([
             cols["Cluster_E0"],
             cols["Cluster_E1"],
             cols["Cluster_E2"],
@@ -214,49 +231,49 @@ def get_MVAcalib_resolution(in_directory, clusters, MVAcalib_file):
             cols["Cluster_E9"],
             cols["Cluster_E10"],
             cols["Cluster_E11"],
-        ]
-        )
+        ])
 
         cluster_E = layers.sum(axis=0)
         normalized_layers = np.divide(layers, cluster_E)
         data = np.vstack([normalized_layers, cluster_E])
 
         calib_e = reg.predict(data.T) * cluster_E
-        #print(np.array([calib_e, data.sum(axis=0)]))
+        # print(np.array([calib_e, data.sum(axis=0)]))
         h_e = ROOT.TH1D("hMVA", "hMVA", 500, -0.5, 0.5)
         for e in calib_e:
-            h_e.Fill((e - truth_e)/truth_e)
+            h_e.Fill((e - truth_e) / truth_e)
 
         c = ROOT.TCanvas()
         h_e.SetName(f"E_Calibrated{clusters}_{truth_e}")
         h_e.Draw()
         c.SetLogy()
         resp_e_v, resol_e_v = get_response_and_resol(h_e, h_e.GetMean(), h_e.GetStdDev())
-        c.Print(in_directory+'/'+h_e.GetName()+'.png')
+        c.Print(in_directory + '/' + h_e.GetName() + '.png')
 
         row = [truth_e, f"Calibrated{clusters}", num_init.GetValue(), num_pass.GetValue(), resp_e_v, resol_e_v, 0, 0, 0, 0]
         results.append(row)
-
 
     results.sort(key=lambda it: it[0])
     return results
 
 
-
-def get_response_and_resol(h, mean_guess=0, resol_guess=1):
-    #
-    #res = h.Fit("gaus", "LS", "", mean_guess-2*resol_guess, mean_guess+2*resol_guess)
-    # Resolution should be corrected for the response (i.e as if response was brutally adjusted per energy)
-    #return (res.Parameter(1), res.Parameter(2)/(1+res.Parameter(1)))
-    nq = 100
+def get_response_and_resol(h, mean_guess=0, resol_guess=1, doFit=True):
+    if doFit:
+        res = h.Fit("gaus", "LS", "", mean_guess - 2 * resol_guess, mean_guess + 2 * resol_guess)
+        # Resolution should be corrected for the response (i.e as if response was brutally adjusted per energy)
+        return (res.Parameter(1), res.Parameter(2) / (1 + res.Parameter(1)))
+    # otherwise, use percentiles (here from the histogram, but could be compute directly by the input data before binning)
+    nq = 200
     xq = np.empty(nq + 1)
-    for i in range(nq+1): xq[i] = i/nq 
+    for i in range(nq + 1):
+        xq[i] = i / nq
     yq = np.empty(nq + 1)
-    h.GetQuantiles(nq + 1, yq, xq);
+    h.GetQuantiles(nq + 1, yq, xq)
     print(h)
-    sigma = (yq[90]-yq[10])/1.645/2.0
-    median = yq[50]
-    return (median, sigma/(1+median))
+    sigma = (yq[195] - yq[5]) / 2.0 / 1.962  #  95% CL = 2*1.962sigma
+    median = yq[100]
+    return (median, sigma / (1 + median))
+
 
 def write_output(results, out_file):
     with open(out_file, 'w') as csvfile:
@@ -270,14 +287,12 @@ def write_output(results, out_file):
 if __name__ == "__main__":
     main()
 
-    #ROOT.gInterpreter.Declare("""
-    #float generatedE(const ROOT::RDF::RSampleInfo &id) {
-        #TString s(id.AsString());
-        #TPRegexp tpr("_(\\\\d+)\\\\.root");
-        #TString ss = s(tpr);
-        #TString e_string = ss(1, ss.Index('.')-1);
-        #return e_string.Atof() / 1000.;
-    #}
-    #""")
-
-
+    # ROOT.gInterpreter.Declare("""
+    # float generatedE(const ROOT::RDF::RSampleInfo &id) {
+    # TString s(id.AsString());
+    # TPRegexp tpr("_(\\\\d+)\\\\.root");
+    # TString ss = s(tpr);
+    # TString e_string = ss(1, ss.Index('.')-1);
+    # return e_string.Atof() / 1000.;
+    # }
+    # """)
