@@ -523,7 +523,7 @@ correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                           upstreamFormulas=[
                                               ['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
                                           # do not split the following line or it will break scripts that update the values of the corrections
-                                          downstreamParameters = [[-0.000347089575424904, 0.0054783610176883, 1.0925004473602618, -1.636683541204462, -0.0018794537834755098, 8.210905237964804]],
+                                          downstreamParameters = [[-0.0027661744480442195, 0.006059143775380306, 0.9788596364251927, -1.4951749409378743, -0.08491999337012696, 16.017621428757778]],
                                           downstreamFormulas=[
                                               ['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel=INFO
@@ -604,7 +604,7 @@ correctCaloTopoClusters = CorrectCaloClusters(
     upstreamParameters = [[0.03900891447361534, -4.322941016402328, -139.1811369546787, 0.498342628339746, -3.3545078429754813, -13.99996971344221]],
     upstreamFormulas=[['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
     # do not split the following line or it will break scripts that update the values of the corrections
-    downstreamParameters = [[-0.000347089575424904, 0.0054783610176883, 1.0925004473602618, -1.636683541204462, -0.0018794537834755098, 8.210905237964804]],
+    downstreamParameters = [[-0.0027661744480442195, 0.006059143775380306, 0.9788596364251927, -1.4951749409378743, -0.08491999337012696, 16.017621428757778]],
     downstreamFormulas=[['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
     OutputLevel=INFO
 )
