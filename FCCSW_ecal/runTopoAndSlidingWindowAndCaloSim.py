@@ -156,7 +156,7 @@ geantsim = SimG4Alg("SimG4Alg",
 # EM scale calibration (sampling fraction)
 from Configurables import CalibrateInLayersTool
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
-                                   samplingFraction=[0.3864252122990472] * 1 + [0.13597644835735828] * 1 + [0.14520427829645913] * 1 + [0.1510076084632846] * 1 + [0.1552347580991012] * 1 + [0.159694330729184] * 1 + [0.1632954482794191] * 1 + [0.16720711037339814] * 1 + [0.17047749048884808] * 1 + [0.17461698117974286] * 1 + [0.1798984163980135] * 1 + [0.17920355117405806] * 1,
+                                   samplingFraction = [0.3632447480841956] * 1 + [0.13187261040190248] * 1 + [0.14349714292943705] * 1 + [0.150266118277841] * 1 + [0.15502683375826457] * 1 + [0.15954408786354762] * 1 + [0.16375302347299436] * 1 + [0.16840384714588075] * 1 + [0.17219540619311383] * 1 + [0.1755068643940401] * 1 + [0.17816980262822366] * 1 + [0.18131266048670405] * 1,
                                    readoutName = ecalBarrelReadoutName,
                                    layerFieldName = "layer")
 
@@ -221,7 +221,7 @@ if addNoise:
                                              readoutName = ecalBarrelReadoutNamePhiEta,
                                              activeVolumeName = "LAr_sensitive",
                                              activeFieldName = "layer",
-                                             activeVolumesNumber=12,
+                                             activeVolumesNumber = 12,
                                              fieldNames = ["system"],
                                              fieldValues = [4])
     # cells with noise not filtered
@@ -346,13 +346,13 @@ from Configurables import CorrectCaloClusters
 correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                           inClusters = createClusters.clusters.Path,
                                           outClusters = "Corrected"+createClusters.clusters.Path,
-                                          numLayers=[12],
+                                          numLayers = [12],
                                           firstLayerIDs = [0],
-                                          lastLayerIDs=[11],
+                                          lastLayerIDs = [11],
                                           readoutNames = [ecalBarrelReadoutNamePhiEta],
-                                          upstreamParameters = [[0.03900891447361534, -4.322941016402328, -139.1811369546787, 0.498342628339746, -3.3545078429754813, -13.99996971344221]],
+                                          upstreamParameters = [[0.033955208567442975, -3.818122686176795, -146.59497297249345, 0.563447903447204, -3.7906629536351906, -8.569962044554627]],
                                           upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          downstreamParameters = [[-0.000347089575424904, 0.0054783610176883, 1.0925004473602618, -1.636683541204462, -0.0018794537834755098, 8.210905237964804]],
+                                          downstreamParameters = [[-0.00357017357914002, 0.006624434345822984, 1.0065650241358008, -1.285181650875406, -0.0707783194915608, 12.907319280196257]],
                                           downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel = INFO
                                           )
@@ -416,13 +416,13 @@ createEcalBarrelPositionedCaloTopoClusterCells.positionedHits.Path = "Positioned
 correctCaloTopoClusters = CorrectCaloClusters("correctCaloTopoClusters",
                                           inClusters = createTopoClusters.clusters.Path,
                                           outClusters = "Corrected"+createTopoClusters.clusters.Path,
-                                          numLayers=[12],
+                                          numLayers = [12],
                                           firstLayerIDs = [0],
-                                          lastLayerIDs=[11],
+                                          lastLayerIDs = [11],
                                           readoutNames = [ecalBarrelReadoutNamePhiEta],
-                                          upstreamParameters = [[0.03900891447361534, -4.322941016402328, -139.1811369546787, 0.498342628339746, -3.3545078429754813, -13.99996971344221]],
+                                          upstreamParameters = [[0.033955208567442975, -3.818122686176795, -146.59497297249345, 0.563447903447204, -3.7906629536351906, -8.569962044554627]],
                                           upstreamFormulas = [['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          downstreamParameters = [[-0.000347089575424904, 0.0054783610176883, 1.0925004473602618, -1.636683541204462, -0.0018794537834755098, 8.210905237964804]],
+                                          downstreamParameters = [[-0.00357017357914002, 0.006624434345822984, 1.0065650241358008, -1.285181650875406, -0.0707783194915608, 12.907319280196257]],
                                           downstreamFormulas = [['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel = INFO
                                           )
