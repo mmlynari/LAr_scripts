@@ -2,9 +2,9 @@ from Configurables import ApplicationMgr
 from Configurables import EventCounter
 from Configurables import AuditorSvc, ChronoAuditor
 from Configurables import PodioOutput
-from Configurables import CorrectCaloClusters
-from Configurables import CreateCaloClustersSlidingWindowFCCee
 from Configurables import CaloTowerToolFCCee
+from Configurables import CreateCaloClustersSlidingWindowFCCee
+from Configurables import CorrectCaloClusters
 from Configurables import CreateEmptyCaloCellsCollection
 from Configurables import CreateCaloCellPositionsFCCee
 from Configurables import CellPositionsECalBarrelModuleThetaSegTool
@@ -42,6 +42,12 @@ use_pythia = False
 addNoise = False
 dumpGDML = False
 runHCal = False
+# for big productions, save significant space removing hits and cells
+# however, hits and cluster cells might be wanted for small productions for detailed event displays
+# also, cluster cells are needed for the MVA training
+saveHits = False
+saveCells = False
+saveClusterCells = True
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set
@@ -59,8 +65,8 @@ Nevts = 10
 # momentum = 100  # in GeV
 momentum = 50  # in GeV
 # momentum = 10  # in GeV
-thetaMin = 40  # degrees
-thetaMax = 140  # degrees
+thetaMin = 50  # degrees
+thetaMax = 130  # degrees
 # thetaMin = 89
 # thetaMax = 91
 # thetaMin = 90  # degrees
@@ -279,8 +285,7 @@ geantsim = SimG4Alg("SimG4Alg",
 # Digitization (Merging hits into cells, EM scale calibration)
 # EM scale calibration (sampling fraction)
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
-                                        samplingFraction=[0.36599110182660616] * 1 + [0.1366222373338866] * 1 + [0.1452035173747207] * 1 + [0.1504319190969367] * 1 + [0.15512713637727382] * 1 + [0.1592916726494782] * 1 + [
-                                            0.16363478857307595] * 1 + [0.1674697333180323] * 1 + [0.16998205747422343] * 1 + [0.1739146363733975] * 1 + [0.17624609543603845] * 1 + [0.1768613530850488] * 1,
+                                        samplingFraction=[0.3864252122990472] * 1 + [0.13597644835735828] * 1 + [0.14520427829645913] * 1 + [0.1510076084632846] * 1 + [0.1552347580991012] * 1 + [0.159694330729184] * 1 + [0.1632954482794191] * 1 + [0.16720711037339814] * 1 + [0.17047749048884808] * 1 + [0.17461698117974286] * 1 + [0.1798984163980135] * 1 + [0.17920355117405806] * 1,
                                         readoutName=ecalBarrelReadoutName,
                                         layerFieldName="layer")
 
@@ -462,7 +467,7 @@ createemptycells.cells.Path = "emptyCaloCells"
 
 # Produce sliding window clusters (ECAL only)
 towers = CaloTowerToolFCCee("towers",
-                            deltaThetaTower = 0.009817477, deltaPhiTower = 2*2*pi/1536.,
+                            deltaThetaTower=4 * 0.009817477/4, deltaPhiTower=2 * 2 * pi / 1536.,
                             ecalBarrelReadoutName=ecalBarrelReadoutName,
                             ecalEndcapReadoutName=ecalEndcapReadoutName,
                             ecalFwdReadoutName="",
@@ -513,16 +518,12 @@ correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                           firstLayerIDs=[0],
                                           lastLayerIDs=[11],
                                           readoutNames=[ecalBarrelReadoutName],
-                                          # upstreamParameters = [
-                                          #   [0.02729094887360858, -1.378665489864182, -68.40424543618059, 3.6930827214130053, -5528.714729126099, -1630.7911298009794]],
-                                          upstreamParameters=[
-                                              [0.02729094887360858, -1.378665489864182, -68.40424543618059, 3.6930827214130053, -5528.714729126099, -1630.7911298009794]],
+                                          # do not split the following line or it will break scripts that update the values of the corrections
+                                          upstreamParameters = [[0.03900891447361534, -4.322941016402328, -139.1811369546787, 0.498342628339746, -3.3545078429754813, -13.99996971344221]],
                                           upstreamFormulas=[
                                               ['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-                                          # downstreamParameters = [
-                                          #   [-0.0032351643028483354, 0.006597484738888312, 0.8972024981692965, -1.0207168610322181, 0.017878133854084398, 9.108099243443101]],
-                                          downstreamParameters=[
-                                              [-0.0032351643028483354, 0.006597484738888312, 0.8972024981692965, -1.0207168610322181, 0.017878133854084398, 9.108099243443101]],
+                                          # do not split the following line or it will break scripts that update the values of the corrections
+                                          downstreamParameters = [[-0.0027661744480442195, 0.006059143775380306, 0.9788596364251927, -1.4951749409378743, -0.08491999337012696, 16.017621428757778]],
                                           downstreamFormulas=[
                                               ['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel=INFO
@@ -588,6 +589,7 @@ createTopoClusters = CaloTopoClusterFCCee("CreateTopoClusters",
 createTopoClusters.clusters.Path = "CaloTopoClusters"
 createTopoClusters.clusterCells.Path = "CaloTopoClusterCells"
 
+
 # Correction below is for EM-only clusters
 # What to do for EM+HAD topoclusters?
 correctCaloTopoClusters = CorrectCaloClusters(
@@ -598,15 +600,11 @@ correctCaloTopoClusters = CorrectCaloClusters(
     firstLayerIDs=[0],
     lastLayerIDs=[11],
     readoutNames=[ecalBarrelReadoutName],
-    # upstreamParameters = [[0.02729094887360858, -1.378665489864182, -68.40424543618059,
-    #                        3.6930827214130053, -5528.714729126099, -1630.7911298009794]],
-    upstreamParameters=[[0.02729094887360858, -1.378665489864182, -68.40424543618059,
-                         3.6930827214130053, -5528.714729126099, -1630.7911298009794]],
+    # do not split the following line or it will break scripts that update the values of the corrections
+    upstreamParameters = [[0.03900891447361534, -4.322941016402328, -139.1811369546787, 0.498342628339746, -3.3545078429754813, -13.99996971344221]],
     upstreamFormulas=[['[0]+[1]/(x-[2])', '[0]+[1]/(x-[2])']],
-    # downstreamParameters = [[-0.0032351643028483354, 0.006597484738888312, 0.8972024981692965,
-    #                           -1.0207168610322181, 0.017878133854084398, 9.108099243443101]],
-    downstreamParameters=[[-0.0032351643028483354, 0.006597484738888312, 0.8972024981692965,
-                           -1.0207168610322181, 0.017878133854084398, 9.108099243443101]],
+    # do not split the following line or it will break scripts that update the values of the corrections
+    downstreamParameters = [[-0.0027661744480442195, 0.006059143775380306, 0.9788596364251927, -1.4951749409378743, -0.08491999337012696, 16.017621428757778]],
     downstreamFormulas=[['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
     OutputLevel=INFO
 )
@@ -628,9 +626,16 @@ if runHCal:
 else:
     out.outputCommands = ["keep *", "drop HCal*", "drop emptyCaloCells"]
 
+if not saveCells:
+    out.outputCommands.append("drop ECal*Cells*")
+if not saveClusterCells:
+    out.outputCommands.append("drop *ClusterCells*")
+if not saveHits:
+    out.outputCommands.append("drop ECal*Hits*")
+
 # out.filename = "root/output_fullCalo_SimAndDigi_withTopoCluster_MagneticField_"+str(magneticField)+"_pMin_"+str(momentum*1000)+"_MeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(thetaMax)+"_pdgId_"+str(pdgCode)+"_pythia"+str(use_pythia)+"_Noise"+str(addNoise)+".root"
-out.filename = "./root/output_evts_"+str(Nevts)+"_pdg_"+str(pdgCode)+"_"+str(momentum)+"_GeV"+"_ThetaMinMax_"+str(thetaMin)+"_"+str(
-    thetaMax)+"_PhiMinMax_"+str(phiMin)+"_"+str(phiMax)+"_MagneticField_"+str(magneticField)+"_Noise"+str(addNoise)+".root"
+out.filename = "./root/output_evts_" + str(Nevts) + "_pdg_" + str(pdgCode) + "_" + str(momentum) + "_GeV" + "_ThetaMinMax_" + str(thetaMin) + "_" + str(
+    thetaMax) + "_PhiMinMax_" + str(phiMin) + "_" + str(phiMax) + "_MagneticField_" + str(magneticField) + "_Noise" + str(addNoise) + ".root"
 
 # CPU information
 chra = ChronoAuditor()

@@ -5,13 +5,17 @@ import os
 import os.path
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib import style
 from scipy import optimize as opt
 
 import ROOT
 
+graphicFormat = 'pdf'
+
+
 def main():
-    style.use('seaborn-colorblind')
+    # enable if seaborn is installed
+    #  from matplotlib import style
+    # style.use('seaborn-colorblind')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--outDir', default='./', type=str, help='output directory for plots')
@@ -51,6 +55,7 @@ def main():
     os.makedirs(args.outDir, exist_ok=True)
     args.func(args)
 
+
 def plot(args):
     df = ROOT.RDF.MakeCsvDataFrame(args.inputFile)
     df = add_uncertainties(df)
@@ -66,9 +71,9 @@ def plot(args):
         for d in distributions:
             fig = simple_plot(df, d, cl, do_fit=args.doFits, tag=args.fileDescr)
             if args.fileDescr:
-                out_f_name = f"{args.outDir}/fig_{args.fileDescr}_{cl}_{d}.png"
+                out_f_name = f"{args.outDir}/fig_{args.fileDescr}_{cl}_{d}.{graphicFormat}"
             else:
-                out_f_name = f"{args.outDir}/fig_{cl}_{d}.png"
+                out_f_name = f"{args.outDir}/fig_{cl}_{d}.{graphicFormat}"
             print(f"Saving {out_f_name}")
             fig.savefig(out_f_name)
             plt.close()
@@ -88,12 +93,13 @@ def compare_clusters(args):
     for d in distributions:
         fig = comparison_plot_clusters(df, d, clusters_colls, do_fit=args.doFits, tag=args.fileDescr)
         if args.fileDescr:
-            out_f_name = f"{args.outDir}/fig_compare_clusters_{args.fileDescr}_{d}.png"
+            out_f_name = f"{args.outDir}/fig_compare_clusters_{args.fileDescr}_{d}.{graphicFormat}"
         else:
-            out_f_name = f"{args.outDir}/fig_compare_clusters_{d}.png"
+            out_f_name = f"{args.outDir}/fig_compare_clusters_{d}.{graphicFormat}"
         print(f"Saving {out_f_name}")
         fig.savefig(out_f_name)
         plt.close()
+
 
 def compare_files(args):
     all_files = [args.inputFile1] + args.inputFiles
@@ -117,7 +123,7 @@ def compare_files(args):
     for cl in clusters_colls:
         for d in distributions:
             fig = comparison_plot_files(dfs, tags, d, cl, do_fit=args.doFits)
-            out_f_name = f"{args.outDir}/fig_compare_files_{cl}_{d}.png"
+            out_f_name = f"{args.outDir}/fig_compare_files_{cl}_{d}.{graphicFormat}"
             print(f"Saving {out_f_name}")
             fig.savefig(out_f_name)
             plt.close()
@@ -132,17 +138,19 @@ def add_uncertainties(df):
         df = df.Define(f"{resol}_err", f"{resol}/sqrt(2*NeventsPass - 2)")
     return df
 
-def resol_curve(x, a, b, c):
-    return np.sqrt(c*c + b*b/x + a*a/(x*x))
 
-def extract_values(df, name, clusters, do_fit = False, fit_fcn=resol_curve):
+def resol_curve(x, a, b, c):
+    return np.sqrt(c * c + b * b / x + a * a / (x * x))
+
+
+def extract_values(df, name, clusters, do_fit=False, fit_fcn=resol_curve):
     cols = df.Filter(f'ClusterType == "{clusters}"').AsNumpy(["E_truth", name, f"{name}_err"])
     if 'E' in name:
-    # Put in % for energy resol
+        # Put in % for energy resol
         cols[name] *= 100
         cols[f"{name}_err"] *= 100
     else:
-    # Put in mrad for angles
+        # Put in mrad for angles
         cols[name] *= 1000
         cols[f"{name}_err"] *= 1000
     popt = None
@@ -150,16 +158,19 @@ def extract_values(df, name, clusters, do_fit = False, fit_fcn=resol_curve):
         popt, pcov = opt.curve_fit(fit_fcn, cols["E_truth"], cols[name], sigma=cols[f"{name}_err"], p0=(0, 10, 1))
     return cols["E_truth"], cols[name], cols[f"{name}_err"], popt
 
+
 def prepare_fig(name, tag=None):
-    fig, ax = plt.subplots(figsize = (4.8, 4.8), constrained_layout = True, subplot_kw=dict(box_aspect=1))
+    fig, ax = plt.subplots(figsize=(4.8, 4.8), constrained_layout=True, subplot_kw=dict(box_aspect=1))
     ax.set_xlabel("E (GeV)")
+    # ax.set_yscale('log')
+    # ax.set_xscale('log')
     if "resp" in name:
         what = "Response"
     elif "resol" in name:
         what = "Resolution"
     if 'E' in name:
         var = "Energy"
-    elif 'Phi'in name:
+    elif 'Phi' in name:
         var = r'$\phi$'
     elif 'Theta' in name:
         var = r'$\theta$'
@@ -173,34 +184,39 @@ def prepare_fig(name, tag=None):
         ax.set_title(f"{var} {what}")
     return fig, ax
 
+
 def postprocess_fig(fig, ax, name, leg_entries):
     if "resol" in name:
         ax.set_ylim(ymin=0)
     ax.set_xlim(xmin=0)
-    loc = 'lower right' if "response" in name else 'upper right'
+    # loc = 'lower right' if "response" in name else 'upper right'
+    loc = 'best'
     ax.legend(handles=leg_entries, loc=loc)
+
 
 def plot_fit(ax, energies, popts, color=None):
     xvals_curve = np.linspace(energies.min(), energies.max(), 200)
     curve, = ax.plot(xvals_curve, resol_curve(xvals_curve, *popts),
-            linestyle='-', color=color,
-            label="$\\frac{{{0:.2f}}}{{E}}\oplus \\frac{{{1:.1f}\\%}}{{\\sqrt{{E}}}}\\oplus {2:.1f}\\%$".format(popts[0]*0.01, popts[1], popts[2]))
+                     linestyle='-', color=color,
+                     label="$\\frac{{{0:.2f}}}{{E}}\\oplus \\frac{{{1:.1f}\\%}}{{\\sqrt{{E}}}}\\oplus {2:.1f}\\%$".format(popts[0] * 0.01, popts[1], popts[2]))
     return curve
 
+
 def simple_plot(df, name, clusters, do_fit=False, tag=None):
-    if not "resol" in name:
+    if "resol" not in name:
         do_fit = False
     energies, yvals, yvals_err, popts = extract_values(df, name, clusters, do_fit)
     fig, ax = prepare_fig(name, tag)
     leg_entries = [ax.errorbar(energies, yvals, yerr=yvals_err, label=f"{name}, {clusters}", marker='o',
-        linestyle='none')]
+                               linestyle='none')]
     if do_fit:
         leg_entries.append(plot_fit(ax, energies, popts))
     postprocess_fig(fig, ax, name, leg_entries)
     return fig
 
+
 def comparison_plot_clusters(df, name, clusters, do_fit=False, tag=None):
-    if not "resol" in name:
+    if "resol" not in name:
         do_fit = False
     fig, ax = prepare_fig(name, tag)
     leg_entries = []
@@ -213,8 +229,9 @@ def comparison_plot_clusters(df, name, clusters, do_fit=False, tag=None):
     postprocess_fig(fig, ax, name, leg_entries)
     return fig
 
+
 def comparison_plot_files(dfs, tags, name, clusters, do_fit=False):
-    if not "resol" in name:
+    if "resol" not in name:
         do_fit = False
     fig, ax = prepare_fig(name, clusters)
     leg_entries = []
@@ -233,6 +250,7 @@ def all_distributions():
     var_types = ["resol", "response"]
     distributions = [f"{v}_{t}" for v in variables for t in var_types]
     return distributions
+
 
 if __name__ == "__main__":
     main()
