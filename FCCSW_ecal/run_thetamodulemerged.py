@@ -2,9 +2,9 @@ from Configurables import ApplicationMgr
 from Configurables import EventCounter
 from Configurables import AuditorSvc, ChronoAuditor
 from Configurables import PodioOutput
-from Configurables import CorrectCaloClusters
-from Configurables import CreateCaloClustersSlidingWindowFCCee
 from Configurables import CaloTowerToolFCCee
+from Configurables import CreateCaloClustersSlidingWindowFCCee
+from Configurables import CorrectCaloClusters
 from Configurables import CreateEmptyCaloCellsCollection
 from Configurables import CreateCaloCellPositionsFCCee
 from Configurables import CellPositionsECalBarrelModuleThetaSegTool
@@ -285,7 +285,7 @@ geantsim = SimG4Alg("SimG4Alg",
 # Digitization (Merging hits into cells, EM scale calibration)
 # EM scale calibration (sampling fraction)
 calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
-                                        samplingFraction=[0.36599110182660616] * 1 + [0.1366222373338866] * 1 + [0.1452035173747207] * 1 + [0.1504319190969367] * 1 + [0.15512713637727382] * 1 + [0.1592916726494782] * 1 + [0.16363478857307595] * 1 + [0.1674697333180323] * 1 + [0.16998205747422343] * 1 + [0.1739146363733975] * 1 + [0.17624609543603845] * 1 + [0.1768613530850488] * 1,
+                                        samplingFraction=[0.3864252122990472] * 1 + [0.13597644835735828] * 1 + [0.14520427829645913] * 1 + [0.1510076084632846] * 1 + [0.1552347580991012] * 1 + [0.159694330729184] * 1 + [0.1632954482794191] * 1 + [0.16720711037339814] * 1 + [0.17047749048884808] * 1 + [0.17461698117974286] * 1 + [0.1798984163980135] * 1 + [0.17920355117405806] * 1,
                                         readoutName=ecalBarrelReadoutName,
                                         layerFieldName="layer")
 
