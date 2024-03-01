@@ -5,6 +5,7 @@ from Configurables import PodioOutput
 from Configurables import CaloTowerToolFCCee
 from Configurables import CreateCaloClustersSlidingWindowFCCee
 from Configurables import CorrectCaloClusters
+from Configurables import CalibrateCaloClusters
 from Configurables import CreateEmptyCaloCellsCollection
 from Configurables import CreateCaloCellPositionsFCCee
 from Configurables import CellPositionsECalBarrelModuleThetaSegTool
@@ -48,6 +49,12 @@ runHCal = False
 saveHits = False
 saveCells = False
 saveClusterCells = True
+
+# cluster energy corrections
+# simple parametrisations of up/downstream losses
+applyUpDownstreamCorrections = True
+# BDT regression from total cluster energy and fraction of energy in each layer (after correction for sampling fraction)
+applyMVAClusterEnergyCalibration = True
 
 # Input for simulations (momentum is expected in GeV!)
 # Parameters for the particle gun simulations, dummy if use_pythia is set
@@ -467,7 +474,7 @@ createemptycells.cells.Path = "emptyCaloCells"
 
 # Produce sliding window clusters (ECAL only)
 towers = CaloTowerToolFCCee("towers",
-                            deltaThetaTower=4 * 0.009817477/4, deltaPhiTower=2 * 2 * pi / 1536.,
+                            deltaThetaTower=4 * 0.009817477 / 4, deltaPhiTower=2 * 2 * pi / 1536.,
                             ecalBarrelReadoutName=ecalBarrelReadoutName,
                             ecalEndcapReadoutName=ecalEndcapReadoutName,
                             ecalFwdReadoutName="",
@@ -528,6 +535,20 @@ correctCaloClusters = CorrectCaloClusters("correctCaloClusters",
                                               ['[0]+[1]*x', '[0]+[1]/sqrt(x)', '[0]+[1]/x']],
                                           OutputLevel=INFO
                                           )
+
+calibrateCaloClusters = CalibrateCaloClusters("calibrateCaloClusters",
+                                              inClusters=createClusters.clusters.Path,
+                                              outClusters="Calibrated" + createClusters.clusters.Path,
+                                              systemIDs=[4],
+                                              numLayers=[12],
+                                              firstLayerIDs=[0],
+                                              readoutNames=[
+                                                  ecalBarrelReadoutName],
+                                              layerFieldNames=["layer"],
+                                              calibrationFile=os.environ['FCCBASEDIR'] + "/LAr_scripts/data/lgbm_calibration-CaloClusters.onnx",
+                                              # calibrationFile=os.environ['FCCBASEDIR'] + "/LAr_scripts/data/xgb_calibration-CaloClusters.onnx",
+                                              OutputLevel=INFO
+                                              )
 
 # TOPO CLUSTERS PRODUCTION
 createTopoInput = CaloTopoClusterInputTool("CreateTopoInput",
@@ -609,6 +630,20 @@ correctCaloTopoClusters = CorrectCaloClusters(
     OutputLevel=INFO
 )
 
+calibrateCaloTopoClusters = CalibrateCaloClusters("calibrateCaloTopoClusters",
+                                                  inClusters=createTopoClusters.clusters.Path,
+                                                  outClusters="Calibrated" + createTopoClusters.clusters.Path,
+                                                  systemIDs=[4],
+                                                  numLayers=[12],
+                                                  firstLayerIDs=[0],
+                                                  readoutNames=[
+                                                      ecalBarrelReadoutName],
+                                                  layerFieldNames=["layer"],
+                                                  calibrationFile=os.environ['FCCBASEDIR'] + "/LAr_scripts/data/lgbm_calibration-CaloTopoClusters.onnx",
+                                                  # calibrationFile=os.environ['FCCBASEDIR'] + "/LAr_scripts/data/xgb_calibration-CaloTopoClusters.onnx",
+                                                  OutputLevel=INFO
+                                                  )
+
 # Output
 out = PodioOutput("out",
                   OutputLevel=INFO)
@@ -670,6 +705,7 @@ TopAlg = [
     createEcalBarrelPositionedCells2,
     createEcalEndcapCells
 ]
+
 if runHCal:
     TopAlg += [
         createHcalBarrelCells,
@@ -678,12 +714,26 @@ if runHCal:
         createHcalBarrelPositionedCells2,
         # createHcalEndcapCells
     ]
+
 TopAlg += [
     createemptycells,
     createClusters,
-    correctCaloClusters,
-    createTopoClusters,
-    correctCaloTopoClusters,
+    createTopoClusters
+]
+
+if applyUpDownstreamCorrections:
+    TopAlg += [
+        correctCaloClusters,
+        correctCaloTopoClusters
+    ]
+
+if applyMVAClusterEnergyCalibration:
+    TopAlg += [
+        calibrateCaloClusters,
+        calibrateCaloTopoClusters
+    ]
+
+TopAlg += [
     out
 ]
 
