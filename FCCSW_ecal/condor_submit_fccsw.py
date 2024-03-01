@@ -42,9 +42,9 @@ def SubmitToCondor(cmd,nbtrials):
 
 def get_condor_submit_header(executable_regex, jobFlavour = 'longlunch'):
     return """executable     = $(filename)
-Log            = $(filename).log
-Output         = $(filename).out
-Error          = $(filename).err
+Log            = $Fpn(filename)/condor.log
+Output         = $Fpn(filename)/condor.out
+Error          = $Fpn(filename)/condor.err
 requirements    = ( (OpSysAndVer =?= "AlmaLinux9") && (Machine =!= LastRemoteHost) && (TARGET.has_avx2 =?= True) )
 max_retries    = 3
 +JobFlavour    = "{0}"
@@ -54,18 +54,20 @@ queue filename matching files {1}
 
 def get_exec_file_header():# assumes you installed FCCSW locally with the 'install' folder at the root of your FCCSW repository
     return """#!/bin/bash
-source /cvmfs/sw.hsf.org/key4hep/setup.sh
-#source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
+#source /cvmfs/sw.hsf.org/key4hep/setup.sh
+source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
+source %s/FCCAnalyses/setup.sh
 export K4RECCALORIMETER=%s
 export K4SIMGEANT4=%s
-export K4FWCORE=%s
+#export K4FWCORE=%s
 export FCCDETECTORS=%s
 export PYTHONPATH=%s
 LD_LIBRARY_PATH=%s
 CMAKE_PREFIX_PATH=%s
 PATH=%s
 export FCCBASEDIR=%s
-"""%(os.environ.get("K4RECCALORIMETER", ""), os.environ.get("K4SIMGEANT4", ""), os.environ.get("K4FWCORE", ""), os.environ.get("FCCDETECTORS", ""), os.environ.get("PYTHONPATH", ""), os.environ.get("LD_LIBRARY_PATH", ""), os.environ.get("CMAKE_PREFIX_PATH", ""), os.environ.get("PATH", ""), os.environ.get("FCCBASEDIR", ""))
+export K4GEO=%s
+"""%(os.environ.get("FCCBASEDIR", ""), os.environ.get("K4RECCALORIMETER", ""), os.environ.get("K4SIMGEANT4", ""), os.environ.get("K4FWCORE", ""), os.environ.get("FCCDETECTORS", ""), os.environ.get("PYTHONPATH", ""), os.environ.get("LD_LIBRARY_PATH", ""), os.environ.get("CMAKE_PREFIX_PATH", ""), os.environ.get("PATH", ""), os.environ.get("FCCBASEDIR", ""), os.environ.get("K4GEO", ""))
 
 
 
@@ -208,6 +210,9 @@ if __name__ == "__main__":
                 else:
                     command = command_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy_min)).replace('PMAX', str(energy_max)).replace('THETAMINRADIAN', str(math.radians(theta_min))).replace('THETAMAXRADIAN', str(math.radians(theta_max))).replace('OUTPUTDIR', outfile_storage).replace('PDGID', str(pdgid)).replace('THETAMIN', str(theta_min)).replace('THETAMAX', str(theta_max)).replace('JOBID', str(job_idx)).replace('SEED', str(job_idx))
                 exec_filename = exec_filename_template.replace('EVT', str(evt_per_job)).replace('PMIN', str(energy)).replace('PMAX', str(energy)).replace('THETAMIN', str(theta)).replace('THETAMAX', str(theta)).replace('JOBID', str(job_idx)).replace('PDGID', str(pdgid))
+                if not os.path.isdir(exec_filename.replace(".sh","")):
+                    os.mkdir(exec_filename.replace(".sh",""))
+
                 with open(exec_filename, "w") as f:
                     f.write(get_exec_file_header())
                     f.write(command)

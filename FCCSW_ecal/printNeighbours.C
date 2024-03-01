@@ -1,9 +1,23 @@
+#include "TTree.h"
+#include "TFile.h"
+#include "TRandom.h"
+#include <iostream>
+using namespace std;
+
 TTree *T = nullptr;
-// const std::string filename = "neighbours_map_barrel_thetamodulemerged.root";
+//const std::string filename = "neighbours_map_barrel_thetamodulemerged.root";
 const std::string filename = "neighbours_map_HCalBarrel.root";
 const std::string treename = "neighbours";
+
+TTree *Tnoise = nullptr;
+const std::string filenameNoise = "cellNoise_map_electronicsNoiseLevel_ecalB_thetamodulemerged_hcalB_thetaphi.root";
+const std::string treenameNoise = "noisyCells";
+
 ULong64_t cID;
 std::vector<unsigned long> *neighbours = 0;
+ULong64_t cIDNoise;
+double noiseLevel;
+double noiseOffset;
 
 bool useHCalReadoutWithRows = false;
 
@@ -79,6 +93,29 @@ ULong_t HCalBarrelPhiBin(ULong_t cellID)
   return 999999999;   
 }
 
+void LoadNeighboursMap()
+{
+  if (T == nullptr && filename!="")
+  {
+    TFile *f = TFile::Open(filename.c_str(), "READ");
+    T = (TTree *)f->Get(treename.c_str());
+    T->SetBranchAddress("cellId", &cID);
+    T->SetBranchAddress("neighbours", &neighbours);
+  }
+}
+
+void LoadNoiseMap()
+{
+  if (Tnoise == nullptr && filenameNoise!="")
+  {
+    TFile *fNoise = TFile::Open(filenameNoise.c_str(), "READ");
+    Tnoise = (TTree *)fNoise->Get(treenameNoise.c_str());
+    Tnoise->SetBranchAddress("cellId", &cIDNoise);
+    Tnoise->SetBranchAddress("noiseLevel", &noiseLevel);
+    Tnoise->SetBranchAddress("noiseOffset", &noiseOffset);
+  }
+}
+
 void printCell(ULong_t cellID)
 {
   cout << "cellID: " << cellID << endl;
@@ -97,28 +134,33 @@ void printCell(ULong_t cellID)
   cout << endl;
 }
 
-void LoadNeighboursMap()
-{
-  if (T == nullptr)
-  {
-    TFile *f = TFile::Open(filename.c_str(), "READ");
-    T = (TTree *)f->Get(treename.c_str());
-    T->SetBranchAddress("cellId", &cID);
-    T->SetBranchAddress("neighbours", &neighbours);
-  }
-}
-
-void printCellAndNeighbours(ULong64_t iEntry)
+void printCell(ULong64_t iEntry, bool showNeighbours, bool showNoise)
 {
   T->GetEntry(iEntry);
   cout << "=================================================" << endl;
   cout << endl;
   printCell(cID);
-  cout << "Neighbours: " << endl
-       << endl;
-  for (unsigned int i = 0; i < neighbours->size(); i++)
+  if (showNeighbours)
   {
-    printCell(neighbours->at(i));
+    cout << "Neighbours: " << endl
+         << endl;
+    for (unsigned int i = 0; i < neighbours->size(); i++)
+    {
+      printCell(neighbours->at(i));
+    }
+  }
+  if (showNoise)
+  {
+    for (ULong64_t jEntry = 0; jEntry < Tnoise->GetEntries(); jEntry++)
+    {
+      Tnoise->GetEntry(jEntry);
+      if (cIDNoise == cID)
+      {
+        cout << "Noise: level = " << noiseLevel << " , offset = " << noiseOffset
+            << endl << endl;
+            break;
+      }
+    }
   }
   cout << "=================================================" << endl;
 }
@@ -131,7 +173,7 @@ void printNeighboursOfCell(ULong_t cellID)
     T->GetEntry(iEntry);
     if (cID == cellID)
     {
-      printCellAndNeighbours(iEntry);
+      printCell(iEntry, true, false);
       return;
     }
   }
@@ -144,6 +186,6 @@ void printNeighbours(int n = 10)
   for (int i = 0; i < n; i++)
   {
     int entry = (int)gRandom->Uniform(T->GetEntries());
-    printCellAndNeighbours(entry);
+    printCell(entry, true, false);
   }
 }

@@ -6,11 +6,15 @@ from plotstyle import FCCStyle
 import ROOT
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
+
 def main():
     parser = argparse.ArgumentParser(description='Material Plotter')
-    parser.add_argument('--fname', "-f", dest='fname', default="out_material_scan.root", type=str, help="name of file to read")
-    parser.add_argument('--etaMax', "-m", dest='etaMax', default=0.89, type=float, help="maximum pseudorapidity")
-    parser.add_argument('--etaBin', "-b", dest='etaBin', default=0.05, type=float, help="pseudorapidity bin width")
+    parser.add_argument('--fname', "-f", dest='fname',
+                        default="out_material_scan.root", type=str, help="name of file to read")
+    parser.add_argument('--etaMax', "-m", dest='etaMax',
+                        default=0.89, type=float, help="maximum pseudorapidity")
+    parser.add_argument('--etaBin', "-b", dest='etaBin',
+                        default=0.05, type=float, help="pseudorapidity bin width")
     args = parser.parse_args()
 
     f = ROOT.TFile.Open(args.fname, "read")
@@ -22,7 +26,8 @@ def main():
     for etaBin, entry in enumerate(tree):
         nMat = entry.nMaterials
         for i in range(nMat):
-            if entry.material.at(i) == "Air": continue
+            if entry.material.at(i) == "Air":
+                continue
             if entry.material.at(i) not in histDict.keys():
                 histDict[entry.material.at(i)] = {
                     "x0": ROOT.TH1F("", "", (int)(2 * args.etaMax / args.etaBin), -args.etaMax, args.etaMax),
@@ -30,11 +35,15 @@ def main():
                     "depth": ROOT.TH1F("", "", (int)(2 * args.etaMax / args.etaBin), -args.etaMax, args.etaMax)
                 }
             hs = histDict[entry.material.at(i)]
-            hs["x0"].SetBinContent(etaBin+1, hs["x0"].GetBinContent(etaBin+1) + entry.nX0.at(i))
-            hs["lambda"].SetBinContent(etaBin+1, hs["lambda"].GetBinContent(etaBin+1) + entry.nLambda.at(i))
-            hs["depth"].SetBinContent(etaBin+1, hs["depth"].GetBinContent(etaBin+1) + entry.matDepth.at(i))
+            hs["x0"].SetBinContent(
+                etaBin + 1, hs["x0"].GetBinContent(etaBin + 1) + entry.nX0.at(i))
+            hs["lambda"].SetBinContent(
+                etaBin + 1, hs["lambda"].GetBinContent(etaBin + 1) + entry.nLambda.at(i))
+            hs["depth"].SetBinContent(
+                etaBin + 1, hs["depth"].GetBinContent(etaBin + 1) + entry.matDepth.at(i))
 
-    axis_titles = ["Number of X_{0}", "Number of #lambda", "Material depth [cm]"]
+    axis_titles = ["Number of X_{0}",
+                   "Number of #lambda", "Material depth [cm]"]
 
     # This loop does the drawing, sets the style and saves the pdf files
     for plot, title in zip(["x0", "lambda", "depth"], axis_titles):
@@ -44,7 +53,7 @@ def main():
         for i, material in enumerate(histDict.keys()):
             linecolor = 1
             if i >= len(FCCStyle.fillcolors):
-                i = i%len(FCCStyle.fillcolors)
+                i = i % len(FCCStyle.fillcolors)
 
             fillcolor = FCCStyle.fillcolors[i]
             histDict[material][plot].SetLineColor(linecolor)
@@ -69,7 +78,7 @@ def main():
         cv.Print(plot + "pos.pdf")
         cv.Print(plot + "pos.png")
 
+
 if __name__ == "__main__":
     FCCStyle.initialize()
     main()
-

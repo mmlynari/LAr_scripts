@@ -185,12 +185,13 @@ For each input energy, find relation between eneryg in layer 0 and energy in fro
 relation between energy in last layer and energy in back:
 `k4SimGeant4/Detector/DetStudies/scripts/cec_process_events`
 
-Then interpolate between energies to find estimates of upstream/downsteram corrections
+Then interpolate between energies to find estimates of upstream/downstream corrections
 as function of calo energy, energy in 1st layer and energy in last layer
 `k4SimGeant4/Detector/DetStudies/scripts/cec_derive1`
 
 #### Running reconstruction algorithms
-Pre-processing step: `sed` the upstream and downstream corrections in the jobOption file.
+Pre-processing step: `sed` the upstream and downstream corrections in the jobOption file, 
+using the `read_upstream_json.py` script
 
 jobOption to run:
 `runTopoAndSlidingWindowAndCaloSim.py`
