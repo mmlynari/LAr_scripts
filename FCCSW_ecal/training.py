@@ -17,12 +17,13 @@ def main():
     parser.add_argument("--training", default=True, action=argparse.BooleanOptionalAction, help='if no-training is set, the training is skipped')
     parser.add_argument("-o", "--outFile", default="out.json",
                         help="Output XGBoost training file", type=str)
+    parser.add_argument("--numLayers", default=11, type=int)
     parser.add_argument("clusters", help="Cluster collection to use", type=str)
     args = parser.parse_args()
-    run(args.inputDir, args.clusters, args.outFile, args.training, args.writeFeatures, args.writeTarget)
+    run(args.inputDir, args.clusters, args.outFile, args.training, args.writeFeatures, args.writeTarget, args.numLayers)
 
 
-def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarget):
+def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarget, numLayers):
     """Actual processing"""
     init_stuff()
 
@@ -33,17 +34,17 @@ def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarge
         df
         .Define("E_truth_v", "sqrt(genParticles.momentum.y*genParticles.momentum.y+genParticles.momentum.x*genParticles.momentum.x+genParticles.momentum.z*genParticles.momentum.z)")
         .Define("Truth_E", "E_truth_v[0]")
-        .Define(f"{clusters}_EnergyInLayers", f"getCaloCluster_energyInLayers({clusters}, {cells}, 12)")
+        .Define(f"{clusters}_EnergyInLayers", f"getCaloCluster_energyInLayers({clusters}, {cells}, {numLayers})")
         .Alias("clusters_energy", f"{clusters}.energy")
         .Define("lc_idx", "ArgMax(clusters_energy)")
         .Define("Cluster_E", "clusters_energy[lc_idx]")
     )
-    for i in range(12):
+    for i in range(numLayers):
         df = df.Define(f"{clusters}_E{i}", f"getFloatAt({i})({clusters}_EnergyInLayers)")
         df = df.Define(f"Cluster_E{i}", f"{clusters}_E{i}[lc_idx]")
 
     cols_to_use = ["Truth_E", "Cluster_E"]
-    cols_to_use += [f"Cluster_E{i}" for i in range(12)]
+    cols_to_use += [f"Cluster_E{i}" for i in range(numLayers)]
     v_cols_to_use = ROOT.std.vector('string')(cols_to_use)
     # Filter to remove weird events and get a proper tree
     d = df.Filter("Cluster_E5!=0 && Cluster_E!=0")  # .Snapshot("events", out_file, v_cols_to_use)
@@ -55,20 +56,7 @@ def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarge
     # Training is so fast it can be done online
     cols = d.AsNumpy(v_cols_to_use)
 
-    layers = np.array([
-        cols["Cluster_E0"],
-        cols["Cluster_E1"],
-        cols["Cluster_E2"],
-        cols["Cluster_E3"],
-        cols["Cluster_E4"],
-        cols["Cluster_E5"],
-        cols["Cluster_E6"],
-        cols["Cluster_E7"],
-        cols["Cluster_E8"],
-        cols["Cluster_E9"],
-        cols["Cluster_E10"],
-        cols["Cluster_E11"],
-    ])
+    layers = np.array([cols[f"Cluster_E{i}"] for i in range(numLayers)])
 
     cluster_E = layers.sum(axis=0)
     normalized_layers = np.divide(layers, cluster_E)
@@ -136,10 +124,9 @@ def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarge
 
 
 def init_stuff():
-    # readoutName = "ECalBarrelPhiEta"
-    # geometryFile = "../../FCCDetectors/Detector/DetFCCeeIDEA-LAr/compact/FCCee_DectMaster.xml"
     readoutName = "ECalBarrelModuleThetaMerged"
-    geometryFile = "../../k4geo/FCCee/ALLEGRO/compact/ALLEGRO_o1_v02/ALLEGRO_o1_v02.xml"
+    # geometryFile = "../../k4geo/FCCee/ALLEGRO/compact/ALLEGRO_o1_v02/ALLEGRO_o1_v02.xml"
+    geometryFile = "../../k4geo/FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ALLEGRO_o1_v03.xml"
     ROOT.gROOT.SetBatch(True)
     ROOT.gSystem.Load("libFCCAnalyses")
     _fcc = ROOT.dummyLoader

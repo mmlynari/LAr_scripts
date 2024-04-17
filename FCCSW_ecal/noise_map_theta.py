@@ -8,7 +8,7 @@ from Configurables import CellPositionsECalBarrelModuleThetaSegTool
 import os
 from Gaudi.Configuration import INFO, DEBUG
 
-doHCal = True
+doHCal = False
 
 # Detector geometry
 geoservice = GeoSvc("GeoSvc")
@@ -16,7 +16,7 @@ geoservice = GeoSvc("GeoSvc")
 path_to_detector = os.environ.get("K4GEO", "")
 print(path_to_detector)
 detectors_to_use = [
-    'FCCee/ALLEGRO/compact/ALLEGRO_o1_v02/ALLEGRO_o1_v02.xml'
+    'FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ALLEGRO_o1_v03.xml'
 ]
 # prefix all xmls with path_to_detector
 geoservice.detectors = [os.path.join(
@@ -44,7 +44,7 @@ ECalNoiseTool = ReadNoiseVsThetaFromFileTool("ReadNoiseFromFileToolECal",
                                              setNoiseOffset=False,
                                              activeFieldName="layer",
                                              addPileup=False,
-                                             numRadialLayers=12,
+                                             numRadialLayers=11,
                                              scaleFactor=1 / 1000.,  # MeV to GeV
                                              OutputLevel=INFO)
 
@@ -78,7 +78,7 @@ if doHCal:
                                                 systemValues=[4, 8],
                                                 activeFieldNames=[
                                                     "layer", "layer"],
-                                                activeVolumesNumbers=[12, 13],
+                                                activeVolumesNumbers=[11, 13],
                                                 # activeVolumesEta = [1.2524, 1.2234, 1.1956, 1.1561, 1.1189, 1.0839, 1.0509, 0.9999, 0.9534, 0.91072],
                                                 activeVolumesTheta=[
                                                     [],
@@ -101,7 +101,7 @@ else:
                                                 systemNames=["system"],
                                                 systemValues=[4],
                                                 activeFieldNames=["layer"],
-                                                activeVolumesNumbers=[12],
+                                                activeVolumesNumbers=[11],
                                                 activeVolumesTheta=[[]],
                                                 outputFileName="cellNoise_map_electronicsNoiseLevel_ecalB_thetamodulemerged.root",
                                                 OutputLevel=DEBUG)
