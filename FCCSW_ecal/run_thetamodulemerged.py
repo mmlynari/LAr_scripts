@@ -105,8 +105,8 @@ origTheta = halfpi
 origPhi = 0.0
 
 # particle type: 11 electron, 13 muon, 22 photon, 111 pi0, 211 pi+
-pdgCode = 11
-# pdgCode = 22
+# pdgCode = 11
+pdgCode = 22
 # pdgCode = 111
 # pdgCode = 211
 
@@ -586,10 +586,10 @@ if doSWClustering:
                                                    numLayers=[11],
                                                    readoutNames=[ecalBarrelReadoutName],
                                                    layerFieldNames=["layer"],
-                                                   thetaRecalcWeights=[
-                                                       # [-1, 3.0, 3.0, 3.0, 4.25, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0]  # -1 : use linear weights
-                                                       [-1, 3.0, 3.0, 3.0, 4.25, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0]  # -1 : use linear weights
-                                                   ],
+                                                   # use default values
+                                                   #thetaRecalcWeights=[
+                                                   #    [-1, 3.0, 3.0, 3.0, 4.25, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0]  # -1 : use linear weights
+                                                   #],
                                                    OutputLevel=INFO
                                                    )
 
@@ -604,6 +604,7 @@ if doSWClustering:
                                                       inClusters=inClusters,
                                                       outClusters="Calibrated" + createClusters.clusters.Path,
                                                       systemIDs=[4],
+                                                      systemNames=["EMB"],
                                                       numLayers=[11],
                                                       firstLayerIDs=[0],
                                                       readoutNames=[
@@ -704,10 +705,10 @@ if doTopoClustering:
                                                        numLayers=[11],
                                                        readoutNames=[ecalBarrelReadoutName],
                                                        layerFieldNames=["layer"],
-                                                       thetaRecalcWeights=[
-                                                           # [-1, 3.0, 3.0, 3.0, 4.25, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0]  # -1 : use linear weights
-                                                           [-1, 3.0, 3.0, 3.0, 4.25, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0]  # -1 : use linear weights
-                                                       ],
+                                                       # use default weights
+                                                       # thetaRecalcWeights=[
+                                                       #     [-1, 3.0, 3.0, 3.0, 4.25, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0]  # -1 : use linear weights
+                                                       # ],
                                                        OutputLevel=INFO)
 
     if applyMVAClusterEnergyCalibration:
@@ -720,6 +721,7 @@ if doTopoClustering:
                                                           inClusters=inClusters,
                                                           outClusters="Calibrated" + createTopoClusters.clusters.Path,
                                                           systemIDs=[4],
+                                                          systemNames=["EMB"],
                                                           numLayers=[11],
                                                           firstLayerIDs=[0],
                                                           readoutNames=[
