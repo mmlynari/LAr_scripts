@@ -19,13 +19,14 @@ def main():
                         help="Output XGBoost training file", type=str)
     parser.add_argument("--numLayers", default=11, type=int)
     parser.add_argument("clusters", help="Cluster collection to use", type=str)
+    parser.add_argument("--useShapeParameters", default=False, action=argparse.BooleanOptionalAction, help='calculate energies per layers from cells or read them from shapeParameters')
     args = parser.parse_args()
-    run(args.inputDir, args.clusters, args.outFile, args.training, args.writeFeatures, args.writeTarget, args.numLayers)
+    run(args.inputDir, args.clusters, args.outFile, args.training, args.writeFeatures, args.writeTarget, args.numLayers, args.useShapeParameters)
 
 
-def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarget, numLayers):
+def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarget, numLayers, useShapeParameters):
     """Actual processing"""
-    init_stuff()
+    init_stuff(useShapeParameters)
 
     df = ROOT.ROOT.RDataFrame("events", in_directory + "/*.root")
     num_init = df.Count()
@@ -34,20 +35,36 @@ def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarge
         df
         .Define("E_truth_v", "sqrt(genParticles.momentum.y*genParticles.momentum.y+genParticles.momentum.x*genParticles.momentum.x+genParticles.momentum.z*genParticles.momentum.z)")
         .Define("Truth_E", "E_truth_v[0]")
-        .Define(f"{clusters}_EnergyInLayers", f"getCaloCluster_energyInLayers({clusters}, {cells}, {numLayers})")
-        .Alias("clusters_energy", f"{clusters}.energy")
+        )
+    if useShapeParameters:
+        df = df.Alias("clusters_energy", f"Augmented{clusters}.energy")
+    else:
+        df = (
+            df
+            .Define(f"{clusters}_EnergyInLayers", f"getCaloCluster_energyInLayers({clusters}, {cells}, {numLayers})")
+            .Alias("clusters_energy", f"{clusters}.energy")
+            )
+    df = (
+        df
         .Define("lc_idx", "ArgMax(clusters_energy)")
         .Define("Cluster_E", "clusters_energy[lc_idx]")
-    )
-    for i in range(numLayers):
-        df = df.Define(f"{clusters}_E{i}", f"getFloatAt({i})({clusters}_EnergyInLayers)")
-        df = df.Define(f"Cluster_E{i}", f"{clusters}_E{i}[lc_idx]")
+        )
+    
+    if useShapeParameters:
+        for i in range(numLayers):
+             df = df.Define(f"Cluster_E{i}", f"_Augmented{clusters}_shapeParameters[lc_idx*33+{i*3}]")
+    else:
+        for i in range(numLayers):
+            df = df.Define(f"{clusters}_E{i}", f"getFloatAt({i})({clusters}_EnergyInLayers)")
+            df = df.Define(f"Cluster_E{i}", f"{clusters}_E{i}[lc_idx]")
 
     cols_to_use = ["Truth_E", "Cluster_E"]
     cols_to_use += [f"Cluster_E{i}" for i in range(numLayers)]
     v_cols_to_use = ROOT.std.vector('string')(cols_to_use)
+
     # Filter to remove weird events and get a proper tree
-    d = df.Filter("Cluster_E5!=0 && Cluster_E!=0")  # .Snapshot("events", out_file, v_cols_to_use)
+    # d = df.Filter("Cluster_E5!=0 && Cluster_E!=0")
+    d = df.Filter("Cluster_E!=0")
     print("We have run on", num_init.GetValue(), "events")
 
     # Study weird events where clusters don't have cells properly attached
@@ -55,21 +72,25 @@ def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarge
 
     # Training is so fast it can be done online
     cols = d.AsNumpy(v_cols_to_use)
-
-    layers = np.array([cols[f"Cluster_E{i}"] for i in range(numLayers)])
-
-    cluster_E = layers.sum(axis=0)
-    normalized_layers = np.divide(layers, cluster_E)
+    
+    if useShapeParameters:
+        cluster_E = cols["Cluster_E"]
+        normalized_layers = np.array([cols[f"Cluster_E{i}"] for i in range(numLayers)])
+    else:
+        cluster_E = layers.sum(axis=0)
+        layers = np.array([cols[f"Cluster_E{i}"] for i in range(numLayers)])
+        normalized_layers = np.divide(layers, cluster_E)
 
     label = cols["Truth_E"] / cluster_E
     weights = -np.log10(cols["Truth_E"]) + 3
-    # weights = 1/label**.5
     data = np.vstack([normalized_layers, cluster_E])
 
     if writeFeatures != "":
         np.save(writeFeatures + "-" + clusters, data)
+        np.savetxt(writeFeatures + "-" + clusters, data.transpose())
     if writeTarget != "":
         np.save(writeTarget + "-" + clusters, label)
+        np.savetxt(writeTarget + "-" + clusters, label.transpose())
 
     if runTraining:
         # Somehow importing those libraries earlier in the script does not work. Bad interaction with
@@ -123,16 +144,17 @@ def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarge
         # print(a)
 
 
-def init_stuff():
+def init_stuff(useShapeParameters):
     readoutName = "ECalBarrelModuleThetaMerged"
     # geometryFile = "../../k4geo/FCCee/ALLEGRO/compact/ALLEGRO_o1_v02/ALLEGRO_o1_v02.xml"
     geometryFile = "../../k4geo/FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ALLEGRO_o1_v03.xml"
     ROOT.gROOT.SetBatch(True)
-    ROOT.gSystem.Load("libFCCAnalyses")
-    _fcc = ROOT.dummyLoader
-    ROOT.gInterpreter.Declare("using namespace FCCAnalyses;")
-    ROOT.gInterpreter.Declare("using namespace FCCAnalyses::CaloNtupleizer;")
-    ROOT.CaloNtupleizer.loadGeometry(geometryFile, readoutName)
+    if not useShapeParameters:
+        ROOT.gSystem.Load("libFCCAnalyses")
+        _fcc = ROOT.dummyLoader
+        ROOT.gInterpreter.Declare("using namespace FCCAnalyses;")
+        ROOT.gInterpreter.Declare("using namespace FCCAnalyses::CaloNtupleizer;")
+        ROOT.CaloNtupleizer.loadGeometry(geometryFile, readoutName)
     # ROOT.ROOT.EnableImplicitMT(32)
     ROOT.ROOT.EnableImplicitMT(96)
 
