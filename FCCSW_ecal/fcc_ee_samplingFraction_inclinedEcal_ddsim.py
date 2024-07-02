@@ -41,8 +41,8 @@ geoservice = GeoSvc("GeoSvc",
 #    ]
 path_to_detector = os.environ.get("K4GEO", "")
 detectors_to_use = [
-    'FCCee/ALLEGRO/compact/ALLEGRO_o1_v02/DectEmptyMaster.xml',
-    'FCCee/ALLEGRO/compact/ALLEGRO_o1_v02/ECalBarrel_thetamodulemerged_calibration.xml'
+    'FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/DectEmptyMaster.xml',
+    'FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ECalBarrel_thetamodulemerged_calibration.xml'
 ]
 geoservice.detectors = [os.path.join(
     path_to_detector, _det) for _det in detectors_to_use]
