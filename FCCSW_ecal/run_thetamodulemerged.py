@@ -510,7 +510,7 @@ if runHCal:
         "CellPositionsHCalEndcap",
         readoutName=hcalEndcapReadoutName,
         detectorName="HCalThreePartsEndcap",
-        OutputLevel=DEBUG
+        OutputLevel=INFO
     )
     hcalEndcapPositionedCellsName = "HCalEndcapPositionedCells"
     createHcalEndcapPositionedCells = CreateCaloCellPositionsFCCee(
@@ -784,7 +784,7 @@ geantsim.AuditExecute = True
 createEcalBarrelCells.AuditExecute = True
 createEcalBarrelPositionedCells.AuditExecute = True
 if runHCal:
-    createHcalBarrelCells.AuditExecute = 
+    createHcalBarrelCells.AuditExecute = True
     createHcalBarrelPositionedCells.AuditExecute = True
     createHcalEndcapCells.AuditExecute = True
     createHcalEndcapPositionedCells.AuditExecute = True
