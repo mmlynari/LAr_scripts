@@ -14,6 +14,7 @@ from Configurables import RedoSegmentation
 from Configurables import CreateCaloCells
 from Configurables import CalibrateCaloHitsTool
 from Configurables import CalibrateInLayersTool
+from Configurables import NoiseCaloCellsVsThetaFromFileTool
 from Configurables import SimG4Alg
 from Configurables import SimG4PrimariesFromEdmTool
 from Configurables import SimG4SaveCalHits
@@ -64,7 +65,7 @@ applyUpDownstreamCorrections = True and not runHCal
 
 # BDT regression from total cluster energy and fraction of energy in each layer (after correction for sampling fraction)
 # not to be applied for ECAL+HCAL clustering (MVA trained only on ECAL)
-applyMVAClusterEnergyCalibration = True and not runHCal
+applyMVAClusterEnergyCalibration = False and not runHCal
 
 # calculate cluster energy and barycenter per layer and save it as extra parameters
 addShapeParameters = True and not runHCal
@@ -415,6 +416,54 @@ createEcalEndcapCells = CreateCaloCells("CreateEcalEndcapCaloCells",
 createEcalEndcapCells.hits.Path = "ECalEndcapHits"
 createEcalEndcapCells.cells.Path = "ECalEndcapCells"
 
+if addNoise:
+    ecalBarrelNoisePath = os.environ['FCCBASEDIR']+"/LAr_scripts/data/elecNoise_ecalBarrelFCCee_theta.root"
+    ecalBarrelNoiseRMSHistName = "h_elecNoise_fcc_"
+    from Configurables import NoiseCaloCellsVsThetaFromFileTool
+    noiseBarrel = NoiseCaloCellsVsThetaFromFileTool("NoiseBarrel",
+                                                    cellPositionsTool=cellPositionEcalBarrelTool,
+                                                    readoutName=ecalBarrelReadoutName,
+                                                    noiseFileName = ecalBarrelNoisePath,
+                                                    elecNoiseRMSHistoName=ecalBarrelNoiseRMSHistName,
+                                                    setNoiseOffset=False,
+                                                    activeFieldName="layer",
+                                                    addPileup=False,
+                                                    filterNoiseThreshold = 0,
+                                                    numRadialLayers=11,
+                                                    scaleFactor=1 / 1000.,  # MeV to GeV
+                                                    OutputLevel=DEBUG)
+
+    # needs to be migrated
+    #from Configurables import TubeLayerPhiEtaCaloTool
+    #barrelGeometry = TubeLayerPhiEtaCaloTool("EcalBarrelGeo",
+    #                                         readoutName = ecalBarrelReadoutNamePhiEta,
+    #                                         activeVolumeName = "LAr_sensitive",
+    #                                         activeFieldName = "layer",
+    #                                         activeVolumesNumber = 12,
+    #                                         fieldNames = ["system"],
+    #                                         fieldValues = [4])
+    
+    # cells with noise not filtered
+    # createEcalBarrelCellsNoise = CreateCaloCells("CreateECalBarrelCellsNoise",
+    #                                              doCellCalibration=False,
+    #                                              addCellNoise=True, filterCellNoise=False,
+    #                                              OutputLevel=INFO,
+    #                                              hits="ECalBarrelCellsStep2",
+    #                                              noiseTool = noiseBarrel,
+    #                                              geometryTool = barrelGeometry,
+    #                                              cells=EcalBarrelCellsName)
+
+    # cells with noise filtered
+    # createEcalBarrelCellsNoise = CreateCaloCells("CreateECalBarrelCellsNoise_filtered",
+    #                                              doCellCalibration=False,
+    #                                              addCellNoise=True,
+    #                                              filterCellNoise=True,
+    #                                              OutputLevel=INFO,
+    #                                              hits="ECalBarrelCellsStep2",
+    #                                              noiseTool = noiseBarrel,
+    #                                              geometryTool = barrelGeometry,
+    #                                              cells=EcalBarrelCellsName)
+
 if runHCal:
     # Create cells in HCal barrel
     # 1 - merge hits into cells with the default readout
@@ -500,6 +549,8 @@ if runHCal:
     # createHcalEndcapCells.hits.Path="HCalEndcapHits"
     # createHcalEndcapCells.cells.Path="HCalEndcapCells"
 
+    # TODO: noise...
+    
 else:
     hcalBarrelCellsName = "emptyCaloCells"
     hcalBarrelPositionedCellsName = "emptyCaloCells"
@@ -565,6 +616,7 @@ if doSWClustering:
                                                   numLayers=[11],
                                                   firstLayerIDs=[0],
                                                   lastLayerIDs=[10],
+                                                  systemIDs=[4],
                                                   readoutNames=[ecalBarrelReadoutName],
                                                   # do not split the following line or it will break scripts that update the values of the corrections
                                                   upstreamParameters = [[0.025582045561310333, -0.9524128168665387, -53.10089405478649, 1.283851527438571, -295.30650178662637, -284.8945817377308]],
@@ -683,6 +735,7 @@ if doTopoClustering:
             "correctCaloTopoClusters",
             inClusters=createTopoClusters.clusters.Path,
             outClusters="Corrected" + createTopoClusters.clusters.Path,
+            systemIDs=[4],
             numLayers=[11],
             firstLayerIDs=[0],
             lastLayerIDs=[10],
