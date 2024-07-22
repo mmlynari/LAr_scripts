@@ -79,12 +79,10 @@ if doHCal:
     HCalNoiseTool = ConstNoiseTool("ConstNoiseTool",
                                    detectors = [ "HCAL_Barrel"],
                                    detectorsNoiseRMS = [0.0115/4],
-                                   detectorsNoiseOffset = [0.0],
                                    OutputLevel = DEBUG)
     #HCalNoiseTool = ConstNoiseTool("ConstNoiseTool",
     #                               detectors = ["ECAL_Barrel", "ECAL_Endcap", "HCAL_Barrel", "HCAL_Endcap"],
     #                               detectorsNoiseRMS = [0.0075/4, 0.0075/4, 0.0115/4, 0.0115/4],
-    #                               detectorsNoiseOffset = [0.0, 0.0, 0.0, 0.0],
     #                               OutputLevel = DEBUG)
 
     # create the noise file for ECAL+HCAL barrel cells
