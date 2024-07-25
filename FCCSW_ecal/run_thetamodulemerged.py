@@ -243,7 +243,7 @@ else:
 # ECAL
 ecalBarrelReadoutName = "ECalBarrelModuleThetaMerged"  # barrel, original segmentation (baseline)
 ecalBarrelReadoutName2 = "ECalBarrelModuleThetaMerged2"  # barrel, after re-segmentation (for optimisation studies)
-ecalEndcapReadoutName = "ECalEndcapPhiEta"  # endcap, from FCC-hh sim, to be replaced by proper readout/detector geometry
+ecalEndcapReadoutName = "ECalEndcapTurbine"  # endcap, turbine-like (baseline)
 # HCAL
 if runHCal:
     hcalBarrelReadoutName = "HCalBarrelReadout"  # barrel, layer-row-theta-phi based (can be used to fill various cell collections with different readouts)
@@ -319,7 +319,7 @@ calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
                                         readoutName=ecalBarrelReadoutName,
                                         layerFieldName="layer")
 
-# - ECAL endcap
+# - ECAL endcap (TO BE UPDATED)
 calibEcalEndcap = CalibrateCaloHitsTool(
     "CalibrateECalEndcap", invSamplingFraction="4.27")
 
