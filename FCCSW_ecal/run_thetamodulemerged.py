@@ -1,19 +1,12 @@
+#
+# IMPORTS
+#
 from Configurables import ApplicationMgr
 from Configurables import EventCounter
 from Configurables import AuditorSvc, ChronoAuditor
-from Configurables import PodioOutput
-from Configurables import CaloTowerToolFCCee
-from Configurables import CreateCaloClustersSlidingWindowFCCee
-from Configurables import CorrectCaloClusters
-from Configurables import CalibrateCaloClusters
-from Configurables import AugmentClustersFCCee
-from Configurables import CreateEmptyCaloCellsCollection
-from Configurables import CreateCaloCellPositionsFCCee
-from Configurables import CellPositionsECalBarrelModuleThetaSegTool
-from Configurables import RedoSegmentation
-from Configurables import CreateCaloCells
-from Configurables import CalibrateCaloHitsTool
-from Configurables import CalibrateInLayersTool
+# Event generation
+from Configurables import GenAlg
+# G4 simulation
 from Configurables import SimG4Alg
 from Configurables import SimG4PrimariesFromEdmTool
 from Configurables import SimG4SaveCalHits
@@ -21,31 +14,61 @@ from Configurables import SimG4ConstantMagneticFieldTool
 from Configurables import SimG4Svc
 from Configurables import SimG4FullSimActions
 from Configurables import SimG4SaveParticleHistory
+# Geometry
 from Configurables import GeoSvc
-from Configurables import HepMCToEDMConverter
-from Configurables import GenAlg
+# Input/output
 from Configurables import FCCDataSvc
+from Configurables import PodioOutput
+from Configurables import HepMCToEDMConverter
+# Create cells
+from Configurables import CreateCaloCells
+from Configurables import CreateEmptyCaloCellsCollection
+# Cell positioning tools
+from Configurables import CreateCaloCellPositionsFCCee
+from Configurables import CellPositionsECalBarrelModuleThetaSegTool
+# Redo segmentation for ECAL and HCAL
+from Configurables import RedoSegmentation
+# Read noise values from file and generate noise in cells
+from Configurables import NoiseCaloCellsVsThetaFromFileTool
+# Apply sampling fraction corrections
+from Configurables import CalibrateCaloHitsTool
+from Configurables import CalibrateInLayersTool
+# Up/down stream correction
+from Configurables import CorrectCaloClusters
+# SW clustering
+from Configurables import CaloTowerToolFCCee
+from Configurables import CreateCaloClustersSlidingWindowFCCee
+# Topo clustering
 from Configurables import CaloTopoClusterInputTool
 from Configurables import TopoCaloNeighbours
 from Configurables import TopoCaloNoisyCells
 from Configurables import CaloTopoClusterFCCee
-from Gaudi.Configuration import INFO
-# , VERBOSE, DEBUG
-# from Gaudi.Configuration import *
-
-import os
-
+# Decorate clusters with shower shape parameters
+from Configurables import AugmentClustersFCCee
+# MVA calibration
+from Configurables import CalibrateCaloClusters
+# Logger
+from Gaudi.Configuration import INFO, VERBOSE, DEBUG
+# Units and physical constants
 from GaudiKernel.SystemOfUnits import GeV, tesla, mm
 from GaudiKernel.PhysicalConstants import pi, halfpi, twopi
+# python libraries
+import os
 from math import cos, sin, tan
 
+#
+# SETTINGS
+#
 
-# general settings
+# - general settings
+#
 use_pythia = False  # use pythia or particle gun
-addNoise = False  # add noise or not to the cell energy
-dumpGDML = False  # create GDML file of detector model
-runHCal = False  # simulate only the ECAL or both ECAL+HCAL
+addNoise = False     # add noise or not to the cell energy
+dumpGDML = False    # create GDML file of detector model
+runHCal = False     # simulate only the ECAL or both ECAL+HCAL
 
+# - what to save in output file
+#
 # for big productions, save significant space removing hits and cells
 # however, hits and cluster cells might be wanted for small productions for detailed event displays
 # also, cluster cells are needed for the MVA training
@@ -53,7 +76,8 @@ saveHits = True
 saveCells = True
 saveClusterCells = True
 
-# clustering
+# - clustering
+#
 doSWClustering = True
 doTopoClustering = True
 
@@ -64,12 +88,13 @@ applyUpDownstreamCorrections = True and not runHCal
 
 # BDT regression from total cluster energy and fraction of energy in each layer (after correction for sampling fraction)
 # not to be applied for ECAL+HCAL clustering (MVA trained only on ECAL)
-applyMVAClusterEnergyCalibration = True and not runHCal
+applyMVAClusterEnergyCalibration = False and not runHCal
 
 # calculate cluster energy and barycenter per layer and save it as extra parameters
 addShapeParameters = True and not runHCal
 
-# Input for simulations (momentum is expected in GeV!)
+# - input for simulations (momentum is expected in GeV!)
+#
 
 # Parameters for the particle gun simulations, dummy if use_pythia is set
 # to True
@@ -120,8 +145,11 @@ if (pdgCode == 111):
 magneticField = False
 
 
-podioevent = FCCDataSvc("EventDataSvc")
+#
+# ALGORITHMS AND SERVICES SETUP
+#
 
+podioevent = FCCDataSvc("EventDataSvc")
 
 # Particle gun setup
 genAlg = GenAlg()
@@ -242,7 +270,7 @@ else:
 # ECAL
 ecalBarrelReadoutName = "ECalBarrelModuleThetaMerged"  # barrel, original segmentation (baseline)
 ecalBarrelReadoutName2 = "ECalBarrelModuleThetaMerged2"  # barrel, after re-segmentation (for optimisation studies)
-ecalEndcapReadoutName = "ECalEndcapPhiEta"  # endcap, from FCC-hh sim, to be replaced by proper readout/detector geometry
+ecalEndcapReadoutName = "ECalEndcapTurbine"  # endcap, turbine-like (baseline)
 # HCAL
 if runHCal:
     hcalBarrelReadoutName = "HCalBarrelReadout"  # barrel, layer-row-theta-phi based (can be used to fill various cell collections with different readouts)
@@ -318,7 +346,7 @@ calibEcalBarrel = CalibrateInLayersTool("CalibrateECalBarrel",
                                         readoutName=ecalBarrelReadoutName,
                                         layerFieldName="layer")
 
-# - ECAL endcap
+# - ECAL endcap (TO BE UPDATED)
 calibEcalEndcap = CalibrateCaloHitsTool(
     "CalibrateECalEndcap", invSamplingFraction="4.27")
 
@@ -415,6 +443,55 @@ createEcalEndcapCells = CreateCaloCells("CreateEcalEndcapCaloCells",
 createEcalEndcapCells.hits.Path = "ECalEndcapHits"
 createEcalEndcapCells.cells.Path = "ECalEndcapCells"
 
+if addNoise:
+    ecalBarrelNoisePath = os.environ['FCCBASEDIR']+"/LAr_scripts/data/elecNoise_ecalBarrelFCCee_theta.root"
+    ecalBarrelNoiseRMSHistName = "h_elecNoise_fcc_"
+    from Configurables import NoiseCaloCellsVsThetaFromFileTool
+    noiseBarrel = NoiseCaloCellsVsThetaFromFileTool("NoiseBarrel",
+                                                    cellPositionsTool=cellPositionEcalBarrelTool,
+                                                    readoutName=ecalBarrelReadoutName,
+                                                    noiseFileName=ecalBarrelNoisePath,
+                                                    elecNoiseRMSHistoName=ecalBarrelNoiseRMSHistName,
+                                                    setNoiseOffset=False,
+                                                    activeFieldName="layer",
+                                                    addPileup=False,
+                                                    filterNoiseThreshold=0,
+                                                    numRadialLayers=11,
+                                                    scaleFactor=1 / 1000.,  # MeV to GeV
+                                                    OutputLevel=DEBUG)
+
+    # needs to be migrated!
+    #from Configurables import TubeLayerPhiEtaCaloTool
+    #barrelGeometry = TubeLayerPhiEtaCaloTool("EcalBarrelGeo",
+    #                                         readoutName=ecalBarrelReadoutNamePhiEta,
+    #                                         activeVolumeName="LAr_sensitive",
+    #                                         activeFieldName="layer",
+    #                                         activeVolumesNumber=12,
+    #                                         fieldNames=["system"],
+    #                                         fieldValues=[4])
+    
+    # cells with noise not filtered
+    # createEcalBarrelCellsNoise = CreateCaloCells("CreateECalBarrelCellsNoise",
+    #                                              doCellCalibration=False,
+    #                                              addCellNoise=True,
+    #                                              filterCellNoise=False,
+    #                                              OutputLevel=INFO,
+    #                                              hits="ECalBarrelCellsStep2",
+    #                                              noiseTool=noiseBarrel,
+    #                                              geometryTool=barrelGeometry,
+    #                                              cells=EcalBarrelCellsName)
+
+    # cells with noise filtered
+    # createEcalBarrelCellsNoise = CreateCaloCells("CreateECalBarrelCellsNoise_filtered",
+    #                                              doCellCalibration=False,
+    #                                              addCellNoise=True,
+    #                                              filterCellNoise=True,
+    #                                              OutputLevel=INFO,
+    #                                              hits="ECalBarrelCellsStep2",
+    #                                              noiseTool=noiseBarrel,
+    #                                              geometryTool=barrelGeometry,
+    #                                              cells=EcalBarrelCellsName)
+
 if runHCal:
     # Create cells in HCal barrel
     # 1 - merge hits into cells with the default readout
@@ -459,7 +536,7 @@ if runHCal:
                                          oldReadoutName=hcalBarrelReadoutName,
                                          # specify which fields are going to be altered (deleted/rewritten)
                                          oldSegmentationIds=["row", "theta", "phi"],
-                                         # new bitfield (readout), with new segmentation (merged modules and theta cells)
+                                         # new bitfield (readout), with new segmentation (theta-phi grid)
                                          newReadoutName=hcalBarrelReadoutName2,
                                          OutputLevel=INFO,
                                          debugPrint=200,
@@ -500,6 +577,8 @@ if runHCal:
     # createHcalEndcapCells.hits.Path="HCalEndcapHits"
     # createHcalEndcapCells.cells.Path="HCalEndcapCells"
 
+    # TODO: noise...
+    
 else:
     hcalBarrelCellsName = "emptyCaloCells"
     hcalBarrelPositionedCellsName = "emptyCaloCells"
@@ -565,6 +644,7 @@ if doSWClustering:
                                                   numLayers=[11],
                                                   firstLayerIDs=[0],
                                                   lastLayerIDs=[10],
+                                                  systemIDs=[4],
                                                   readoutNames=[ecalBarrelReadoutName],
                                                   # do not split the following line or it will break scripts that update the values of the corrections
                                                   upstreamParameters = [[0.025582045561310333, -0.9524128168665387, -53.10089405478649, 1.283851527438571, -295.30650178662637, -284.8945817377308]],
@@ -683,6 +763,7 @@ if doTopoClustering:
             "correctCaloTopoClusters",
             inClusters=createTopoClusters.clusters.Path,
             outClusters="Corrected" + createTopoClusters.clusters.Path,
+            systemIDs=[4],
             numLayers=[11],
             firstLayerIDs=[0],
             lastLayerIDs=[10],
