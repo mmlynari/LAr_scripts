@@ -6,7 +6,7 @@ Various scripts for HCal studies and combined ECal+HCal simulation
 For this, one needs to first remove ECal which is in front of HCal from the geometry xml file and it in the simulation.  
 Set invSF=1 in the run_thetamerged_tileStandalone.py script and run the simulation with 100 GeV electrons (for EM scale) or pions (for HAD scale). 
 Basic scripts to obtain the SF and invSF are in the HCal_SF_calibration directory. The script expects as an input a flat ntuple that can be produced with
-[caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py)
+[FCCAnalyses caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py) and a modified version can be found in [caloNtuplizer](caloNtuplizer/analysis_HCal.py).
  
 
 ## Benchmark calibration for ECal+HCal simulation of charged hadrons
