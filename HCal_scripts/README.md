@@ -7,6 +7,9 @@ For this, one needs to first remove ECal which is in front of HCal from the geom
 Set invSF=1 in the run_thetamerged_tileStandalone.py script and run the simulation with 100 GeV electrons (for EM scale) or pions (for HAD scale). 
 Basic scripts to obtain the SF and invSF are in the HCal_SF_calibration directory. The script expects as an input a flat ntuple that can be produced with
 [FCCAnalyses caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py) and a modified version can be found in [caloNtupleizer directory](caloNtupleizer/analysis_HCal.py).
+For the record, the HCal SFs in Allegro_o1_v03 calculated with 5000 events (28 Aug 2024): 
+EM invSF = 30.3953
+HAD invSF = 35.2556
  
 
 ## Benchmark calibration for ECal+HCal simulation of charged hadrons
