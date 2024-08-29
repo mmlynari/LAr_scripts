@@ -1,12 +1,13 @@
 # HCal and ECal+HCal scripts 
 
-Various scripts for HCal studies and combined ECal+HCal simulation
+Various scripts for standaloneHCal and combined ECal+HCal simulation and calibration.
 
 ## HCal sampling fraction (SF) calculation
 For this, one needs to first remove ECal and other subdetectors in front of HCal in the geometry xml file and run standalone HCal simulation.  
-Set invSF=1 in the [run_thetamerged_tileStandalone.py](simulation_scripts/run_thetamerged_tileStandalone.py) script and run the simulation with 100 GeV electrons with pdgID=11 (for EM scale) or charged pions with pdgID=211 (for HAD scale). 
+Set invSF=1 in the [run_thetamerged_tileStandalone.py](run_simulation/run_thetamerged_tileStandalone.py) script and run the simulation with 100 GeV electrons with pdgID=11 (for EM scale) or charged pions with pdgID=211 (for HAD scale). 
 Basic scripts to obtain the SF and invSF are in the HCal_SF_calibration directory. The script expects as an input a flat ntuple that can be produced with
-[FCCAnalyses caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py) and an adapted version can be found in [caloNtupleizer directory](caloNtupleizer/analysis_HCal.py).
+[FCCAnalyses caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py) and an adapted version can be found in 
+[FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts/analysis_HCal.py).
 For the record, the HCal SFs in Allegro_o1_v03 calculated with 5000 events (28 Aug 2024): 
 EM invSF = 30.3953
 HAD invSF = 35.2556
@@ -34,8 +35,10 @@ The scripts to run the simulation locally or on lxbatch can be found in the simu
 
 ## Energy calibration with BRT
 Original scripts were prepared for standalone ECal simulation and its energy calibration, so here is a modified version for HCal and ECal+HCal. 
-The scripts communicate with FCCAnalyses caloNtupleizer, so this part needs to be modified, to reflect the correct number of radial layers in each simulation setup and to read the corresponding geometry.
+The scripts communicate with FCCAnalyses caloNtupleizer, so this part needs to be modified, to reflect the correct number of radial layers in each simulation setup and to read the corresponding 
+geometry - see [FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts/analysis_HCal.py).
 For the creation of training and testing samples, one needs to be careful and ensure that these are different events (need to modify the randomSeed for each submitted job) and this is why we have 
-two separate lxbatch submission scripts for this. 
+two separate lxbatch submission scripts for this. In addition, for the training, you want to have a continuous energy distribution, while for the evaluation, we usually derive the energy resolution
+from several energy points. Use BRT_training_launch_several_energies.sh and BRT_validation_launch_several_energies.sh scripts (stored in run_simulation directory) to get training and testing datasets.  
 The code for training and plotting is executed from run_all_chain.sh.  
 
