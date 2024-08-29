@@ -3,29 +3,39 @@
 Various scripts for HCal studies and combined ECal+HCal simulation
 
 ## HCal sampling fraction (SF) calculation
-For this, one needs to first remove ECal which is in front of HCal from the geometry xml file and it in the simulation.  
-Set invSF=1 in the run_thetamerged_tileStandalone.py script and run the simulation with 100 GeV electrons (for EM scale) or pions (for HAD scale). 
+For this, one needs to first remove ECal and other subdetectors in front of HCal in the geometry xml file and run standalone HCal simulation.  
+Set invSF=1 in the [run_thetamerged_tileStandalone.py](simulation_scripts/run_thetamerged_tileStandalone.py) script and run the simulation with 100 GeV electrons with pdgID=11 (for EM scale) or charged pions with pdgID=211 (for HAD scale). 
 Basic scripts to obtain the SF and invSF are in the HCal_SF_calibration directory. The script expects as an input a flat ntuple that can be produced with
-[FCCAnalyses caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py) and a modified version can be found in [caloNtupleizer directory](caloNtupleizer/analysis_HCal.py).
+[FCCAnalyses caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py) and an adapted version can be found in [caloNtupleizer directory](caloNtupleizer/analysis_HCal.py).
 For the record, the HCal SFs in Allegro_o1_v03 calculated with 5000 events (28 Aug 2024): 
 EM invSF = 30.3953
 HAD invSF = 35.2556
  
 
-## Benchmark calibration for ECal+HCal simulation of charged hadrons
+## Benchmark calibration for ECal+HCal combined simulation of charged hadrons
 HCal should be calibrated to HAD scale via invSF, ECal on EM scale. 
-The benchmark calibration as it is implemented now has 5 parameters
+The benchmark calibration as it is implemented now has 6 parameters, and two of them are fixed during the minimization (one can try to include them)
 - p[0] brings ECal to HAD scale, 
 - p[1] scales the HCal energy, but as it is already on HAD scale, it is fixed to 1 
 - p[2] corrects for the energy lost between ECal and HCal 
-- p[3] corrects for energy loses in the upstream material (e.g. ECal cryostat)
-- p[4] is for the residual corrections (currently set to 0)
+- p[3] corrects ECal energy  
+- p[4] corrects for energy loses in the upstream material (e.g. ECal cryostat)
+- p[5] is for the residual corrections, it is fixed to 0
  
+After running [fcc_ee_caloBenchmarkCalibration.py](benchmark_calibration_scripts/fcc_ee_caloBenchmarkCalibration.py) to obtain the benchmark parameters, the output is stored in a histogram in a root file, where each bin corresponds to one parameter.
 For FCC-ee, it was observed that in the energy range of interest, the benchmark parameters depend on the energy (unlike in FCC-hh case). 
-Therefore, one needs to obtain benchmark parameters for various energies, plot these distributions to find out the dependency of each parameter on the energy and fit with appropriate formula. 
-Then these formulas can be used to correct cluster energy by applying CorrectCaloClusters. Note, that one also needs to provide the approximate benchmark parameters 
-for the initial energy calculation (currently correspond to 50 GeV pion) - this approximate energy is then used to obtain final benchmark parameters. 
- 
-https://github.com/HEP-FCC/k4RecCalorimeter/blob/2fcef0d5a31eda8825dd85b1570ae80737342748/RecCalorimeter/src/components/CalibrateBenchmarkMethod.cpp 
-https://github.com/HEP-FCC/k4RecCalorimeter/blob/main/RecCalorimeter/src/components/CorrectCaloClusters.cpp
+Therefore, one needs to obtain benchmark parameters for various energies (in the range cca1GeV-150GeV), plot these distributions to find out the dependency of each parameter on the energy 
+and fit with appropriate formula - example script is [draw_benchmark_parameters.py](benchmark_calibration_scripts/draw_benchmark_parameters.py). 
+Then these formulas can be used to correct cluster energy by applying CorrectCaloClusters in the simulation code. Note, that one also needs to provide the approximate benchmark parameters 
+for the initial energy calculation (currently correspond to 50 GeV pion) - this approximate energy is then used to obtain final benchmark parameters.
+
+## Running the simulation 
+The scripts to run the simulation locally or on lxbatch can be found in the simulation_scripts directory, both for standalone HCal and combined ECal+HCal simulation. 
+
+## Energy calibration with BRT
+Original scripts were prepared for standalone ECal simulation and its energy calibration, so here is a modified version for HCal and ECal+HCal. 
+The scripts communicate with FCCAnalyses caloNtupleizer, so this part needs to be modified, to reflect the correct number of radial layers in each simulation setup and to read the corresponding geometry.
+For the creation of training and testing samples, one needs to be careful and ensure that these are different events (need to modify the randomSeed for each submitted job) and this is why we have 
+two separate lxbatch submission scripts for this. 
+The code for training and plotting is executed from run_all_chain.sh.  
 
