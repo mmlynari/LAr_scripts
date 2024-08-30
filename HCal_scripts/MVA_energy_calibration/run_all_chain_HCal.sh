@@ -6,8 +6,8 @@ xmlbasedir=../../../k4geo
 xmldir=FCCee/ALLEGRO/compact/ALLEGRO_o1_v03
 xmlfileFullDet=ALLEGRO_o1_v03_tileStandalone
 xmlfileECal=HCalBarrelReadout
-trainingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/HCal_v28Aug24_FSR/240828_energies_10kevt_SW_noNoise_HCal/combined"
-testingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/HCal_v28Aug24_FSR/240828_energies_10kevt_SW_noNoise_HCal/combined"
+trainingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240829_energies_1mil_cells_SW_noNoise_HCal_EMscale_BRT_training"
+testingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240829_energies_10kevt_cells_SW_noNoise_HCal_EMscale_BRT_validation/combined"
 today=`date +%y%m%d`
 
 doCalibrationFiles=0
@@ -22,7 +22,6 @@ doClustersForMVAEvaluation=0
 ## to be run from LAr_scripts/FCCSW_ecal/training_directory
 doMVATraining=0
 doComputeResolutions=1
-
 
 # Remake calibration xml files from the main xml file
 #
@@ -148,7 +147,7 @@ fi
 # Compute resolutions and responses of the clusters produced in the previous step, also applying the MVA calibrations
 if (( $doComputeResolutions > 0 )); then
     ## run this 
-    #python compute_resolutions_HCal.py --inputDir $testingDataset --outFile $runname/results.csv --clusters CaloClusters --MVAcalibCalo $runname/training_calo.json 
+    python compute_resolutions_HCal.py --inputDir $testingDataset --outFile $runname/results.csv --clusters CaloClusters --MVAcalibCalo $runname/training_calo.json 
     ##--MVAcalibTopo $runname/training_topo.json
 
     # Make resolution plots
