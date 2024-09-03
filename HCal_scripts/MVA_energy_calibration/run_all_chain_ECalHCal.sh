@@ -1,13 +1,13 @@
 #!/usr/bin/bash
 
-runname="test_HCal_v01"
+runname="test_ECalHCal_v01"
 #runname="rescaling"
-xmlbasedir=../../../k4geo
+xmlbasedir=../../k4geo
 xmldir=FCCee/ALLEGRO/compact/ALLEGRO_o1_v03
-xmlfileFullDet=ALLEGRO_o1_v03_tileStandalone
-xmlfileECal=HCalBarrelReadout
-trainingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240901_energies_3mil_SW_noNoise_HCal_EMscale_BRT_training"
-testingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240829_energies_10kevt_cells_SW_noNoise_HCal_EMscale_BRT_validation/combined"
+xmlfileFullDet=ALLEGRO_o1_v03
+xmlfileECal=ECalBarrel_thetamodulemerged
+trainingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240902_energies_1mil_SWandTopo_noNoise_ECalHCal_oldBenchmark_BRT_training"
+testingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240902_energies_10kevt_cells_SW_noNoise_ECalHCal_oldBenchmark_BRT_validation/combined"
 today=`date +%y%m%d`
 
 doCalibrationFiles=0
@@ -16,12 +16,10 @@ doSamplingFractions=0
 doUpDownStreamCorrections=0
 doClustersForMVATraining=0
 doClustersForMVAEvaluation=0
+## Shalini, only run the options below 
+doMVATraining=1
+doComputeResolutions=0
 
-## For HCal and ECal+HCal, only run the options below 
-## assuming that the training and testing dataset was already created
-## to be run from LAr_scripts/FCCSW_ecal/training_directory
-doMVATraining=0
-doComputeResolutions=1
 
 # Remake calibration xml files from the main xml file
 #
@@ -85,8 +83,7 @@ if (( $doX0plots > 0 )); then
     cp ../geometry/plots/*png $runname/geometry
     cp ../geometry/plots/*pdf $runname/geometry
 else
-    mkdir -v $runname
-    #cd ../FCCSW_ecal/
+    cd ../FCCSW_ecal/
 fi
 
 # Compute sampling fractions and update scripts
@@ -130,8 +127,7 @@ fi
 
 # Train the MVA on CaloClusters and CaloTopoClusters with XGBoost
 if (( $doMVATraining > 0 )); then
-    ## run this
-    python training_HCal.py CaloClusters -i $trainingDataset -o $runname/training_calo.json
+    python training_ECalHCal.py CaloClusters -i $trainingDataset -o $runname/training_calo.json
     ##python training.py CaloTopoClusters -i $runname/production/ -o $runname/training_topo.json
     # This instead will not run the training, just write numpy arrays with input features and target, to use a different MVA tool
     # python training.py CaloClusters -i $runname/production/ -o $runname/training_calo.json --no-training --writeFeatures $runname/production/features --writeTarget $runname/production/target
@@ -146,8 +142,7 @@ fi
 
 # Compute resolutions and responses of the clusters produced in the previous step, also applying the MVA calibrations
 if (( $doComputeResolutions > 0 )); then
-    ## run this 
-    python compute_resolutions_HCal.py --inputDir $testingDataset --outFile $runname/results.csv --clusters CaloClusters --MVAcalibCalo $runname/training_calo.json 
+    python compute_resolutions_ECalHCal.py --inputDir $testingDataset --outFile $runname/results.csv --clusters CorrectedCaloClusters --MVAcalibCalo $runname/training_calo.json 
     ##--MVAcalibTopo $runname/training_topo.json
 
     # Make resolution plots
@@ -155,10 +150,9 @@ if (( $doComputeResolutions > 0 )); then
     ## python plot_resolutions.py --outDir $runname --doFits plot $runname/results.csv --all
     # - compare the resolutions among different cluster collections and calibrations
     
-    # 1. showing also raw clusters and clusters with MVA corrections
-    ## run this
-    python plot_resolutions.py --outDir $runname --doFits compare clusters CaloClusters CalibratedCaloClusters $runname/results.csv --all
-    
+    # 1. showing also raw clusters and clusters with up/downstream corrections
+    python plot_resolutions.py --outDir $runname --doFits compare clusters CorrectedCaloClusters CalibratedCaloClusters $runname/results.csv --all
+    # CalibratedCaloClusters
     # 2. showing only the calibrated clusters
     ##python plot_resolutions.py --outDir $runname --doFits compare clusters CalibratedCaloClusters CalibratedCaloTopoClusters $runname/results.csv --all
 fi

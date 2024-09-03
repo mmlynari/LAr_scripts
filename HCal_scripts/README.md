@@ -1,6 +1,8 @@
 # HCal and ECal+HCal scripts 
 
 Various scripts for standaloneHCal and combined ECal+HCal simulation and calibration.
+It is guaranteed that these scripts work in source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh -r 2024-08-01 
+They might not work in the newer releases due to the software migration. 
 
 ## HCal sampling fraction (SF) calculation
 For this, one needs to first remove ECal and other subdetectors in front of HCal in the geometry xml file and run standalone HCal simulation.  
