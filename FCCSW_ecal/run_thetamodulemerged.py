@@ -248,10 +248,12 @@ if runHCal:
     hcalBarrelReadoutName = "HCalBarrelReadout"  # barrel, layer-row-theta-phi based (can be used to fill various cell collections with different readouts)
     hcalBarrelReadoutName2 = "BarHCal_Readout_phitheta"  # barrel, layer-theta-phi based, groups tiles from different rows together (baseline)
     hcalEndcapReadoutName = "HCalEndcapReadout"  # endcap
+    hcalEndcapReadoutName2 = "HCalEndcapReadout_phitheta"  # endcap
 else:
     hcalBarrelReadoutName = ""
     hcalBarrelReadoutName2 = ""
     hcalEndcapReadoutName = ""
+    hcalEndcapReadoutName2 = ""
 
 # Configure saving of calorimeter positioned hits
 # - ECAL barrel
