@@ -437,6 +437,7 @@ if runHCal:
     cellPositionHcalBarrelTool = CellPositionsHCalPhiThetaSegTool(
         "CellPositionsHCalBarrel",
         readoutName=hcalBarrelReadoutName,
+        detectorName=="HCalBarrel",
         OutputLevel=INFO
     )
     hcalBarrelPositionedCellsName = "HCalBarrelPositionedCells"
@@ -482,6 +483,7 @@ if runHCal:
     cellPositionHcalBarrelTool2 = CellPositionsHCalPhiThetaSegTool(
         "CellPositionsHCalBarrel2",
         readoutName=hcalBarrelReadoutName2,
+        detectorName=="HCalBarrel",
         OutputLevel=INFO
     )
     createHcalBarrelPositionedCells2 = CreateCaloCellPositionsFCCee(
