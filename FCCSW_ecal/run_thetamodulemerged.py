@@ -276,12 +276,12 @@ saveECalEndcapTool.CaloHits.Path = "ECalEndcapHits"
 if runHCal:
     # - HCAL barrel
     hcalBarrelHitsName = "HCalBarrelPositionedHits"
-    saveHCalTool = SimG4SaveCalHits(
+    saveHCalBarrelTool = SimG4SaveCalHits(
         "saveHCalBarrelHits",
         readoutName=hcalBarrelReadoutName,
         OutputLevel=INFO
     )
-    saveHCalTool.CaloHits.Path = hcalBarrelHitsName
+    saveHCalBarrelTool.CaloHits.Path = hcalBarrelHitsName
 
     # - HCAL endcap
     saveHCalEndcapTool = SimG4SaveCalHits(
@@ -301,7 +301,7 @@ outputTools = [
 ]
 if runHCal:
     outputTools += [
-        saveHCalTool,
+        saveHCalBarrelTool,
         saveHCalEndcapTool
     ]
 
