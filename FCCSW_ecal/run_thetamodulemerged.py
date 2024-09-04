@@ -287,7 +287,7 @@ if runHCal:
         readoutName = hcalEndcapReadoutName,
         OutputLevel=INFO
     )
-    saveHCalEndcapTool.CaloHits.Path = "HCalEndcapHits"
+    saveHCalEndcapTool.CaloHits.Path = "HCalEndcapPositionedHits"
 
 # next, create the G4 algorithm, giving the list of names of tools ("XX/YY")
 particle_converter = SimG4PrimariesFromEdmTool("EdmConverter")
