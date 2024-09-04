@@ -500,16 +500,17 @@ if runHCal:
                                             addCellNoise=False,
                                             filterCellNoise=False,
                                             addPosition=True,
-                                            hits="HCalEndcapHits",
+                                            hits="HCalEndcapPositionedHits",
                                             cells=hcalEndcapCellsName,
                                             OutputLevel=INFO)
 
     # 2 - attach positions to the cells (cell positions needed for RedoSegmentation!)
-    #cellPositionHcalEndcapTool = CellPositionsHCalBarrelPhiThetaSegTool(
-    cellPositionHcalEndcapTool = CellPositionsHCalBarrelPhiThetaSegTool(
+    #cellPositionHcalEndcapTool = CellPositionsHCalPhiThetaSegTool(
+    cellPositionHcalEndcapTool = CellPositionsHCalPhiThetaSegTool(
         "CellPositionsHCalEndcap",
         readoutName=hcalEndcapReadoutName,
         detectorName="HCalThreePartsEndcap",
+        numLayersHCalThreeParts=[6,9,22],
         OutputLevel=INFO
     )
     hcalEndcapPositionedCellsName = "HCalEndcapPositionedCells"
@@ -520,6 +521,47 @@ if runHCal:
     createHcalEndcapPositionedCells.positionsTool = cellPositionHcalEndcapTool
     createHcalEndcapPositionedCells.hits.Path = hcalEndcapCellsName
     createHcalEndcapPositionedCells.positionedHits.Path = hcalEndcapPositionedCellsName
+
+    # 3 - compute new cellID of cells based on new readout - removing row information
+    hcalEndcapCellsName2 = "HCalEndcapCells2"
+
+    # first we create new hits with the readout without the row information
+    # and then merge them into new cells
+    rewriteHCalEndcap = RedoSegmentation("ReSegmentationEndcapHcal",
+                                         # old bitfield (readout)
+                                         oldReadoutName=hcalEndcapReadoutName,
+                                         # specify which fields are going to be altered (deleted/rewritten)
+                                         oldSegmentationIds=["row", "theta", "phi"],
+                                         # new bitfield (readout), with new segmentation (merged modules and theta cells)
+                                         newReadoutName=hcalEndcapReadoutName2,
+                                         OutputLevel=INFO,
+                                         debugPrint=200,
+                                         inhits=hcalEndcapPositionedCellsName,
+                                         outhits="HCalEndcapCellsWithoutRow")
+
+    createHcalEndcapCells2 = CreateCaloCells("CreateHCalEndcapCells2",
+                                             doCellCalibration=False,
+                                             addCellNoise=False,
+                                             filterCellNoise=False,
+                                             OutputLevel=INFO,
+                                             hits=rewriteHCalEndcap.outhits.Path,
+                                             cells=hcalEndcapCellsName2)
+    # 4 - attach positions to the new cells 
+    cellPositionHcalEndcapTool2 = CellPositionsHCalPhiThetaSegTool(
+        "CellPositionsHCalEndcap2",
+        readoutName=hcalEndcapReadoutName2,
+        detectorName="HCalThreePartsEndcap",
+        numLayersHCalThreeParts=[6,9,22],
+        OutputLevel=INFO
+    )
+    hcalEndcapPositionedCellsName2 = "HCalEndcapPositionedCells2"
+    createHcalEndcapPositionedCells2 = CreateCaloCellPositionsFCCee(
+        "CreateHcalEndcapPositionedCells2",
+        OutputLevel=INFO
+    )
+    createHcalEndcapPositionedCells2.positionsTool = cellPositionHcalEndcapTool2
+    createHcalEndcapPositionedCells2.hits.Path = hcalEndcapCellsName2
+    createHcalEndcapPositionedCells2.positionedHits.Path = hcalEndcapPositionedCellsName2
 
 else:
     hcalBarrelCellsName = "emptyCaloCells"
