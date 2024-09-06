@@ -5,6 +5,7 @@ import ROOT
 import numpy as np
 import glob 
 from datetime import datetime
+import importlib.util
 
 
 def main():
@@ -29,6 +30,7 @@ def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarge
     """Actual processing"""
     init_stuff(useShapeParameters)
 
+    print(f"Loading data from: {in_directory}/*.root")
     df = ROOT.ROOT.RDataFrame("events", in_directory + "/*.root")
 
     num_init = df.Count()
@@ -59,21 +61,28 @@ def run(in_directory, clusters, out_file, runTraining, writeFeatures, writeTarge
         for i in range(numLayersHCal):
             df = df.Define(f"{clusters}_E{i}", f"getFloatAt({i})({clusters}_energyInLayersHCal)")
             df = df.Define(f"Cluster_E{i}", f"{clusters}_E{i}[lc_idx]")
+            print(f"Defined Cluster_E{i}")
 
     cols_to_use = ["Truth_E", "Cluster_E"]
     cols_to_use += [f"Cluster_E{i}" for i in range(numLayersHCal)]
-    v_cols_to_use = ROOT.std.vector('string')(cols_to_use)
+    # not needed v_cols_to_use
+    #v_cols_to_use = ROOT.std.vector('string')(cols_to_use)
 
     # Filter to remove weird events and get a proper tree
     # d = df.Filter("Cluster_E5!=0 && Cluster_E!=0")
     d = df.Filter("Cluster_E!=0")
     print("We have run on", num_init.GetValue(), "events")
+    filtered_count = d.Count().GetValue()
+    print(f"Filtered event count: {filtered_count}")
 
     # Study weird events where clusters don't have cells properly attached
     # df.Filter("Cluster_E5==0").Snapshot("events", "problems.root")
 
     # Training is so fast it can be done online
-    cols = d.AsNumpy(v_cols_to_use)
+    ## for debugging 
+    ## print(d.GetColumnNames())
+    #cols = d.AsNumpy(v_cols_to_use)
+    cols = d.AsNumpy(cols_to_use)
     
     if useShapeParameters:
         cluster_E = cols["Cluster_E"]
@@ -155,6 +164,7 @@ def init_stuff(useShapeParameters):
     geometryFile = "../../../k4geo/FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ALLEGRO_o1_v03_tileStandalone.xml"
     ROOT.gROOT.SetBatch(True)
     if not useShapeParameters:
+        #Load the FCCAnalyses library
         ROOT.gSystem.Load("libFCCAnalyses")
         _fcc = ROOT.dummyLoader
         ROOT.gInterpreter.Declare("using namespace FCCAnalyses;")

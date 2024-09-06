@@ -216,8 +216,9 @@ def get_MVAcalib_resolution(in_directory, clusters, MVAcalib_file):
         # Filter to remove weird events and get a proper tree
         # filter_str = "&&".join([f" Cluster_E{i}!=0 " for i in range(11)])
         # df2 = df.Filter(filter_str + " && Cluster_E!=0", "Remove bad clusters with missing cell links")
-        df2 = df.Filter("Cluster_E5!=0 && Cluster_E!=0", "Remove bad clusters with missing cell links")
-        cols = df2.AsNumpy(v_cols_to_use)
+        ## df2 = df.Filter("Cluster_E5!=0 && Cluster_E!=0", "Remove bad clusters with missing cell links")
+        df2 = df.Filter("Cluster_E!=0")
+        cols = df2.AsNumpy(cols_to_use)
         num_pass = df2.Count()
         # df2.Report().Print()
         

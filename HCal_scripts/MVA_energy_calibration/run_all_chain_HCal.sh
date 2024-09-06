@@ -6,8 +6,12 @@ xmlbasedir=../../../k4geo
 xmldir=FCCee/ALLEGRO/compact/ALLEGRO_o1_v03
 xmlfileFullDet=ALLEGRO_o1_v03_tileStandalone
 xmlfileECal=HCalBarrelReadout
-trainingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240901_energies_3mil_SW_noNoise_HCal_EMscale_BRT_training"
+# inputs at EM scale
+trainingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240901_energies_3mil_SW_noNoise_HCal_EMscale_BRT_training/"
 testingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240829_energies_10kevt_cells_SW_noNoise_HCal_EMscale_BRT_validation/combined"
+# inputs at HAD scale 
+#trainingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240904_energies_3mil_SW_noNoise_HCal_HADscale_BRT_training/"
+#testingDataset="/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240904_energies_10kevt_cells_SW_noNoise_HCal_HADscale_BRT_validation/combined"
 today=`date +%y%m%d`
 
 doCalibrationFiles=0
@@ -20,8 +24,8 @@ doClustersForMVAEvaluation=0
 ## For HCal and ECal+HCal, only run the options below 
 ## assuming that the training and testing dataset was already created
 ## to be run from LAr_scripts/FCCSW_ecal/training_directory
-doMVATraining=0
-doComputeResolutions=1
+doMVATraining=1
+doComputeResolutions=
 
 # Remake calibration xml files from the main xml file
 #

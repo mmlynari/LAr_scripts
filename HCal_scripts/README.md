@@ -1,8 +1,16 @@
 # HCal and ECal+HCal scripts 
 
-Various scripts for standaloneHCal and combined ECal+HCal simulation and calibration.
-It is guaranteed that these scripts work in source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh -r 2024-08-01 
-They might not work in the newer releases due to the software migration. 
+This directory includes various scripts for standalone HCal and combined ECal+HCal simulation and calibration.
+This directory reflects the status in the summer 2024 and this version will be used for FCC feasibility study report (FSR). 
+
+## Important notes 
+Due to the k4hep software migration, some of these scripts might not work in the newer releases, so here are a few notes 
+- the scripts for running the simulation were tested in release /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh -r 2024-08-01 
+- BRT training was synchronized with the nightly release on 6 September so it should work
+- plotting scripts should also work in the newer releases as these are written in python
+- for running the simulation in newer releases, please use [this how-to](https://github.com/HEP-FCC/FCC-config/tree/main/FCCee/FullSim/ALLEGRO/ALLEGRO_o1_v03) and 
+here is an example code for running the digi+reco step with HCal Barrel and Endcap: [link](https://github.com/HEP-FCC/k4RecCalorimeter/blob/main/RecFCCeeCalorimeter/tests/options/ALLEGRO_o1_v03_digi_reco.py)
+ 
 
 ## HCal sampling fraction (SF) calculation
 For this, one needs to first remove ECal and other subdetectors in front of HCal in the geometry xml file and run standalone HCal simulation.  
@@ -10,7 +18,7 @@ Set invSF=1 in the [run_thetamerged_tileStandalone.py](run_simulation/run_thetam
 Basic scripts to obtain the SF and invSF are in the HCal_SF_calibration directory. The script expects as an input a flat ntuple that can be produced with
 [FCCAnalyses caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py) and an adapted version can be found in 
 [FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts/analysis_HCal.py).
-For the record, the HCal SFs in Allegro_o1_v03 calculated with 5000 events (28 Aug 2024): 
+For the record, the HCal Barrel SFs in Allegro_o1_v03 calculated with 5000 events (28 Aug 2024): 
 EM invSF = 30.3953
 HAD invSF = 35.2556
  

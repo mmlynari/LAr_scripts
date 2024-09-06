@@ -52,8 +52,18 @@ def find_zombie_files(directory):
 def main():
     #directory = '/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240902_energies_1mil_SWandTopo_noNoise_ECalHCal_oldBenchmark_BRT_training'  # Replace with your directory
     
-    directory = '/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240902_energies_10kevt_cells_SW_noNoise_ECalHCal_oldBenchmark_BRT_validation'
+    ##directory = '/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240902_energies_10kevt_cells_SW_noNoise_ECalHCal_oldBenchmark_BRT_validation'
+    #directory = '/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/HCal_v28Aug24_FSR/240904_energies_10kevt_cells_noNoise_EMscale_HCal_Endcap'
+    directory = '/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/MVA_training_v28Aug24_FSR/240901_energies_3mil_SW_noNoise_HCal_EMscale_BRT_training'
     zombie_dir = os.path.join(directory, 'zombies')
+
+    if not os.path.exists(directory):
+        print(f"Error: The directory '{directory}' does not exist.")
+        sys.exit(1)  # Exit the program if the directory doesn't exist
+
+    # Print the directory being searched
+    print(f"Searching for zombie files in directory: {directory}")
+
     
     zombies = move_zombie_files(directory, zombie_dir)
     #zombies = find_zombie_files(directory)
