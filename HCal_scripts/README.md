@@ -13,7 +13,7 @@ here is an example code for running the digi+reco step with HCal Barrel and Endc
  
 
 ## HCal sampling fraction (SF) calculation
-For this, one needs to first remove ECal and other subdetectors in front of HCal in the geometry xml file and run standalone HCal simulation.  
+For this, one needs to first remove ECal and other subdetectors in front of HCal in the geometry xml file and run standalone HCal simulation for a FIXED THETA (e.g. for the barrel 69 degrees). Then you will evaluate the performance using the same theta angle as the one for which the SF was obtained.   
 Set invSF=1 in the [run_thetamerged_tileStandalone.py](run_simulation/run_thetamerged_tileStandalone.py) script and run the simulation with 100 GeV electrons with pdgID=11 (for EM scale) or charged pions with pdgID=211 (for HAD scale). 
 Basic scripts to obtain the SF and invSF are in the HCal_SF_calibration directory. The script expects as an input a flat ntuple that can be produced with
 [FCCAnalyses caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py) and an adapted version can be found in 
