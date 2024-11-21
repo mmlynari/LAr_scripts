@@ -45,14 +45,14 @@ Outdated scripts to run the simulation locally or on lxbatch can be found in the
 
 New how-to to run the simulation below from Archil (Nov 2024)
 
-# Setup the environment (I am working with the stable release 2024-10-03):
+- Setup the environment (I am working with the stable release 2024-10-03):
 source /cvmfs/sw.hsf.org/key4hep/setup.sh -r 2024-10-03
 
-# Checkout packages:
+- Checkout packages:
 git clone https://github.com/Archil-AD/k4RecCalorimeter.git
 git clone https://github.com/Archil-AD/k4geo.git
 
-# Compile packages:
+- Compile packages:
 cd k4geo/
 mkdir build install
 cd build/
@@ -72,19 +72,19 @@ cd ..
 k4_local_repo
 cd ../
 
-# Run the simulation
+- Run the simulation
 ddsim --enableGun --gun.distribution uniform --gun.energy "50*GeV" --gun.thetaMin "10*deg" --gun.thetaMax "170*deg" --gun.particle pi- --numberOfEvents 5000 --outputFile ALLEGRO_sim_pi.root --random.enableEventSeed --random.seed 42 --compactFile $K4GEO/FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ALLEGRO_o1_v03.xml
 
-# Run the reconstruction
+- Run the reconstruction
 cp /afs/cern.ch/work/a/adurglis/public/ALLEGRO/run_reco_HCal.py .
 k4run run_reco_HCal.py --IOSvc.input ALLEGRO_sim_pi.root --IOSvc.output ALLEGRO_reco_pi.root
 
-# Check the content of output file
+- Check the content of output file
 podio-dump ALLEGRO_reco_pi.root
-# collection of HCal Barrel and Endcap cells are HCalBarrelReadoutPositioned and HCalEndcapReadoutPositioned, respectively.
+ -- collection of HCal Barrel and Endcap cells are HCalBarrelReadoutPositioned and HCalEndcapReadoutPositioned, respectively.
 
 
-# An example of drawing HCal barrel energy response:
+- An example of drawing HCal barrel energy response:
 root -l    ALLEGRO_reco_pi.root
 events->Draw("Sum$(HCalBarrelReadoutPositioned.energy)/50.","")
 
