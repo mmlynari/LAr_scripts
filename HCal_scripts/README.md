@@ -16,8 +16,8 @@ here is an example code for running the digi+reco step with HCal Barrel and Endc
 For this, one needs to first remove ECal and other subdetectors in front of HCal in the geometry xml file and run standalone HCal simulation for a FIXED THETA (e.g. for the barrel 69 degrees). Then you will evaluate the performance using the same theta angle as the one for which the SF was obtained.   
 Set invSF=1 in the [run_thetamerged_tileStandalone.py](run_simulation/run_thetamerged_tileStandalone.py) script and run the simulation with 100 GeV electrons with pdgID=11 (for EM scale) or charged pions with pdgID=211 (for HAD scale). 
 Basic scripts to obtain the SF and invSF are in the HCal_SF_calibration directory. The script expects as an input a flat ntuple that can be produced with
-[FCCAnalyses caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py) and an adapted version can be found in 
-[FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts/analysis_HCal.py).
+[FCCAnalyses caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py) and an adapted HCal version can be found in 
+[FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts/analysis_HCal_new.py).
 For the record, the HCal Barrel SFs in Allegro_o1_v03 calculated with 5000 events (28 Aug 2024): 
 EM invSF = 30.3953
 HAD invSF = 35.2556
@@ -41,12 +41,59 @@ Then these formulas can be used to correct cluster energy by applying CorrectCal
 for the initial energy calculation (currently correspond to 50 GeV pion) - this approximate energy is then used to obtain final benchmark parameters.
 
 ## Running the simulation 
-The scripts to run the simulation locally or on lxbatch can be found in the simulation_scripts directory, both for standalone HCal and combined ECal+HCal simulation. 
+Outdated scripts to run the simulation locally or on lxbatch can be found in the simulation_scripts directory, both for standalone HCal and combined ECal+HCal simulation.
+
+New how-to to run the simulation below from Archil (Nov 2024)
+
+# Setup the environment (I am working with the stable release 2024-10-03):
+source /cvmfs/sw.hsf.org/key4hep/setup.sh -r 2024-10-03
+
+# Checkout packages:
+git clone https://github.com/Archil-AD/k4RecCalorimeter.git
+git clone https://github.com/Archil-AD/k4geo.git
+
+# Compile packages:
+cd k4geo/
+mkdir build install
+cd build/
+cmake .. -DCMAKE_INSTALL_PREFIX=../install
+make install -j 8
+cd ..
+k4_local_repo
+export K4GEO=$PWD/
+cd ../
+
+cd k4RecCalorimeter/
+mkdir build install
+cd build/
+cmake .. -DCMAKE_INSTALL_PREFIX=../install
+make install -j 8
+cd ..
+k4_local_repo
+cd ../
+
+# Run the simulation
+ddsim --enableGun --gun.distribution uniform --gun.energy "50*GeV" --gun.thetaMin "10*deg" --gun.thetaMax "170*deg" --gun.particle pi- --numberOfEvents 5000 --outputFile ALLEGRO_sim_pi.root --random.enableEventSeed --random.seed 42 --compactFile $K4GEO/FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ALLEGRO_o1_v03.xml
+
+# Run the reconstruction
+cp /afs/cern.ch/work/a/adurglis/public/ALLEGRO/run_reco_HCal.py .
+k4run run_reco_HCal.py --IOSvc.input ALLEGRO_sim_pi.root --IOSvc.output ALLEGRO_reco_pi.root
+
+# Check the content of output file
+podio-dump ALLEGRO_reco_pi.root
+# collection of HCal Barrel and Endcap cells are HCalBarrelReadoutPositioned and HCalEndcapReadoutPositioned, respectively.
+
+
+# An example of drawing HCal barrel energy response:
+root -l    ALLEGRO_reco_pi.root
+events->Draw("Sum$(HCalBarrelReadoutPositioned.energy)/50.","")
+
+ 
 
 ## Energy calibration with BRT
 Original scripts were prepared for standalone ECal simulation and its energy calibration, so here is a modified version for HCal and ECal+HCal. 
 The scripts communicate with FCCAnalyses caloNtupleizer, so this part needs to be modified, to reflect the correct number of radial layers in each simulation setup and to read the corresponding 
-geometry - see [FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts/analysis_HCal.py).
+geometry - see [FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts/analysis_HCal_new.py).
 For the creation of training and testing samples, one needs to be careful and ensure that these are different events (need to modify the randomSeed for each submitted job) and this is why we have 
 two separate lxbatch submission scripts for this. In addition, for the training, you want to have a continuous energy distribution, while for the evaluation, we usually derive the energy resolution
 from several energy points. Use BRT_training_launch_several_energies.sh and BRT_validation_launch_several_energies.sh scripts (stored in run_simulation directory) to get training and testing datasets.  
