@@ -37,7 +37,7 @@ parser.add_argument(
     help='Whether or not to store cell information')
 parser.add_argument(
     '-cellBranchNames',
-    nargs='+', default=['HCalBarrelReadoutPositioned'],
+    nargs='+', default=['HCalBarrelReadoutPositioned','HCalEndcapReadoutPositioned'],
     help='Names of the cell branches in the input rootfile. Must have position information!')
 parser.add_argument(
     '-storeClusterBranches',
@@ -77,11 +77,11 @@ parser.add_argument(
     help='Whether or not to load the FCCSW geometry. Used to get the detector segmentation for e.g. the definition of the cell layer index.')
 parser.add_argument(
     '-geometryFile',
-    type=str, default=os.environ['K4GEO'] + '/FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ALLEGRO_o1_v03.xml',
+    type=str, default=os.environ['K4GEO'] + '/FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ALLEGRO_o1_v03_tileStandalone.xml',
     help='Path to the xml geometry file')
 parser.add_argument(
     '-readoutName',
-    type=str, default='ECalBarrelModuleThetaMerged',
+    type=str, default='HCalBarrelReadout',
     help='Name of the readout to use for the layer/phi/theta bin definition')
 parser.add_argument(
     '-extractHighestEnergyClusterCells',
@@ -132,7 +132,7 @@ class analysis():
                 dict_outputBranchName_function["%s_eta"%cellBranchName] = "CaloNtupleizer::getCaloHit_eta(%s)"%cellBranchName
                 dict_outputBranchName_function["%s_energy"%cellBranchName] = "CaloNtupleizer::getCaloHit_energy(%s)"%cellBranchName
                 if args.useGeometry:
-                    dict_outputBranchName_function["%s_moduleIdx"%cellBranchName] = "CaloNtupleizer::getCaloHit_moduleIdx(%s)"%cellBranchName
+                    #dict_outputBranchName_function["%s_moduleIdx"%cellBranchName] = "CaloNtupleizer::getCaloHit_moduleIdx(%s)"%cellBranchName
                     dict_outputBranchName_function["%s_thetaIdx"%cellBranchName] = "CaloNtupleizer::getCaloHit_thetaIdx(%s)"%cellBranchName
                     dict_outputBranchName_function["%s_layer"%cellBranchName] = "CaloNtupleizer::getCaloHit_layer(%s)"%cellBranchName
 
@@ -160,7 +160,7 @@ class analysis():
                 dict_outputBranchName_function["%s_eta"%clusterCellsBranchName] = "CaloNtupleizer::getCaloHit_eta(%s)"%clusterCellsBranchName
                 dict_outputBranchName_function["%s_energy"%clusterCellsBranchName] = "CaloNtupleizer::getCaloHit_energy(%s)"%clusterCellsBranchName
                 if args.useGeometry:
-                    dict_outputBranchName_function["%s_moduleIdx"%clusterCellsBranchName] = "CaloNtupleizer::getCaloHit_moduleIdx(%s)"%clusterCellsBranchName
+                    #dict_outputBranchName_function["%s_moduleIdx"%clusterCellsBranchName] = "CaloNtupleizer::getCaloHit_moduleIdx(%s)"%clusterCellsBranchName
                     dict_outputBranchName_function["%s_thetaIdx"%clusterCellsBranchName] = "CaloNtupleizer::getCaloHit_thetaIdx(%s)"%clusterCellsBranchName
                     dict_outputBranchName_function["%s_layer"%clusterCellsBranchName] = "CaloNtupleizer::getCaloHit_layer(%s)"%clusterCellsBranchName
 

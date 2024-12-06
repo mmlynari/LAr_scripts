@@ -101,7 +101,10 @@ root -l    ALLEGRO_reco_pi.root
 events->Draw("Sum$(HCalBarrelReadoutPositioned.energy)/50.","")
 ```
 
- 
+### ALLEGRO pandora development: 
+[Presentation by Archil in the FCC Full sim meeting](https://indico.cern.ch/event/1481286/#55-pandorapfa-on-allegro)
+[ALLEGRO Pandora how-to](https://github.com/Archil-AD/ALLEGRO_PandoraPFA/tree/main)
+
 
 ## Energy calibration with BRT
 Original scripts were prepared for standalone ECal simulation and its energy calibration, so here is a modified version for HCal and ECal+HCal. 
