@@ -41,7 +41,7 @@ parser.add_argument(
     help='Names of the cell branches in the input rootfile. Must have position information!')
 parser.add_argument(
     '-storeClusterBranches',
-    type=str2bool, default=False,
+    type=str2bool, default=True,
     help='Whether or not to store cluster information')
 parser.add_argument(
     '-clusterBranchNames',

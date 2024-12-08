@@ -16,7 +16,7 @@ print("Launch without sourcing k4 environment!!")
 ROOT.gROOT.ProcessLine(".L /afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses/install/lib/libFCCAnalyses.C+")
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-inputFiles", default = "/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/HCal_v28Aug24_FSR/fcc_analysis_ouput/240828_energies_10kevt_SW_noNoise_HCal/fccsw_output_pdgID_211_pMin_*.root", help = "Regex for input files.", type = str)
+parser.add_argument("-inputFiles", default = "/afs/cern.ch/user/m/mmlynari/workspace/ALLEGRO_PandoraPFA/HCal_standalone/outputs/241208/ALLEGRO_reco_pMin_100000_e.root", help = "Regex for input files.", type = str)
 #parser.add_argument("-inputFiles", default = "/eos/user/b/brfranco/rootfile_storage/fcc_analysis/220308_energies_10kevt_topoAndSW_noise_splitLowEnergy30_caloReco/fccsw_output_pdgID_22_pMin_*.root", help = "Regex for input files.", type = str)
 parser.add_argument("-outputPostfix", default = date.today().strftime("%y%m%d") + "_CaloClusters", help = "Postfix to append to the output folder.", type = str)
 parser.add_argument("-color", default = 46, help = "Color of the graph", type = int)
@@ -64,7 +64,9 @@ def draw_resol_canvas(th1, prefix, variable):
     elif 'esponse' in variable:
         th1.GetXaxis().SetTitle("#frac{E_{Reco}}{E_{Gen}}")
         th1.GetXaxis().SetTitleOffset(1.2)
-
+    elif 'reco' in variable:
+        th1.GetXaxis().SetTitle("E_{Reco}")
+        th1.GetXaxis().SetTitleOffset(1.2)
     else:
         #th1.GetXaxis().SetTitle("#{0}_{Reco} - #{0}_{Gen}".format(variable))
         th1.GetXaxis().SetTitle("#%s_{Reco} - #%s_{Gen}"%(variable, variable))
@@ -125,11 +127,11 @@ for inputFile in inputFiles:
     th1_angularresol = ROOT.TH1F(prefix + "angular_resolution", prefix + "angular_resolution", 100, 0, 0.03)
     th1_Eresol = ROOT.TH1F(prefix + "energy_resolution", prefix + "energy_resolution", 500, -25, 20)
     th1_Eresol_cells = ROOT.TH1F(prefix + "energy_resolution_cells", prefix + "energy_resolution_cells", 500, -25, 20)
-    th1_relEresol = ROOT.TH1F(prefix + "relative_energy_resolution", prefix + "relative_energy_resolution", 100, -0.6, 0.6)
+    th1_relEresol = ROOT.TH1F(prefix + "relative_energy_resolution_toEReco", prefix + "relative_energy_resolution_toEReco", 100, -0.6, 0.6)
     th1_relEresol_eGenDivided = ROOT.TH1F(prefix + "relative_energy_resolution_toEGen", prefix + "relative_energy_resolution_toEgen", 150, -0.6, 0.9)
     th1_energy_response = ROOT.TH1F(prefix + "energy_response", prefix + "energy_response", 100, 0, 2)
     th1_relEresol_cells = ROOT.TH1F(prefix + "relative_energy_resolution_cells", prefix + "relative_energy_resolution_cells", 100, -0.6, 0.6)
-    th1_Ereco = ROOT.TH1F(prefix + "reconstructed_energy", prefix + "reconstructed_energy", 200, energy_gev_float-0.8*energy_gev_float,energy_gev_float+0.8*energy_gev_float)
+    th1_Ereco = ROOT.TH1F(prefix + "reconstructed_energy", prefix + "reconstructed_energy", 200, -20, 20)
     th1_Ereco_cells = ROOT.TH1F(prefix + "reconstructed_energy_cells", prefix + "reconstructed_energy_cells", 200, energy_gev_float-0.8*energy_gev_float,energy_gev_float+0.8*energy_gev_float)
 
     f = ROOT.TFile(rootfile_path)
@@ -138,7 +140,7 @@ for inputFile in inputFiles:
     events.SetBranchStatus(args.clusterCollection + "_*", 1)
     events.SetBranchStatus("genParticle_*", 1)
     if args.cells:
-        events.SetBranchStatus("HCalBarrelPositionedCells2_energy", 1)
+        events.SetBranchStatus("HCalBarrelReadoutPositioned_energy", 1)
 
 
     theta_cells = []
@@ -153,7 +155,7 @@ for inputFile in inputFiles:
         total_energy_cells = 0
         gen_particle_energy = 0
         if args.cells:
-            for cell_energy in event.HCalBarrelPositionedCells2_energy:
+            for cell_energy in event.HCalBarrelReadoutPositioned_energy:
                 total_energy_cells += cell_energy
 
         for genParticle_idx in range(len(event.genParticle_status)):
@@ -209,6 +211,7 @@ for inputFile in inputFiles:
                     th1_Eresol_cells.Fill((total_energy_cells - gen_particle_energy))
                     th1_relEresol_cells.Fill((total_energy_cells - gen_particle_energy)/total_energy_cells)
                     th1_Ereco_cells.Fill(total_energy_cells)  
+
             # Ask both for dR and dE matching for the efficiency
             if best_d_R < cutoff_dR and abs(best_d_relE) < cutoff_relE:
                 evt_with_cluster_matching_genParticle += 1
@@ -365,7 +368,7 @@ def plot_resolution_vs_energy_graph(variable_name, postfix, relEresol_vs_energy_
 
     ## LEGEND
     if 'linearity' in variable_name:
-        eResol_vs_e_legend = copy(gStyle.bottomRight_legend)
+        eResol_vs_e_legend = copy(gStyle.topRight_legend)
     else: 
         eResol_vs_e_legend = copy(gStyle.topRight_legend_relEresol)
     eResol_vs_e_legend.AddEntry(ROOT.nullptr,"#bf{FCC-ee simulation}","")

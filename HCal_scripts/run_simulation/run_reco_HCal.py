@@ -19,7 +19,8 @@ from GaudiKernel.PhysicalConstants import pi
 inputfile = "ALLEGRO_sim_pi_endcap.root"            # input file produced with ddsim
 outputfile = "ALLEGRO_sim_digi_reco_pi_endcap.root" # output file produced by this steering file
 Nevts = -1                                # -1 means all events
-doSWClustering = False
+runHCal = True
+doSWClustering = True
 doTopoClustering = False
 
 #

@@ -5,16 +5,17 @@ This directory reflects the status in the summer 2024 and this version will be u
 
 ## Important notes 
 Due to the k4hep software migration, some of these scripts might not work in the newer releases, so here are a few notes 
-- the scripts for running the simulation were tested in release /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh -r 2024-08-01 
-- BRT training was synchronized with the nightly release on 6 September so it should work
-- plotting scripts shouldalso work in the newer releases as these are written in python
+- the scripts for running the simulation were tested in release source /cvmfs/sw.hsf.org/key4hep/setup.sh -r 2024-10-03 
+- BRT training was synchronized with the nightly release on 6 September 2024
+- plotting scripts might require renaming some variable branches and containers following the latest updates 
 - for running the simulation in newer releases, please use [this how-to](https://github.com/HEP-FCC/FCC-config/tree/main/FCCee/FullSim/ALLEGRO/ALLEGRO_o1_v03) and 
 here is an example code for running the digi+reco step with HCal Barrel and Endcap: [link](https://github.com/HEP-FCC/k4RecCalorimeter/blob/main/RecFCCeeCalorimeter/tests/options/ALLEGRO_o1_v03_digi_reco.py)
  
 
 ## HCal sampling fraction (SF) calculation
-For this, one needs to first remove ECal and other subdetectors in front of HCal in the geometry xml file and run standalone HCal simulation for a FIXED THETA (e.g. for the barrel 69 degrees). Then you will evaluate the performance using the same theta angle as the one for which the SF was obtained.   
-Set invSamplingFraction=1 in calibHCalBarrel in the run_reco_HCal.py script and run the simulation with 100 GeV electrons (for EM scale) or charged pions (for HAD scale). 
+For this, one needs to first remove ECal and other subdetectors in front of HCal in the geometry [xml file](https://github.com/mmlynari/LAr_scripts/blob/main/HCal_scripts/k4geo_Tilestandalone_xml/ALLEGRO_o1_v03_tileStandalone.xml) and run standalone HCal simulation for a FIXED THETA (e.g. for the barrel 68-69 degrees). 
+Then you will evaluate the performance using the same theta angle as the one for which the SF was obtained. If you intend to evaluate the performance for a different theta angle, you need to recalculate the SF.   
+First, set invSamplingFraction=1 in calibHCalBarrel in the [run_reco_HCal.py](https://github.com/mmlynari/LAr_scripts/blob/main/HCal_scripts/run_simulation/run_reco_HCal.py) script and run the simulation with 100 GeV electrons (for EM scale) or charged pions (for HAD scale). 
 Basic scripts to obtain the SF and invSF are in the HCal_SF_calibration directory. The script expects as an input a flat ntuple that can be produced with
 [FCCAnalyses caloNtuplizer](https://github.com/HEP-FCC/FCCAnalyses/blob/master/examples/FCCee/fullSim/caloNtupleizer/analysis.py) and an adapted HCal version can be found in 
 [FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts/analysis_HCal_new.py).
@@ -44,25 +45,10 @@ k4run run_reco_HCal.py --IOSvc.input ALLEGRO_sim_e.root --IOSvc.output ALLEGRO_r
 ```
 
 ## Make performance plots
-Simulate 10k events for each energy point, you can launch the simulations jobs on lxbatch launch_condor_ddsim.sh. 
-Make resolution plots using perfPlots_HCal_cells_only.py. 
-
-## Benchmark calibration for ECal+HCal combined simulation of charged hadrons
-HCal should be calibrated to HAD scale via invSF, ECal on EM scale. 
-The benchmark calibration as it is implemented now has 6 parameters, and two of them are fixed during the minimization (one can try to include them)
-- p[0] brings ECal to HAD scale, 
-- p[1] scales the HCal energy, but as it is already on HAD scale, it is fixed to 1 
-- p[2] corrects for the energy lost between ECal and HCal 
-- p[3] corrects ECal energy  
-- p[4] corrects for energy loses in the upstream material (e.g. ECal cryostat)
-- p[5] is for the residual corrections, it is fixed to 0
- 
-After running [fcc_ee_caloBenchmarkCalibration.py](benchmark_calibration_scripts/fcc_ee_caloBenchmarkCalibration.py) to obtain the benchmark parameters, the output is stored in a histogram in a root file, where each bin corresponds to one parameter.
-For FCC-ee, it was observed that in the energy range of interest, the benchmark parameters depend on the energy (unlike in FCC-hh case). 
-Therefore, one needs to obtain benchmark parameters for various energies (in the range cca1GeV-150GeV), plot these distributions to find out the dependency of each parameter on the energy 
-and fit with appropriate formula - example script is [draw_benchmark_parameters.py](benchmark_calibration_scripts/draw_benchmark_parameters.py). 
-Then these formulas can be used to correct cluster energy by applying CorrectCaloClusters in the simulation code. Note, that one also needs to provide the approximate benchmark parameters 
-for the initial energy calculation (currently correspond to 50 GeV pion) - this approximate energy is then used to obtain final benchmark parameters.
+Simulate 10k events for each energy point, you can launch the simulations jobs on lxbatch [launch_condor_ddsim.sh](https://github.com/mmlynari/LAr_scripts/blob/main/HCal_scripts/run_simulation/launch_condor_ddsim.sh). 
+An example of a script to make resolution plots using cells information can be found here: [perfPlots_HCal_cells_only.py](https://github.com/mmlynari/LAr_scripts/blob/main/HCal_scripts/plotting_scripts/perfPlots_HCal_cells_only.py). 
+One can also compare cells and clusters performance, the script it [perfPlots_HCal_clusters_cells.py](https://github.com/mmlynari/LAr_scripts/blob/main/HCal_scripts/plotting_scripts/perfPlots_HCal_clusters_cells.py)
+Note that the clustering parameters might need some tuning (e.g. size of the SW). 
 
 ## Running the simulation 
 Outdated scripts to run the simulation locally or on lxbatch can be found in the simulation_scripts directory, both for standalone HCal and combined ECal+HCal simulation.
@@ -125,9 +111,36 @@ root -l    ALLEGRO_reco_pi.root
 events->Draw("Sum$(HCalBarrelReadoutPositioned.energy)/50.","")
 ```
 
-### ALLEGRO pandora development: 
-[Presentation by Archil in the FCC Full sim meeting](https://indico.cern.ch/event/1481286/#55-pandorapfa-on-allegro)
-[ALLEGRO Pandora how-to](https://github.com/Archil-AD/ALLEGRO_PandoraPFA/tree/main)
+### ALLEGRO pandora development:
+An effort started towards implementing the Pandora particle flow in ALLEGRO detector benchmark, including TileCal HCal. More information and the first very promising results can be found in presentations below  
+- [Presentation by Archil in the FCC Full sim meeting](https://indico.cern.ch/event/1481286/#55-pandorapfa-on-allegro)
+- [ALLEGRO Pandora how-to](https://github.com/Archil-AD/ALLEGRO_PandoraPFA/tree/main)
+
+One of the first tasks is to tune EM shower parameters so they are correctly identified. This can be done via changing the setup in the settings xml file to play with EMshower identification algorithm parameters:
+```    
+<LCEmShowerId>
+<RmsLowECut>80</RmsLowECut>
+</LCEmShowerId>
+```
+and this is the place in the code where you can find all other parameters:
+- [https://github.com/PandoraPFA/LCContent/blob/master/src/LCPlugins/LCParticleIdPlugins.cc](https://github.com/PandoraPFA/LCContent/blob/master/src/LCPlugins/LCParticleIdPlugins.cc#L229)
+
+## Benchmark calibration for ECal+HCal combined simulation of charged hadrons
+HCal should be calibrated to HAD scale via invSF, ECal on EM scale.
+The benchmark calibration as it is implemented now has 6 parameters, and two of them are fixed during the minimization (one can try to include them)
+- p[0] brings ECal to HAD scale,
+- p[1] scales the HCal energy, but as it is already on HAD scale, it is fixed to 1
+- p[2] corrects for the energy lost between ECal and HCal
+- p[3] corrects ECal energy  
+- p[4] corrects for energy loses in the upstream material (e.g. ECal cryostat)
+- p[5] is for the residual corrections, it is fixed to 0
+
+After running [fcc_ee_caloBenchmarkCalibration.py](benchmark_calibration_scripts/fcc_ee_caloBenchmarkCalibration.py) to obtain the benchmark parameters, the output is stored in a histogram in a root file>
+For FCC-ee, it was observed that in the energy range of interest, the benchmark parameters depend on the energy (unlike in FCC-hh case).
+Therefore, one needs to obtain benchmark parameters for various energies (in the range cca1GeV-150GeV), plot these distributions to find out the dependency of each parameter on the energy
+and fit with appropriate formula - example script is [draw_benchmark_parameters.py](benchmark_calibration_scripts/draw_benchmark_parameters.py).
+Then these formulas can be used to correct cluster energy by applying CorrectCaloClusters in the simulation code. Note, that one also needs to provide the approximate benchmark parameters
+for the initial energy calculation (currently correspond to 50 GeV pion) - this approximate energy is then used to obtain final benchmark parameters.
 
 
 ## Energy calibration with BRT
