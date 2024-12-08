@@ -16,7 +16,7 @@ print("Launch without sourcing k4 environment!!")
 ROOT.gROOT.ProcessLine(".L /afs/cern.ch/user/b/brfranco/work/public/Fellow/FCCSW/FCCAnalysesRepos/211210/FCCAnalyses/install/lib/libFCCAnalyses.C+")
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-inputFiles", default = "/eos/user/m/mmlynari/FCC_fellow/FCC_rootfile_storage/HCal_v28Aug24_FSR/fcc_analysis_ouput/240828_energies_10kevt_SW_noNoise_HCal/fccsw_output_pdgID_211_pMin_*.root", help = "Regex for input files.", type = str)
+parser.add_argument("-inputFiles", default = "/afs/cern.ch/user/m/mmlynari/workspace/ALLEGRO_PandoraPFA/HCal_standalone/outputs/241208/ALLEGRO_reco_pMin_100000_e.root", help = "Regex for input files.", type = str)
 #parser.add_argument("-inputFiles", default = "/eos/user/m/mmlynari/FCC_rootfile_storage/HCal_v26May23/fcc_analysis_ouput/231220_energies_10kevt_cellsAndSW_noNoise_HCal_Sci_Steel_2x10_4x150_4x250_lowEne_SF_1/fccsw_output_pdgID_211_pMin_*_pMax_*_thetaMin_69.805_thetaMax_69.805.root", help = "Regex for input files.", type = str)
 parser.add_argument("-outputPostfix", default = date.today().strftime("%y%m%d") + "_v28Aug24_energies_10kevt_cells_noNoise_Barrel", help = "Postfix to append to the output folder.", type = str)
 parser.add_argument("-color", default = 46, help = "Color of the graph", type = int)
@@ -87,6 +87,7 @@ energies_gev_float = []
 for inputFile in inputFiles:
     print("Treating %s..."%inputFile)
     rootfile_path = inputFile
+    # lines below require a specific format of the input file name
     energy = inputFile.split('_pMin_')[1].split("_")[0]
     energy_gev_float = int(energy)/1000.0
     energies_gev_float.append(energy_gev_float)
@@ -112,10 +113,10 @@ for inputFile in inputFiles:
     events = f.Get("events")
     events.SetBranchStatus("*", 0) # //disable all branches
     events.SetBranchStatus("genParticle_*", 1)
-    events.SetBranchStatus("HCalBarrelPositionedCells2_energy", 1)
-    events.SetBranchStatus("HCalBarrelPositionedCells2_eta", 1)
-    events.SetBranchStatus("HCalBarrelPositionedCells2_phi", 1)
-    events.SetBranchStatus("HCalBarrelPositionedCells2_layer", 1)
+    events.SetBranchStatus("HCalBarrelReadoutPositioned_energy", 1)
+    events.SetBranchStatus("HCalBarrelReadoutPositioned_theta", 1)
+    events.SetBranchStatus("HCalBarrelReadoutPositioned_phi", 1)
+    events.SetBranchStatus("HCalBarrelReadoutPositioned_layer", 1)
 
     evt = 0
     n_gen_particles = 0
@@ -127,8 +128,8 @@ for inputFile in inputFiles:
         evt += 1
         total_energy = 0
         gen_particle_energy = 0
-        for cell in range(len(getattr(event, "HCalBarrelPositionedCells2_energy"))):
-            cell_energy = event.HCalBarrelPositionedCells2_energy[cell]*invSF
+        for cell in range(len(getattr(event, "HCalBarrelReadoutPositioned_energy"))):
+            cell_energy = event.HCalBarrelReadoutPositioned_energy[cell]*invSF
             total_energy += cell_energy
 
         #print('total_energy ', total_energy)
@@ -239,7 +240,7 @@ def plot_resolution_vs_energy_graph(variable_name, postfix, relEresol_vs_energy_
 
     ## LEGEND
     if variable_name == "linearity":
-        eResol_vs_e_legend = copy(gStyle.bottomRight_legend)
+        eResol_vs_e_legend = copy(gStyle.topRight_legend)
     else: 
         eResol_vs_e_legend = copy(gStyle.topRight_legend_relEresol)
     eResol_vs_e_legend.AddEntry(ROOT.nullptr,"#bf{FCC-ee simulation}","")

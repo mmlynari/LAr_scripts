@@ -81,7 +81,7 @@ hcalEndcapReadoutName = "HCalEndcapReadout"            # endcap, original segmen
 from Configurables import CalibrateCaloHitsTool
 # HCAL barrel
 calibHCalBarrel = CalibrateCaloHitsTool(
-        "CalibrateHCalBarrel", invSamplingFraction="1.")
+        "CalibrateHCalBarrel", invSamplingFraction="27.42") # 27.42 is at 60 degrees 
 # HCAL endcap
 calibHCalEndcap = CalibrateCaloHitsTool(
         "CalibrateHCalEndcap", invSamplingFraction="1.")  # FIXME: to be updated for ddsim

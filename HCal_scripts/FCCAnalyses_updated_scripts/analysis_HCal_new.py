@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument(
     '-inputFiles',
-    type=str, default='ALLEGRO_reco_e.root',
+    type=str, default='ALLEGRO_reco_pMin_100000_e.root',
     help='Input rootfiles (can be a single file or a regex)')
 parser.add_argument(
     '-t', '--test',
