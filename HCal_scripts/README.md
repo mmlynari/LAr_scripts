@@ -5,12 +5,16 @@ This directory reflects the status in the summer 2024 and this version will be u
 
 ## Important notes 
 Due to the k4hep software migration, some of these scripts might not work in the newer releases, so here are a few notes 
-- the scripts for running the simulation were tested in release source /cvmfs/sw.hsf.org/key4hep/setup.sh -r 2024-10-03 
+- the scripts for running the simulation were tested in release source /cvmfs/sw.hsf.org/key4hep/setup.sh -r 2024-12-11 
 - BRT training was synchronized with the nightly release on 6 September 2024
 - plotting scripts might require renaming some variable branches and containers following the latest updates 
 - for running the simulation in newer releases, please use [this how-to](https://github.com/HEP-FCC/FCC-config/tree/main/FCCee/FullSim/ALLEGRO/ALLEGRO_o1_v03) and 
 here is an example code for running the digi+reco step with HCal Barrel and Endcap: [link](https://github.com/HEP-FCC/k4RecCalorimeter/blob/main/RecFCCeeCalorimeter/tests/options/ALLEGRO_o1_v03_digi_reco.py)
  
+## General workflow 
+- calibrate standalone HCal to EMscale (by changing the sampling fraction) and check performance with single electrons and charged pions (xml file needs to be changed to remove all other subdetectors)
+- look at the combined performance of ECal+HCal, one can use BDT calibration or benchmark method, see description below (for both of them updated parameters need to be derived)  
+- one can look at the performance of calorimeter cells, sliding window clusters and topological clusters (neighbours and noise maps are required)
 
 ## HCal sampling fraction (SF) calculation
 For this, one needs to first remove ECal and other subdetectors in front of HCal in the geometry [xml file](https://github.com/mmlynari/LAr_scripts/blob/main/HCal_scripts/k4geo_Tilestandalone_xml/ALLEGRO_o1_v03_tileStandalone.xml) and run standalone HCal simulation for a FIXED THETA (e.g. for the barrel 68-69 degrees). 
@@ -23,6 +27,15 @@ For the record, the HCal Barrel SFs in Allegro_o1_v03 calculated with 5000 event
 EM invSF = 30.3953
 HAD invSF = 35.2556
 
+### Setup the environment
+Use the nightly release
+``` 
+source /cvmfs/sw-nightlies.hsf.org/key4hep/setup.sh
+```
+or stable stack (several releases available)
+``` 
+source /cvmfs/sw.hsf.org/key4hep/setup.sh
+```
 ### run simulation for a fixed theta
 ```
 ddsim --enableGun --gun.distribution uniform --gun.energy "100*GeV" --gun.thetaMin "60*deg" --gun.thetaMax "60*deg" --gun.particle e- --numberOfEvents 5000 --outputFile ALLEGRO_sim_e.root --random.enableEventSeed --random.seed 42 --compactFile $K4GEO/FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ALLEGRO_o1_v03_tileStandalone.xml
