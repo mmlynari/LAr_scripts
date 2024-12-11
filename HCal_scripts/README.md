@@ -6,7 +6,7 @@ This directory reflects the status in the summer 2024 and this version will be u
 ## Important notes 
 Due to the k4hep software migration, some of these scripts might not work in the newer releases, so here are a few notes 
 - the scripts for running the simulation were tested in release source /cvmfs/sw.hsf.org/key4hep/setup.sh -r 2024-12-11 
-- BRT training was synchronized with the nightly release on 6 September 2024
+- BRT training was synchronized with the nightly release on 6 September 2024 and likely it will not work out of the box in the latest release
 - plotting scripts might require renaming some variable branches and containers following the latest updates 
 - for running the simulation in newer releases, please use [this how-to](https://github.com/HEP-FCC/FCC-config/tree/main/FCCee/FullSim/ALLEGRO/ALLEGRO_o1_v03) and 
 here is an example code for running the digi+reco step with HCal Barrel and Endcap: [link](https://github.com/HEP-FCC/k4RecCalorimeter/blob/main/RecFCCeeCalorimeter/tests/options/ALLEGRO_o1_v03_digi_reco.py)
@@ -38,7 +38,7 @@ source /cvmfs/sw.hsf.org/key4hep/setup.sh
 ```
 ### run simulation for a fixed theta
 ```
-ddsim --enableGun --gun.distribution uniform --gun.energy "100*GeV" --gun.thetaMin "60*deg" --gun.thetaMax "60*deg" --gun.particle e- --numberOfEvents 5000 --outputFile ALLEGRO_sim_e.root --random.enableEventSeed --random.seed 42 --compactFile $K4GEO/FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ALLEGRO_o1_v03_tileStandalone.xml
+ddsim --enableGun --gun.distribution uniform --gun.energy "100*GeV" --gun.thetaMin "68*deg" --gun.thetaMax "68*deg" --gun.particle e- --numberOfEvents 5000 --outputFile ALLEGRO_sim_e.root --random.enableEventSeed --random.seed 42 --compactFile $K4GEO/FCCee/ALLEGRO/compact/ALLEGRO_o1_v03/ALLEGRO_o1_v03_tileStandalone.xml
 ```
 ### run reconstruction with invSamplingFraction=1
 ```
@@ -61,12 +61,13 @@ k4run run_reco_HCal.py --IOSvc.input ALLEGRO_sim_e.root --IOSvc.output ALLEGRO_r
 Simulate 10k events for each energy point, you can launch the simulations jobs on lxbatch [launch_condor_ddsim.sh](https://github.com/mmlynari/LAr_scripts/blob/main/HCal_scripts/run_simulation/launch_condor_ddsim.sh). 
 An example of a script to make resolution plots using cells information can be found here: [perfPlots_HCal_cells_only.py](https://github.com/mmlynari/LAr_scripts/blob/main/HCal_scripts/plotting_scripts/perfPlots_HCal_cells_only.py). 
 One can also compare cells and clusters performance, the script it [perfPlots_HCal_clusters_cells.py](https://github.com/mmlynari/LAr_scripts/blob/main/HCal_scripts/plotting_scripts/perfPlots_HCal_clusters_cells.py)
-Note that the clustering parameters might need some tuning (e.g. size of the SW). 
+Note that the clustering parameters might need some tuning (e.g. size of the SW).
+More scripts for performance plots can be found in (LAr_scripts)[https://github.com/BrieucF/LAr_scripts], but these scripts are not supported anymore.  
 
 ## Running the simulation 
-Outdated scripts to run the simulation locally or on lxbatch can be found in the simulation_scripts directory, both for standalone HCal and combined ECal+HCal simulation.
+Scripts to run the simulation on lxbatch can be found in the [simulation_scripts](simulation_scripts) directory, for standalone HCal (change the xml file if you want to run the combined ECal+HCal simulation).
 
-New how-to to run the simulation below from Archil (Nov 2024)
+Below is the how-to for running the simulation locally from Archil (Nov 2024). NOTE: As of December 2024, all updates were pushed to main k4geo and k4Rec directories, so these can be cloned instead of Archil's github and nightly release can be used. 
 
 ### Setup the environment (I am working with the stable release 2024-10-03):
 ```
@@ -146,7 +147,7 @@ The benchmark calibration as it is implemented now has 6 parameters, and two of 
 - p[2] corrects for the energy lost between ECal and HCal
 - p[3] corrects ECal energy  
 - p[4] corrects for energy loses in the upstream material (e.g. ECal cryostat)
-- p[5] is for the residual corrections, it is fixed to 0
+- p[5] is for the residual corrections, for now it is fixed to 0 as it did not improve the results 
 
 After running [fcc_ee_caloBenchmarkCalibration.py](benchmark_calibration_scripts/fcc_ee_caloBenchmarkCalibration.py) to obtain the benchmark parameters, the output is stored in a histogram in a root file>
 For FCC-ee, it was observed that in the energy range of interest, the benchmark parameters depend on the energy (unlike in FCC-hh case).
@@ -158,10 +159,9 @@ for the initial energy calculation (currently correspond to 50 GeV pion) - this 
 
 ## Energy calibration with BRT
 Original scripts were prepared for standalone ECal simulation and its energy calibration, so here is a modified version for HCal and ECal+HCal. 
-The scripts communicate with FCCAnalyses caloNtupleizer, so this part needs to be modified, to reflect the correct number of radial layers in each simulation setup and to read the corresponding 
-geometry - see [FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts/analysis_HCal_new.py).
-For the creation of training and testing samples, one needs to be careful and ensure that these are different events (need to modify the randomSeed for each submitted job) and this is why we have 
-two separate lxbatch submission scripts for this. In addition, for the training, you want to have a continuous energy distribution, while for the evaluation, we usually derive the energy resolution
-from several energy points. Use BRT_training_launch_several_energies.sh and BRT_validation_launch_several_energies.sh scripts (stored in run_simulation directory) to get training and testing datasets.  
-The code for training and plotting is executed from run_all_chain.sh.  
+The scripts take information from FCCAnalyses caloNtupleizer, so this part needs to be modified, to reflect the correct number of radial layers in each simulation setup and to read the corresponding 
+geometry - see [FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts).
+For the creation of training and testing samples, one needs to be careful and ensure that these are different events. 
+In addition, for the training, you want to have a continuous energy distribution (possible with ddsim using momentumMin and momentumMax instead of the energy?), while for the evaluation, we usually derive the energy resolution
+from several energy points. Outdated scripts used to prepare training and validation samples can be found in [outdated_scripts](run_simulation/outdated_scripts). The code for training and plotting is executed from run_all_chain.sh.  
 
