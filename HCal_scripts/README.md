@@ -65,14 +65,44 @@ Same simulation setup as for obtaining the sampling fraction, but now we want to
 An example of a script to make resolution plots using cells information can be found here: [perfPlots_HCal_cells_only.py](https://github.com/mmlynari/LAr_scripts/blob/main/HCal_scripts/plotting_scripts/perfPlots_HCal_cells_only.py). 
 One can also compare cells and clusters performance, the script it [perfPlots_HCal_clusters_cells.py](https://github.com/mmlynari/LAr_scripts/blob/main/HCal_scripts/plotting_scripts/perfPlots_HCal_clusters_cells.py)
 Note that the clustering parameters might need some tuning (e.g. size of the SW).
-More scripts for performance plots can be found in (LAr_scripts)[https://github.com/BrieucF/LAr_scripts], but these scripts are not supported anymore.  
+More scripts for performance plots can be found in (LArscripts by Brieuc Francois)[https://github.com/BrieucF/LAr_scripts], but these scripts are not maintained anymore.  
 ### combined ECal+HCal
 For topological clustering, one needs to copy (or recreate) the neighbours and noise maps
 ``` 
 cp /eos/project/f/fccsw-web/www/filesForSimDigiReco/ALLEGRO/ALLEGRO_o1_v03/* .
 ```
 Run the simulation the same way as for standalone HCal, just replace the xml file by the one for whole Allegro detector. 
-Run the reconstruction using [run_reco_ECal_HCal.py](run_simulation/run_reco_ECal_HCal.py).  
+Run the reconstruction using [run_reco_ECal_HCal.py](run_simulation/run_reco_ECal_HCal.py). 
+One needs to apply additional calibration on calorimeter clusters for correct energy reconstruction of charged pions.
+
+## Benchmark calibration for ECal+HCal combined simulation of charged hadrons
+HCal should be calibrated to HAD scale via invSF, ECal on EM scale.
+The benchmark calibration as it is implemented now has 6 parameters, and two of them are fixed during the minimization (one can try to include them)
+- p[0] brings ECal to HAD scale,
+- p[1] scales the HCal energy, but as it is already on HAD scale, it is fixed to 1
+- p[2] corrects for the energy lost between ECal and HCal
+- p[3] corrects ECal energy  
+- p[4] corrects for energy loses in the upstream material (e.g. ECal cryostat)
+- p[5] is for the residual corrections, for now it is fixed to 0 as it did not improve the results
+
+After running [fcc_ee_caloBenchmarkCalibration.py](benchmark_calibration_scripts/fcc_ee_caloBenchmarkCalibration.py) to obtain the benchmark parameters,
+the output is stored in a histogram in a root file.
+For FCC-ee, it was observed that in the energy range of interest, the benchmark parameters depend on the energy (unlike in FCC-hh case) - especially true for very low energies.
+Therefore, one needs to obtain benchmark parameters for various energies (in the range cca1GeV-150GeV), plot these distributions to find out the dependency of each parameter on the energy
+and fit with appropriate formula - example script is [draw_benchmark_parameters.py](benchmark_calibration_scripts/draw_benchmark_parameters.py).
+Then these formulas can be used to correct cluster energy by applying CorrectCaloClusters in the simulation code, see an example in [run_reco_ECal_HCal.py](run_simulation/run_reco_ECal_HCal.py).
+Note that one also needs to provide the approximate benchmark parameters for the initial energy calculation
+(this currently corresponds to benchmark parameters obtained for 50 GeV pion) - this approximate energy is then used to obtain final benchmark parameters.
+
+
+## Energy calibration with BRT
+Original scripts were prepared for standalone ECal simulation and its energy calibration, so here is a modified version for HCal and ECal+HCal.
+The scripts take information from FCCAnalyses caloNtupleizer, so this part needs to be modified, to reflect the correct number of radial layers in each simulation setup and to read the corresponding
+geometry - see [FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts).
+For the creation of training and testing samples, one needs to be careful and ensure that these are different events (change seed).
+In addition, for the training, you want to have a continuous energy distribution (possible with ddsim using momentumMin and momentumMax instead of the energy?), while for the evaluation, we usually deriv>
+from several energy points. Outdated scripts used to prepare training and validation samples can be found in [outdated_scripts](run_simulation/outdated_scripts).
+The code for training and plotting is executed from run_all_chain.sh - two versions available, one for standalone HCal and one for ECal+HCal.    
 
 
 ## How to run the simulation locally 
@@ -136,7 +166,7 @@ root -l    ALLEGRO_reco_pi.root
 events->Draw("Sum$(HCalBarrelReadoutPositioned.energy)/50.","")
 ```
 
-### ALLEGRO pandora development:
+## ALLEGRO pandora development:
 An effort started towards implementing the Pandora particle flow in ALLEGRO detector benchmark, including TileCal HCal. More information and the first very promising results can be found in presentations below  
 - [Presentation by Archil in the FCC Full sim meeting](https://indico.cern.ch/event/1481286/#55-pandorapfa-on-allegro)
 - [ALLEGRO Pandora how-to](https://github.com/Archil-AD/ALLEGRO_PandoraPFA/tree/main)
@@ -150,32 +180,4 @@ One of the first tasks is to tune EM shower parameters so they are correctly ide
 and this is the place in the code where you can find all other parameters:
 - [https://github.com/PandoraPFA/LCContent/blob/master/src/LCPlugins/LCParticleIdPlugins.cc](https://github.com/PandoraPFA/LCContent/blob/master/src/LCPlugins/LCParticleIdPlugins.cc#L229)
 
-## Benchmark calibration for ECal+HCal combined simulation of charged hadrons
-HCal should be calibrated to HAD scale via invSF, ECal on EM scale.
-The benchmark calibration as it is implemented now has 6 parameters, and two of them are fixed during the minimization (one can try to include them)
-- p[0] brings ECal to HAD scale,
-- p[1] scales the HCal energy, but as it is already on HAD scale, it is fixed to 1
-- p[2] corrects for the energy lost between ECal and HCal
-- p[3] corrects ECal energy  
-- p[4] corrects for energy loses in the upstream material (e.g. ECal cryostat)
-- p[5] is for the residual corrections, for now it is fixed to 0 as it did not improve the results 
-
-After running [fcc_ee_caloBenchmarkCalibration.py](benchmark_calibration_scripts/fcc_ee_caloBenchmarkCalibration.py) to obtain the benchmark parameters, 
-the output is stored in a histogram in a root file. 
-For FCC-ee, it was observed that in the energy range of interest, the benchmark parameters depend on the energy (unlike in FCC-hh case) - especially true for very low energies.
-Therefore, one needs to obtain benchmark parameters for various energies (in the range cca1GeV-150GeV), plot these distributions to find out the dependency of each parameter on the energy
-and fit with appropriate formula - example script is [draw_benchmark_parameters.py](benchmark_calibration_scripts/draw_benchmark_parameters.py).
-Then these formulas can be used to correct cluster energy by applying CorrectCaloClusters in the simulation code, see an example in [run_reco_ECal_HCal.py](run_simulation/run_reco_ECal_HCal.py). 
-Note that one also needs to provide the approximate benchmark parameters for the initial energy calculation 
-(this currently corresponds to benchmark parameters obtained for 50 GeV pion) - this approximate energy is then used to obtain final benchmark parameters.
-
-
-## Energy calibration with BRT
-Original scripts were prepared for standalone ECal simulation and its energy calibration, so here is a modified version for HCal and ECal+HCal. 
-The scripts take information from FCCAnalyses caloNtupleizer, so this part needs to be modified, to reflect the correct number of radial layers in each simulation setup and to read the corresponding 
-geometry - see [FCCAnalyses_updated_scripts directory](FCCAnalyses_updated_scripts).
-For the creation of training and testing samples, one needs to be careful and ensure that these are different events (change seed). 
-In addition, for the training, you want to have a continuous energy distribution (possible with ddsim using momentumMin and momentumMax instead of the energy?), while for the evaluation, we usually derive the energy resolution
-from several energy points. Outdated scripts used to prepare training and validation samples can be found in [outdated_scripts](run_simulation/outdated_scripts). 
-The code for training and plotting is executed from run_all_chain.sh - two versions available, one for standalone HCal and one for ECal+HCal.  
 
